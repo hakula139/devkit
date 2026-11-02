@@ -13,6 +13,7 @@ Shared development tooling for Hakula's repositories.
 | Composite actions | Install Nix with the shared cache, gate a run, and release a version                              | `hakula139/devkit/actions/setup-nix@v1`, `.../ci-result@v1`, `.../tagged-ci@v1`, `.../publish-release@v1` |
 | CI workflow       | Run `nix flake check` on Linux and macOS                                                          | `hakula139/devkit/.github/workflows/nix.yml@v1`                                                           |
 | Release workflows | Check the tagged commit, pin the cache, and publish the release                                   | `hakula139/devkit/.github/workflows/release.yml@v1`, `.../nix-cache.yml@v1`                               |
+| Renovate preset   | Share the update policy, release-age floors, and grouping                                         | `github>hakula139/devkit`                                                                                 |
 
 ## Adopt the flake
 
@@ -159,6 +160,21 @@ Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to
 ## Adopt the release workflow
 
 [Releasing](docs/releasing.md) covers the release caller and its prerequisites, the tag-versus-package check, and the cache pin.
+
+## Adopt the Renovate preset
+
+Extend the preset from `.github/renovate.json`:
+
+```json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>hakula139/devkit"]
+}
+```
+
+A preset change applies to every consumer on its next Renovate run, without a devkit release. Pin the reference to `github>hakula139/devkit#v1` to take preset changes only with a devkit release, or to `#v1.2.3` to take them when you bump the reference.
+
+The preset automerges daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates, all with squash, so the repository must allow squash merging. Every other update opens for review. A devkit major arrives in the `devkit` group's own PR, which moves the `@v1` references and, through the preset's custom manager, the `github:hakula139/devkit/v1` flake reference. That manager leaves `flake.lock` alone, so run `nix flake update devkit` on that PR before merging it.
 
 ## Development
 

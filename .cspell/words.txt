@@ -13,6 +13,7 @@ nuon
 pkgs
 pname
 prek
+pypi
 rhysd
 shfmt
 statix

@@ -4,22 +4,24 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 ## Read before you edit
 
-| When the change touches                                             | Read                                   |
-| ------------------------------------------------------------------- | -------------------------------------- |
-| The pre-commit baseline or the dev shell                            | [Hooks](docs/hooks.md)                 |
-| `nu-test`, `nu-check`, or `nuTests`                                 | [Nushell test runner](docs/nu-test.md) |
-| An action, a reusable workflow, a release, or a versioning decision | [Releasing](docs/releasing.md)         |
+| When the change touches                                             | Read                                                   |
+| ------------------------------------------------------------------- | ------------------------------------------------------ |
+| The pre-commit baseline or the dev shell                            | [Hooks](docs/hooks.md)                                 |
+| `nu-test`, `nu-check`, or `nuTests`                                 | [Nushell test runner](docs/nu-test.md)                 |
+| An action, a reusable workflow, a release, or a versioning decision | [Releasing](docs/releasing.md)                         |
+| The Renovate preset                                                 | [Renovate preset](README.md#adopt-the-renovate-preset) |
 
 ## Layout
 
 ```text
 .
 ├── .cspell/       # Project spelling dictionary
-├── .github/       # actionlint and Dependabot configs, and the CI and release workflows
+├── .github/       # actionlint, Dependabot, and Renovate configs, and the CI and release workflows
 ├── actions/       # setup-nix, ci-result, tagged-ci, and publish-release composite actions
 ├── docs/          # Hooks, the Nushell test runner, and releasing
 ├── nix/           # Hook baseline, library, Nushell tooling, and tests
 ├── CHANGELOG.md   # Release notes, one section per tag
+├── default.json   # The Renovate preset consumers extend
 ├── flake.nix      # The exported `lib`, package, checks, and dev shell
 └── README.md      # What each piece is and how a repository adopts it
 ```

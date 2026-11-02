@@ -1,13 +1,17 @@
 cachix
 devkit
 direnv
+dont
 envrc
 hakula
 mypy
 nixfmt
 nixos
 nixpkgs
+nufmt
+nuon
 pkgs
+pname
 prek
 rhysd
 shfmt

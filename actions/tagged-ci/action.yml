@@ -1,0 +1,11 @@
+name: Tagged CI
+description: Wait for a push or dispatched `ci.yml` run to pass on the tagged commit
+
+runs:
+  using: composite
+  steps:
+    - name: Wait for CI on the tagged commit
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: bash "$GITHUB_ACTION_PATH/tagged-ci.sh"

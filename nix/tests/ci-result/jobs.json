@@ -1,0 +1,42 @@
+[
+  {
+    "jobs": [
+      {
+        "id": 1,
+        "name": "gate",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 2,
+        "name": "build",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 3,
+        "name": "skipped-leg",
+        "status": "completed",
+        "conclusion": "skipped"
+      },
+      {
+        "id": 4,
+        "name": "cancelled-leg",
+        "status": "completed",
+        "conclusion": "cancelled"
+      },
+      {
+        "id": 5,
+        "name": "deploy-preview",
+        "status": "in_progress",
+        "conclusion": null
+      },
+      {
+        "id": 6,
+        "name": "deploy-voting",
+        "status": "queued",
+        "conclusion": null
+      }
+    ]
+  }
+]

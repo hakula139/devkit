@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  nix:
+    uses: $/.github/workflows/nix.yml
+    secrets:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+  result:
+    name: CI Result
+    # A skipped job counts as a passing required check, so the gate must run after failures too.
+    if: ${{ !cancelled() }}
+    needs: [nix]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    steps:
+      - name: Check results
+        uses: $/actions/ci-result
+        with:
+          check_run_id: ${{ job.check_run_id }}

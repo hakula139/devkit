@@ -1,0 +1,149 @@
+# ==================================================================================================
+# Pre-commit Hooks
+# ==================================================================================================
+
+{
+  pkgs,
+  git-hooks-nix,
+}:
+
+{
+  src,
+  hooks ? { },
+  devHooks ? { },
+  excludes ? [ ],
+}:
+
+let
+  inherit (pkgs) lib;
+
+  # rhysd/actionlint@644076a accepts the `queue` key. Drop the patch once a release ships it.
+  actionlint = pkgs.actionlint.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [
+      (pkgs.fetchpatch {
+        url = "https://github.com/rhysd/actionlint/commit/644076a59742c2d1540ebd4686eab3c308f0e562.patch";
+        hash = "sha256-Lpd7CTkLbzgvAZV2H8G4GTUoPNDCK7PiW3A40+cquUk=";
+      })
+    ];
+  });
+
+  baseline =
+    { config, ... }:
+    {
+      excludes = [ "(^|/)fixtures/" ];
+
+      hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
+        actionlint = {
+          enable = true;
+          package = actionlint;
+        };
+
+        check-added-large-files.enable = true;
+        check-merge-conflicts.enable = true;
+        check-yaml.enable = true;
+
+        cspell = {
+          enable = true;
+          args = [
+            "--no-progress"
+            "--no-must-find-files"
+          ];
+        };
+
+        deadnix.enable = true;
+        editorconfig-checker.enable = true;
+        end-of-file-fixer.enable = true;
+
+        markdownlint-cli2 = {
+          enable = true;
+          package = pkgs.markdownlint-cli2;
+          entry = lib.getExe config.hooks.markdownlint-cli2.package;
+          args = [ "--fix" ];
+          files = "\\.md$";
+        };
+
+        nixfmt.enable = true;
+
+        # Markdown stays out of Prettier, which drops the blank line before nested items.
+        prettier = {
+          enable = true;
+          files = "\\.(js|json|jsonc|ya?ml)$";
+        };
+
+        shellcheck = {
+          enable = true;
+          exclude_types = [ "zsh" ];
+        };
+
+        # Formatting flags disable shfmt's EditorConfig settings.
+        shfmt = {
+          enable = true;
+          settings = {
+            language-dialect = null;
+            simplify = false;
+          };
+        };
+
+        sort-file-contents = {
+          enable = true;
+          files = "^\\.cspell/words\\.txt$";
+          settings.ignore-case = true;
+        };
+
+        statix.enable = true;
+        taplo.enable = true;
+
+        trim-trailing-whitespace = {
+          enable = true;
+          args = [ "--markdown-linebreak-ext=md" ];
+        };
+      };
+    };
+
+  # Mirrors git-hooks.nix's own overlay, so the hooks build from the consumer's package set.
+  gitHooksRun = pkgs.callPackage "${git-hooks-nix}/nix/run.nix" {
+    tools = import "${git-hooks-nix}/nix/call-tools.nix" pkgs;
+    isFlakes = true;
+  };
+
+  run =
+    modules:
+    gitHooksRun {
+      inherit src;
+      package = pkgs.prek;
+      imports = [
+        baseline
+        { inherit hooks excludes; }
+      ]
+      ++ modules;
+    };
+
+  dev = run [ { hooks = devHooks; } ];
+  check = run [ { hooks = lib.mapAttrs (_: _: { enable = lib.mkForce false; }) devHooks; } ];
+
+  cmp = lib.getExe' pkgs.diffutils "cmp";
+  flock = lib.getExe pkgs.flock;
+  git = lib.getExe dev.config.gitPackage;
+in
+{
+  inherit check;
+
+  shell = pkgs.mkShell {
+    packages = dev.enabledPackages ++ [ dev.config.package ];
+
+    # Use shared hooks to avoid the relative path bug in linked worktrees (git-hooks.nix#688).
+    # Serialize installation, and leave sibling repositories that borrow this shell untouched.
+    shellHook = ''
+      unset PYTHONPATH
+      if top=$(${git} rev-parse --show-toplevel 2>/dev/null) &&
+        ${cmp} -s ${src + "/flake.nix"} "$top/flake.nix"; then
+        common=$(${git} rev-parse --path-format=absolute --git-common-dir)
+        (
+          ${flock} 9
+          ${dev.config.installationScript}
+          ${git} config --local --unset-all core.hooksPath || true
+        ) 9>"$common/git-hooks.lock"
+      fi
+    '';
+  };
+}

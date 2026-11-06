@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - `nu-test` installs a test file's stubs when the file's directory name holds glob characters such as `[1]`.
+- `publish-release` passes the release notes to `gh` without writing them to a file, so an `assets` glob that matches `*.md` no longer attaches a `release-notes.md` to the release.
 
 ## [1.0.0-rc.2] - 2026-11-06
 

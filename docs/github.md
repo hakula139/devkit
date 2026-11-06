@@ -1,8 +1,8 @@
 # GitHub conventions
 
-Every Hakula repository starts from these GitHub defaults, and uses no milestones, since a release ships when it is ready and the range since the last tag shows what it holds. A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and says why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets need GitHub Pro there.
+Every Hakula repository starts from these GitHub defaults and uses no milestones, since a release ships when it is ready and the range since the last tag shows what it holds. A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets on private repositories require GitHub Pro.
 
-Run the commands from a checkout of the repository with an admin's credentials, since `gh` fills `{owner}` and `{repo}` from the checkout.
+Run the commands from a checkout of the repository with admin credentials, since `gh` fills `{owner}` and `{repo}` from the checkout.
 
 ## Apply the branch ruleset
 
@@ -13,7 +13,7 @@ The ruleset blocks deleting and force-pushing the default branch, and requires a
 - No approval is required, since a sole maintainer cannot approve their own pull request.
 - The admin role can bypass the ruleset in an emergency.
 
-The command creates the `main` ruleset, or replaces it when the repository already has one:
+The command creates the `main` ruleset, or replaces an existing one:
 
 ```bash
 endpoint=repos/{owner}/{repo}/rulesets
@@ -89,14 +89,12 @@ gh api repos/{owner}/{repo}/immutable-releases --method PUT
 
 ## Apply the repository settings
 
-| Setting                      | Value                    | Reason                                                                           |
-| ---------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
-| Merge methods                | Squash only              | The changelog is drafted from each squashed commit's conventional title.         |
-| Squash commit title and body | `PR_TITLE` and `PR_BODY` | The pull request description carries the rationale into the commit body.         |
-| `delete_branch_on_merge`     | On                       | A merged branch has nothing left to keep.                                        |
-| `allow_auto_merge`           | On                       | Renovate's platform automerge merges the moment checks pass.                     |
-| Wiki, Projects, Discussions  | Off                      | Docs live in the repository. A repository with a community turns Discussions on. |
-| Workflow token               | Read, cannot approve     | Each job requests the writes it needs.                                           |
+- **Merge methods: squash only.** The changelog is drafted from each squashed commit's conventional title.
+- **Squash commit title and body: `PR_TITLE` and `PR_BODY`.** The pull request description carries the rationale into the commit body.
+- **`delete_branch_on_merge`: on.** A merged branch has nothing left to keep.
+- **`allow_auto_merge`: on.** Renovate's platform automerge merges the moment checks pass.
+- **Wiki, Projects, and Discussions: off.** Docs live in the repository. A repository with a community turns Discussions on.
+- **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
 
 ```bash
 gh api repos/{owner}/{repo} \
@@ -119,7 +117,7 @@ gh api repos/{owner}/{repo}/actions/permissions/workflow \
 
 ## Turn on the security features
 
-Dependabot alerts stay on and Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, outside its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`. Private vulnerability reporting is the channel the default `SECURITY.md` names, and secret scanning with push protection keeps credentials out of the history.
+Dependabot alerts stay on while Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, bypassing its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`. Private vulnerability reporting provides the channel named in the default `SECURITY.md`, and secret scanning with push protection keeps credentials out of the history.
 
 ```bash
 gh api repos/{owner}/{repo}/vulnerability-alerts --method PUT
@@ -147,9 +145,9 @@ The labels are GitHub's defaults that carry meaning, plus the one the Renovate p
 | `good first issue` | `7057ff` | Good for newcomers                          |
 | `help wanted`      | `008672` | Extra attention is needed                   |
 
-Labels do not mirror commit types, since a pull request's title already carries its type and the changelog groups by it. `bug`, `enhancement`, and `documentation` sort issues, which have no commit type, and the pull requests that resolve them. Every other label goes, including GitHub's `duplicate`, `invalid`, and `wontfix`, which the close reasons "duplicate" and "not planned" replace.
+Labels do not mirror commit types, since a pull request's title already carries its type and the changelog groups by it. `bug`, `enhancement`, and `documentation` sort issues, which have no commit type, along with the pull requests that resolve them. Every other label is removed, including GitHub's `duplicate`, `invalid`, and `wontfix`, which the "duplicate" and "not planned" close reasons replace.
 
-The commands create or update each label in the table, then delete every label outside it. Deleting a label removes it from every issue and pull request that carries it, and cannot be undone.
+The commands create or update each label in the table, then delete every other label. Deleting a label permanently removes it from every issue and pull request.
 
 ```bash
 labels=$(

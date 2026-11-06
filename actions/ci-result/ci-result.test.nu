@@ -6,7 +6,7 @@
 
 use std/assert
 
-const FILTER_FILE = path self ci-result.jq
+const FILTER_FILE = path self "ci-result.jq"
 
 def ci-result [gate: int, jobs: table]: nothing -> record {
   (

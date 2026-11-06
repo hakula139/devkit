@@ -9,7 +9,7 @@
 
 use std/assert
 
-const FIXTURES = path self fixtures
+const FIXTURES = path self "fixtures"
 
 # Check the `nu-test` and `nu-check` on `PATH` against the fixtures.
 def main [] {
@@ -38,13 +38,6 @@ def main [] {
       stderr: []
     }
     {
-      name: "a failing test fails the run"
-      tool: nu-test
-      args: ["nu-tools/fails.test.nu"]
-      exit_code: 1
-      stdout: ["PASS nu-tools/fails.test.nu: test passes" "1 passed, 1 failed"]
-    }
-    {
       name: "a missing file fails to load"
       tool: nu-test
       args: ["nu-tools/missing.test.nu"]
@@ -58,6 +51,13 @@ def main [] {
       args: ["nu-tools/broken.test.nu" "nu-tools/noisy.test.nu"]
       exit_code: 1
       stdout: ["0 passed, 2 failed"]
+    }
+    {
+      name: "a failing test fails the run"
+      tool: nu-test
+      args: ["nu-tools/fails.test.nu"]
+      exit_code: 1
+      stdout: ["PASS nu-tools/fails.test.nu: test passes" "1 passed, 1 failed"]
     }
     {
       name: "a run without tests fails and says why"
@@ -118,6 +118,17 @@ def main [] {
     )
     assert equal $actual $expected $case.name
   }
+
+  let paths = (
+    ^nu-test "nu-tools/tmpdir.test.nu"
+    | complete
+    | get stderr
+    | lines
+    | where {|line| $line | str starts-with "TMPDIR=" }
+    | each {|line| $line | str replace "TMPDIR=" "" }
+  )
+  assert equal ($paths | length) 2 "each failing test prints its TMPDIR"
+  assert not equal $paths.0 $paths.1 "each test gets its own TMPDIR"
 
   assert equal (ls $env.TMPDIR) [] "nu-test leaves no scratch directory behind"
   rm $env.TMPDIR

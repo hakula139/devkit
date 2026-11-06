@@ -38,13 +38,11 @@ def diagnostics [target: string, text: string]: nothing -> list<string> {
 # The errors in `file`, or the reason it cannot be read.
 def check [file: string]: nothing -> list<string> {
   # `--ide-check` passes invalid UTF-8 in a comment.
-  let text = (
-    try {
-      open --raw $file | into string
-    } catch {|err|
-      return [$"($file): ($err.msg)"]
-    }
-  )
+  let text = try {
+    open --raw $file | into string
+  } catch {|err|
+    return [$"($file): ($err.msg)"]
+  }
   diagnostics $file $text
 }
 

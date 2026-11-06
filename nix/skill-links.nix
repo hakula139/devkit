@@ -7,13 +7,17 @@
 }:
 
 let
-  skipped = [
+  skippedSuffixes = [
     ".test.nu"
     ".stub.nu"
     ".testlib.nu"
   ];
+
+  packagedFile = file: !lib.any (suffix: lib.hasSuffix suffix file.name) skippedSuffixes;
 in
 {
+  inherit packagedFile;
+
   skillDirectoriesOption = {
     type = lib.types.listOf lib.types.str;
     default = [
@@ -27,9 +31,7 @@ in
     skill:
     lib.fileset.toSource {
       root = skill;
-      fileset = lib.fileset.fileFilter (
-        file: !lib.any (suffix: lib.hasSuffix suffix file.name) skipped
-      ) skill;
+      fileset = lib.fileset.fileFilter packagedFile skill;
     };
 
   skillLinks =

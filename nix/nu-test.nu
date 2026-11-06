@@ -90,10 +90,8 @@ def main [
 
   # A test may leave a read-only directory in its file's scratch, which `rm` cannot empty.
   for plan in $plans {
-    if ($plan.scratch | path exists) {
-      ^chmod -R u+rwx $plan.scratch
-      rm --recursive $plan.scratch
-    }
+    ^chmod -R u+rwx $plan.scratch
+    rm --recursive $plan.scratch
   }
 
   for result in $results {

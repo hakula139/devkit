@@ -10,7 +10,7 @@ A test is a command named `test <behavior>` in a `.test.nu` file, with assertion
 - **Load failures are tests.** A file that fails to parse or whose test names cannot be read reports a `(load)` entry with its output and counts as a failure. A file that prints while loading cannot report its test names, so it fails too.
 - **Stubs.** A `<name>.stub.nu` file beside a test file is installed as an executable `<name>` in the directory named by `NU_TEST_STUBS`, with a shebang line the runner writes in place of any the stub has. A test calls a stub by `$env.NU_TEST_STUBS | path join <name>` or prepends that directory to `PATH`.
 - **Shared helpers.** A `<name>.testlib.nu` file beside the test files holds builders that several of them `use`. `nuTests` copies it with the test files, and `mkNuApplication` leaves it out of the package.
-- **Scratch space.** `TMPDIR` points to a fresh empty directory for each test, and the runner removes each file's scratch directory afterwards, even if the file fails to load.
+- **Scratch space.** `TMPDIR` points to a fresh empty directory for each test, and the runner removes them after the run, even if the file fails to load.
 - **Exit codes.** The runner prints one `PASS` or `FAIL` line per test and a `passed, failed` summary, then exits nonzero if any test fails or no tests run.
 
 ## Run the check
@@ -27,7 +27,9 @@ devShells.default = pkgs.mkShell {
     dk.nushell
     dk.nu-test
   ];
-  inputsFrom = [ preCommit.shell ];
+  inputsFrom = [
+    preCommit.shell
+  ];
 };
 ```
 

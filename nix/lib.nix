@@ -6,12 +6,11 @@
   pkgs,
   git-hooks-nix,
   nushell,
+  packagedFile,
+  skillSource,
 }:
 
 let
-  inherit (pkgs) lib;
-  inherit (import ./skill-links.nix { inherit lib; }) skillSource;
-
   lockedTool =
     runtimeInputs: runner: command:
     pkgs.writeShellApplication {
@@ -41,5 +40,12 @@ in
     pkgs.uv
   ] "uv run --locked";
   nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
-  mkNuApplication = import ./mk-nu-application.nix { inherit pkgs nushell skillSource; };
+  mkNuApplication = import ./mk-nu-application.nix {
+    inherit
+      pkgs
+      nushell
+      packagedFile
+      skillSource
+      ;
+  };
 }

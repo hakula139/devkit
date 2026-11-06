@@ -5,6 +5,7 @@
 {
   pkgs,
   nushell,
+  packagedFile,
   skillSource,
 }:
 
@@ -21,17 +22,11 @@
 let
   inherit (pkgs) lib;
 
-  skipped = [
-    ".test.nu"
-    ".stub.nu"
-    ".testlib.nu"
-  ];
-
   source = lib.fileset.toSource {
     root = src;
-    fileset = lib.fileset.fileFilter (
-      file: file.hasExt "nu" && !lib.any (suffix: lib.hasSuffix suffix file.name) skipped
-    ) src;
+    fileset = lib.fileset.intersection (lib.fileset.fileFilter (file: file.hasExt "nu") src) (
+      lib.fileset.fileFilter packagedFile src
+    );
   };
 
   pathArgs = lib.optionalString (
@@ -41,7 +36,9 @@ in
 pkgs.stdenvNoCC.mkDerivation {
   inherit pname version;
   src = source;
-  nativeBuildInputs = [ pkgs.makeBinaryWrapper ];
+  nativeBuildInputs = [
+    pkgs.makeBinaryWrapper
+  ];
   dontBuild = true;
 
   # Nushell names `main` after the script file in `--help`.

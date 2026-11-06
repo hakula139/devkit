@@ -79,7 +79,9 @@ packages.default = dk.mkNuApplication {
   pname = "my-tool";
   version = "0.1.0";
   src = ./src;
-  skills = [ ./skills/my-tool ];
+  skills = [
+    ./skills/my-tool
+  ];
 };
 ```
 
@@ -93,7 +95,9 @@ The same `devkit.lib` provides the skill option and links for a Home Manager mod
 options.programs.my-tool.skillDirectories = lib.mkOption devkit.lib.skillDirectoriesOption;
 
 config = lib.mkIf cfg.enable {
-  home.packages = [ cfg.package ];
+  home.packages = [
+    cfg.package
+  ];
   home.file = devkit.lib.skillLinks {
     inherit (cfg) package;
     name = "my-tool";

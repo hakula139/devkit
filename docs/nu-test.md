@@ -7,7 +7,7 @@
 A test is a command named `test <behavior>` in a `.test.nu` file, with assertions from `std/assert`. A test name may hold only letters, digits, spaces, and `,.:-`, since the runner passes it to `nu --commands` as source text, where a quote, `;`, or `#` ends or breaks the command.
 
 - **One process per test.** The runner collects test names from the files and runs the tests in parallel, each in its own `nu` process, so a test that changes its environment or exits cannot affect the others.
-- **Load failures are tests.** A file that fails to parse or whose test names cannot be read reports a `(load)` entry with its output and counts as a failure. A file that prints while loading cannot report its test names, so it fails too.
+- **Load failures are tests.** A file that fails to parse or whose test names cannot be read reports a `(load)` entry with its output and the error, and counts as a failure. A file that prints while loading cannot report its test names, so it fails too.
 - **Stubs.** A `<name>.stub.nu` file beside a test file is installed as an executable `<name>` in the directory named by `NU_TEST_STUBS`, with a shebang line the runner writes in place of any the stub has. A test calls a stub by `$env.NU_TEST_STUBS | path join <name>` or by prepending that directory to `PATH`.
 - **Shared helpers.** A `<name>.testlib.nu` file beside the test files holds builders that several of them `use`. `nuTests` copies it with the test files, and `mkNuApplication` leaves it out of the package.
 - **Scratch space.** `TMPDIR` points to a fresh empty directory for each test, and the runner removes these directories after the run, even if the file fails to load.

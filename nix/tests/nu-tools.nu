@@ -122,6 +122,9 @@ def main [] {
     assert equal $actual $expected $case.name
   }
 
+  let noisy = (^nu-test "nu-tools/noisy.test.nu" | complete)
+  assert str contains $noisy.stderr "Error while parsing JSON text" "a load failure says why"
+
   let paths = (
     ^nu-test "nu-tools/tmpdir.test.nu"
     | complete

@@ -54,8 +54,8 @@ def plan-file [file: string]: nothing -> record {
           {file: $file, name: $name, run: {exit_code: 1, stdout: "", stderr: $message}}
         }
       }
-    } catch {
-      [(load-failure $file $found)]
+    } catch {|err|
+      [(load-failure $file ($found | update stderr $err.rendered))]
     }
   }
 

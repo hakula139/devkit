@@ -45,6 +45,32 @@ def main [] {
       stdout: ["0 passed, 2 failed"]
     }
     {
+      name: "a file that prints while it loads fails and says why"
+      tool: nu-test
+      args: ["nu-tools/noisy.test.nu"]
+      exit_code: 1
+      stdout: ["0 passed, 1 failed"]
+      stderr: [
+        "FAIL nu-tools/noisy.test.nu: (load)"
+        "loading"
+        "["
+        '  "test passes after printing"'
+        "]"
+        "A test file must not print to stdout or exit while it loads."
+      ]
+    }
+    {
+      name: "a file that exits while it loads fails and says why"
+      tool: nu-test
+      args: ["nu-tools/exits.test.nu"]
+      exit_code: 1
+      stdout: ["0 passed, 1 failed"]
+      stderr: [
+        "FAIL nu-tools/exits.test.nu: (load)"
+        "A test file must not print to stdout or exit while it loads."
+      ]
+    }
+    {
       name: "a failing test fails the run"
       tool: nu-test
       args: ["nu-tools/fails.test.nu"]

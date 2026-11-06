@@ -43,9 +43,9 @@ def plan-file [file: string]: nothing -> record {
     [(load-failure $file $found)]
   } else {
     install-stubs ($path | path dirname) $stubs
-    try {
-      $found.stdout
-      | from json
+    let names = try { $found.stdout | from json }
+    if ($names | describe | str starts-with "list") {
+      $names
       | each {|name|
         if ($name =~ '^test [A-Za-z0-9 ,.:-]+$') {
           {file: $file, name: $name, path: $path, scratch: $scratch, stubs: $stubs}
@@ -54,8 +54,9 @@ def plan-file [file: string]: nothing -> record {
           {file: $file, name: $name, run: {exit_code: 1, stdout: "", stderr: $message}}
         }
       }
-    } catch {
-      [(load-failure $file $found)]
+    } else {
+      let message = "A test file must not print to stdout or exit while it loads."
+      [(load-failure $file ($found | update stderr { $in + $message }))]
     }
   }
 

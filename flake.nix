@@ -88,14 +88,6 @@
           src = ./.;
           hooks.nu-check.enable = true;
         };
-
-        tools = pkgs.symlinkJoin {
-          name = "devkit";
-          paths = [
-            dk.nu-check
-            dk.nu-test
-          ];
-        };
       in
       {
         # ------------------------------------------------------------------------------------------
@@ -174,10 +166,18 @@
             runtimeInputs = [ pkgs.jq ];
           };
 
-          nu-tools = pkgs.runCommand "devkit-nu-tools" { nativeBuildInputs = [ tools ]; } ''
-            ${lib.getExe dk.nushell} --no-config-file ${./nix/tests}/nu-tools.nu
-            touch "$out"
-          '';
+          nu-tools =
+            pkgs.runCommand "devkit-nu-tools"
+              {
+                nativeBuildInputs = [
+                  dk.nu-check
+                  dk.nu-test
+                ];
+              }
+              ''
+                ${lib.getExe dk.nushell} --no-config-file ${./nix/tests}/nu-tools.nu
+                touch "$out"
+              '';
 
           nu-application =
             let
@@ -213,11 +213,6 @@
               touch "$out"
             '';
         };
-
-        # ------------------------------------------------------------------------------------------
-        # Packages
-        # ------------------------------------------------------------------------------------------
-        packages.default = tools;
 
         # ------------------------------------------------------------------------------------------
         # Dev shell

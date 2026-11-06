@@ -10,7 +10,6 @@ A repository releases from its own `tag.yml`, which calls devkit's `release.yml`
 - `packages.default` exposes a `version` attribute, and it builds on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
 - `CHANGELOG.md` has a section titled with the tag number without `v`, such as `## [1.2.3]`.
 - The `CACHIX_AUTH_TOKEN` secret can push and pin the `hakula` Cachix cache.
-- The [cache caller](#restore-a-tags-cache-pin), which restores a lost pin, is committed.
 
 ```yaml
 # .github/workflows/tag.yml
@@ -78,6 +77,8 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 If the tagged commit has no passing push or dispatched CI run, rerun its failed CI jobs or dispatch one with `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once that run passes.
 
+To restore a deleted pin, check out the tag on each system it pins, `x86_64-linux` and `aarch64-darwin`, and run `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`.
+
 ### Write your own release workflow
 
 A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions and cache workflow from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
@@ -124,7 +125,7 @@ publish:
           dist/my-tool-aarch64-darwin.tar.gz
 ```
 
-The `nix` job pins the cache as `release.yml` does, so it needs a package that builds on both systems the prerequisites name. A repository whose package builds on fewer systems drops the job and lists `tagged-ci` in its place under `publish`, and its tags then have no pin to restore.
+The `nix` job pins the cache as `release.yml` does, so it needs a package that builds on both systems the prerequisites name. A repository whose package builds on fewer systems drops the job and lists `tagged-ci` in its place under `publish`.
 
 `assets` takes newline-separated globs relative to the repository root. The step fails when a named file is missing or a glob matches nothing. Name each file, since a glob that matches only some archives publishes a partial set.
 
@@ -143,34 +144,9 @@ tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
   && gh release edit v1.2.3 --notes-file "$dir/notes.md"
 ```
 
-### Restore a tag's cache pin
-
-`release.yml` pins the `out` output of `packages.default` on `x86_64-linux` and `aarch64-darwin` as `<repository>-<tag>-<system>`, such as `my-tool-v1.2.3-x86_64-linux`, which keeps it in the cache. If a pin goes missing, such as after a manual deletion, dispatch a thin caller on the tag. A dispatch runs the workflow file as it exists at the tag, so the caller must be committed before the tag:
-
-```yaml
-# .github/workflows/nix-cache.yml
-name: Nix Cache
-
-on:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  nix:
-    uses: hakula139/devkit/.github/workflows/nix-cache.yml@v1
-    secrets:
-      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-```
-
-```bash
-gh workflow run nix-cache.yml --ref v1.2.3
-```
-
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit's `packages.default` has no `version` and its `tag.yml` checks none. devkit's `nix-cache.yml` also runs on dispatch, so `gh workflow run nix-cache.yml --ref v1.2.3` restores one of its pins without a thin caller.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package. Its `tag.yml` runs `tagged-ci` and `publish-release` directly and pins nothing in the cache.
 
 Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 

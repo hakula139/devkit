@@ -11,18 +11,34 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  release:
+  tagged-ci:
+    name: Check Tagged Commit CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
     permissions:
       actions: read
+    steps:
+      - name: Wait for CI on the tagged commit
+        uses: $/actions/tagged-ci
+
+  publish:
+    name: Publish GitHub Release
+    needs: tagged-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
       contents: write
-    uses: $/.github/workflows/release.yml
-    secrets:
-      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Publish release
+        uses: $/actions/publish-release
 
   major-tag:
     name: Move the Major Tag
     if: ${{ !contains(github.ref_name, '-') }}
-    needs: release
+    needs: publish
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

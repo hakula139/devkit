@@ -4,7 +4,7 @@ devkit publishes a moving major tag. Consumers reference `@v1` for actions and w
 
 ## Release your repository
 
-A repository releases from its own `tag.yml`, which calls devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marked as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. A deleted pin is restored locally with `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`. The repository needs these before its first release:
+A repository releases from its own `tag.yml`, which calls devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marked as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. The repository needs these before its first release:
 
 - CI runs from `.github/workflows/ci.yml` on pushes to the default branch, since `tagged-ci` counts only push and dispatched runs of that workflow on the tagged commit.
 - `packages.default` exposes a `version` attribute, and it builds on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
@@ -77,6 +77,8 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 If the tagged commit has no passing push or dispatched CI run, rerun its failed CI jobs or dispatch one with `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once that run passes.
 
+To restore a deleted pin, check out the tag on each system it pins, `x86_64-linux` and `aarch64-darwin`, and run `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`.
+
 ### Write your own release workflow
 
 A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions and cache workflow from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
@@ -144,7 +146,7 @@ tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
 
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit's `tag.yml` runs `tagged-ci` and `publish-release` directly. devkit publishes no package, so its release pins nothing in the cache.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package. Its `tag.yml` runs `tagged-ci` and `publish-release` directly and pins nothing in the cache.
 
 Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 

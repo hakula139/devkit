@@ -22,7 +22,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── nix/           # Hook baseline, library, Nushell tooling, and tests
 ├── CHANGELOG.md   # Release notes, one section per tag
 ├── default.json   # The Renovate preset consumers extend
-├── flake.nix      # The exported `lib`, package, checks, and dev shell
+├── flake.nix      # The exported `lib`, checks, and dev shell
 └── README.md      # What each piece is and how a repository adopts it
 ```
 

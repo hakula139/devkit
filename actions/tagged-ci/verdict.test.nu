@@ -6,7 +6,7 @@
 
 use std/assert
 
-const FILTER_FILE = path self verdict.jq
+const FILTER_FILE = path self "verdict.jq"
 
 def verdict [runs: table]: nothing -> record {
   (

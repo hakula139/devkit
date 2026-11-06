@@ -32,6 +32,8 @@ jobs:
         with:
           client-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-workflows: write
 
       - name: Checkout
         uses: actions/checkout@v7
@@ -48,7 +50,8 @@ jobs:
               --sort=-v:refname \
               | grep \
                 -v \
-                -m 1 -- -
+                -m 1 \
+                -e -
           )
           if [[ "$latest" != "$GITHUB_REF_NAME" ]]; then
             echo "Skipping the major tag, since $latest is newer than $GITHUB_REF_NAME"

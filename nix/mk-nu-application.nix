@@ -5,6 +5,7 @@
 {
   pkgs,
   nushell,
+  skillSource,
 }:
 
 {
@@ -51,11 +52,12 @@ pkgs.stdenvNoCC.mkDerivation {
   ''
   + lib.concatMapStrings (skill: ''
     mkdir -p $out/share/skills
-    cp -r ${skill} $out/share/skills/${baseNameOf skill}
+    cp -r ${skillSource skill} $out/share/skills/${baseNameOf skill}
   '') skills
   + ''
     makeWrapper ${lib.getExe nushell} $out/bin/${entry} \
-      --add-flags "--no-config-file $out/share/${pname}/${entry}" ${pathArgs}
+      --add-flags "--no-config-file $out/share/${pname}/${entry}" \
+      ${pathArgs}
   '';
 
   meta = {

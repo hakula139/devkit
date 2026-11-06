@@ -1,3 +1,3 @@
 def greet [name: string] {}
-greet "café" extra
+greet "café" "extra"
 $missing

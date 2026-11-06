@@ -3,11 +3,20 @@
 # ==================================================================================================
 # Nushell Test Runner
 # ==================================================================================================
-# Each `test <behavior>` in a `.test.nu` file runs in its own `nu` process.
+# A test is a command named `test <behavior>` in a `.test.nu` file. Each runs in its own `nu`
+# process with its own `TMPDIR`, so a test that changes its environment or exits cannot affect the
+# others. Each `<name>.stub.nu` beside a test file is installed as `<name>` in `NU_TEST_STUBS`.
 # ==================================================================================================
 
-def nu-run [file: string, body: string]: nothing -> record {
-  ^$nu.current-exe --no-config-file --commands $"source ($file | to nuon)\n($body)" | complete
+def nu-run [file: string, body: string, tmp: string, stubs: string]: nothing -> record {
+  with-env {TMPDIR: $tmp, NU_TEST_STUBS: $stubs} {
+    (
+      ^$nu.current-exe
+        --no-config-file
+        --commands $"source ($file | to nuon)\n($body)"
+      | complete
+    )
+  }
 }
 
 # Install each `<name>.stub.nu` beside `file` in `dir` as an executable `<name>`, whose shebang
@@ -27,48 +36,65 @@ def load-failure [file: string, run: record]: nothing -> record {
   {file: $file, name: "(load)", run: ($run | upsert exit_code 1)}
 }
 
-# The outcome of every test in `file`, or a single failure when the file does not load.
-def run-file [file: string]: nothing -> list<record> {
+# Create the scratch directory and stubs for `file`, then return them with one job per test, or
+# one job carrying the load failure when the file does not load.
+def plan-file [file: string]: nothing -> record {
   let path = ($file | path expand)
-  let found = (nu-run $path "scope commands | where name starts-with 'test ' | get name | to json")
-  let names = (try { $found.stdout | from json } catch { null })
-  if $found.exit_code != 0 or $names == null {
-    return [(load-failure $file $found)]
+  let scratch = (mktemp --directory)
+  if not ($file | path exists) {
+    return {scratch: $scratch, jobs: [(load-failure $file {stdout: "File not found", stderr: ""})]}
   }
 
-  $names | each {|name| {file: $file, name: $name, run: (nu-run $path $name)} }
+  let stubs = ($scratch | path join "stubs")
+  install-stubs $file $stubs
+  let query = "scope commands | where name starts-with 'test ' | get name | to json"
+  let found = (nu-run $path $query $scratch $stubs)
+  let jobs = if $found.exit_code != 0 {
+    [(load-failure $file $found)]
+  } else {
+    try {
+      $found.stdout
+      | from json
+      | each {|name| {file: $file, name: $name, path: $path, scratch: $scratch, stubs: $stubs} }
+    } catch {
+      [(load-failure $file $found)]
+    }
+  }
+
+  {scratch: $scratch, jobs: $jobs}
 }
 
-# Run each `test <behavior>` command in the given files, exiting nonzero if any fails or none run.
+# Run `job` in a fresh `TMPDIR` under its file's scratch, or return the load failure.
+def run-job [job: record]: nothing -> record {
+  if ($job.run? != null) {
+    return $job
+  }
+
+  let tmp = (mktemp --directory --tmpdir-path $job.scratch)
+  {file: $job.file, name: $job.name, run: (nu-run $job.path $job.name $tmp $job.stubs)}
+}
+
+# Run every test in the given files, exiting nonzero if any fails or none run.
 def main [
   ...files: string # `.test.nu` files to run
 ] {
+  # Nested `par-each` builds a private thread pool per inner call, so plan every test first and
+  # run the flat job list on one default-size pool.
+  let plans = ($files | par-each --keep-order {|file| plan-file $file })
   let results = (
-    $files
-    | each {|file|
-      if not ($file | path exists) {
-        return [(load-failure $file {stdout: "File not found", stderr: ""})]
-      }
-
-      let scratch = (mktemp --directory)
-      let stubs = ($scratch | path join stubs)
-      let outcomes = (try {
-        install-stubs $file $stubs
-        with-env {TMPDIR: $scratch, NU_TEST_STUBS: $stubs} { run-file $file }
-      } catch {|err|
-        [(load-failure $file {stdout: $err.msg, stderr: ""})]
-      })
-
-      # A test may remove its scratch directory or leave a store copy in it that `rm` cannot empty.
-      if ($scratch | path exists) {
-        ^chmod -R u+rwx $scratch
-        rm --recursive $scratch
-      }
-
-      $outcomes
-    }
+    $plans
+    | get jobs
     | flatten
+    | par-each --keep-order {|job| run-job $job }
   )
+
+  # A test may leave a read-only directory in its file's scratch, which `rm` cannot empty.
+  for plan in $plans {
+    if ($plan.scratch | path exists) {
+      ^chmod -R u+rwx $plan.scratch
+      rm --recursive $plan.scratch
+    }
+  }
 
   for result in $results {
     if $result.run.exit_code == 0 {

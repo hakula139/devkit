@@ -83,7 +83,7 @@ packages.default = dk.mkNuApplication {
 };
 ```
 
-[Nushell test runner](docs/nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`. It packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`, and copies each `skills` directory to `share/skills/<basename>`.
+[Nushell test runner](docs/nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`. It packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`, and copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill. It sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
 
 `mkNuApplication`, `nuTests`, and the `nu-*` tools run on `dk.nushell`, which is the consumer's `pkgs.nushell` when it is 0.116 or later, and otherwise the one from devkit's `nixpkgs-unstable` input, so `nixpkgs-unstable` must not follow a stable nixpkgs.
 

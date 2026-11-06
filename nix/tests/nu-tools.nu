@@ -17,48 +17,47 @@ def main [] {
     {
       name: "passing tests exit 0"
       tool: nu-test
-      args: [nu-tools/stubs.test.nu]
+      args: ["nu-tools/stubs.test.nu"]
       exit_code: 0
       stdout: [
         "PASS nu-tools/stubs.test.nu: test a stub runs with or without a shebang"
-        "PASS nu-tools/stubs.test.nu: test the scratch directory holds only the stubs"
+        "PASS nu-tools/stubs.test.nu: test each test starts with an empty scratch directory"
         "2 passed, 0 failed"
       ]
       stderr: []
     }
     {
-      name: "a test that removes its scratch directory or locks a directory in it still reports"
+      name: "a test that leaves a locked directory in its scratch still reports"
       tool: nu-test
-      args: [nu-tools/removes-scratch.test.nu nu-tools/locked.test.nu]
+      args: ["nu-tools/locked.test.nu"]
       exit_code: 0
       stdout: [
-        "PASS nu-tools/removes-scratch.test.nu: test removes its scratch directory"
         "PASS nu-tools/locked.test.nu: test leaves a locked directory behind"
-        "2 passed, 0 failed"
+        "1 passed, 0 failed"
       ]
       stderr: []
     }
     {
       name: "a failing test fails the run"
       tool: nu-test
-      args: [nu-tools/fails.test.nu]
+      args: ["nu-tools/fails.test.nu"]
       exit_code: 1
       stdout: ["PASS nu-tools/fails.test.nu: test passes" "1 passed, 1 failed"]
     }
     {
-      name: "each load failure counts"
-      tool: nu-test
-      args: [nu-tools/broken.test.nu nu-tools/noisy.test.nu]
-      exit_code: 1
-      stdout: ["0 passed, 2 failed"]
-    }
-    {
       name: "a missing file fails to load"
       tool: nu-test
-      args: [nu-tools/missing.test.nu]
+      args: ["nu-tools/missing.test.nu"]
       exit_code: 1
       stdout: ["0 passed, 1 failed"]
       stderr: ["FAIL nu-tools/missing.test.nu: (load)" "File not found"]
+    }
+    {
+      name: "each load failure counts"
+      tool: nu-test
+      args: ["nu-tools/broken.test.nu" "nu-tools/noisy.test.nu"]
+      exit_code: 1
+      stdout: ["0 passed, 2 failed"]
     }
     {
       name: "a run without tests fails and says why"
@@ -69,9 +68,17 @@ def main [] {
       stderr: ['No "test <behavior>" commands found in the given files.']
     }
     {
+      name: "a file that is not UTF-8 fails the check"
+      tool: nu-check
+      args: ["nu-tools/invalid-utf8.nu"]
+      exit_code: 1
+      stdout: []
+      stderr: ["nu-tools/invalid-utf8.nu: Non-UTF8 string"]
+    }
+    {
       name: "every file is checked, and an error names its line and column"
       tool: nu-check
-      args: [nu-tools/stubs.test.nu nu-tools/positions.nu nu-tools/shebang.stub.nu]
+      args: ["nu-tools/stubs.test.nu" "nu-tools/positions.nu" "nu-tools/shebang.stub.nu"]
       exit_code: 1
       stdout: []
       stderr: [
@@ -80,9 +87,9 @@ def main [] {
       ]
     }
     {
-      name: "an error at a file's end still names its line and column, and each error in a loaded module is reported once"
+      name: "an error at a file's end stays in it, and each in a loaded module is reported once"
       tool: nu-check
-      args: [nu-tools/broken.test.nu nu-tools/uses-broken.nu]
+      args: ["nu-tools/broken.test.nu" "nu-tools/uses-broken.nu"]
       exit_code: 1
       stdout: []
       stderr: [
@@ -91,14 +98,6 @@ def main [] {
         "nu-tools/uses-broken.nu: Expected keyword. (in a module it loads)"
         "nu-tools/uses-broken.nu: Unclosed delimiter. (in a module it loads)"
       ]
-    }
-    {
-      name: "a file that is not UTF-8 fails the check"
-      tool: nu-check
-      args: [nu-tools/invalid-utf8.nu]
-      exit_code: 1
-      stdout: []
-      stderr: ["nu-tools/invalid-utf8.nu: Non-UTF8 string"]
     }
   ]
 

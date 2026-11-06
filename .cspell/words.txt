@@ -16,6 +16,7 @@ prek
 rhysd
 shfmt
 statix
+stdenv
 substituters
 taplo
 venv

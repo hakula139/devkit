@@ -59,6 +59,8 @@
           pkgs.nushell
         else
           nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.nushell;
+
+      skillHelpers = import ./nix/skill-links.nix { inherit lib; };
     in
     # ----------------------------------------------------------------------------------------------
     # Library
@@ -66,7 +68,7 @@
     {
       lib = {
         inherit eachSystem systems;
-        inherit (import ./nix/skill-links.nix { inherit lib; }) skillDirectoriesOption skillLinks;
+        inherit (skillHelpers) skillDirectoriesOption skillLinks skillSource;
 
         mkLib =
           pkgs:

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased
 
 ### Changed
 
@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `nu-test` installs a test file's stubs when the file's directory name holds glob characters such as `[1]`.
 - `publish-release` passes the release notes to `gh` without writing them to a file, so an `assets` glob that matches `*.md` no longer attaches a `release-notes.md` to the release.
 
-## [1.0.0-rc.2] - 2026-11-06
+## 1.0.0-rc.2 - 2026-11-06
 
 ### Changed
 
@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The Renovate preset's custom manager matches only a flake reference that pins the major tag, such as `github:hakula139/devkit/v1`, and now moves `v1` to `v2` correctly. It leaves a full-version ref such as `v1.0.0-rc.1` unchanged. In rc.1, the same manager broke a major update by rewriting the owner in `hakula139` to `hakula239`.
 - The `nu-test` runner rejects a test name that holds characters outside letters, digits, spaces, and `,.:-`, so a `;` in a name can no longer inject a command and an apostrophe no longer breaks the run. Rename any test whose name falls outside that set.
 
-## [1.0.0-rc.1] - 2026-11-06
+## 1.0.0-rc.1 - 2026-11-06
 
 ### Added
 
@@ -46,7 +46,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The `setup-nix`, `ci-result`, `tagged-ci`, and `publish-release` composite actions.
 - The `nix.yml`, `release.yml`, and `nix-cache.yml` reusable workflows.
 - The Renovate preset in `default.json`.
-
-[Unreleased]: https://github.com/hakula139/devkit/compare/v1.0.0-rc.2...HEAD
-[1.0.0-rc.2]: https://github.com/hakula139/devkit/compare/v1.0.0-rc.1...v1.0.0-rc.2
-[1.0.0-rc.1]: https://github.com/hakula139/devkit/releases/tag/v1.0.0-rc.1

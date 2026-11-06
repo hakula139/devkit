@@ -4,12 +4,12 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 ## Read before you edit
 
-| When the change touches                                             | Read                                                   |
-| ------------------------------------------------------------------- | ------------------------------------------------------ |
-| The pre-commit baseline or the dev shell                            | [Hooks](docs/hooks.md)                                 |
-| `nu-test`, `nu-check`, or `nuTests`                                 | [Nushell test runner](docs/nu-test.md)                 |
-| An action, a reusable workflow, a release, or a versioning decision | [Releasing](docs/releasing.md)                         |
-| The Renovate preset                                                 | [Renovate preset](README.md#adopt-the-renovate-preset) |
+| When the change touches                                                                   | Read                                                   |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| The pre-commit baseline or the dev shell                                                  | [Hooks](docs/hooks.md)                                 |
+| `nu-test`, `nu-check`, or `nuTests`                                                       | [Nushell test runner](docs/nu-test.md)                 |
+| An action, a reusable workflow, the git-cliff config, a release, or a versioning decision | [Releasing](docs/releasing.md)                         |
+| The Renovate preset                                                                       | [Renovate preset](README.md#adopt-the-renovate-preset) |
 
 ## Layout
 
@@ -21,6 +21,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── docs/          # Hooks, the Nushell test runner, and releasing
 ├── nix/           # Hook baseline, library, Nushell tooling, and tests
 ├── CHANGELOG.md   # Release notes, one section per tag
+├── cliff.toml     # The shared git-cliff config that drafts each release section
 ├── default.json   # The Renovate preset consumers extend
 ├── flake.nix      # The exported `lib`, checks, and dev shell
 └── README.md      # What each piece is and how a repository adopts it

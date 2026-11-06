@@ -21,7 +21,7 @@ jobs:
       - name: Wait for CI on the tagged commit
         uses: $/actions/tagged-ci
 
-  nix:
+  nix-cache:
     needs: tagged-ci
     uses: $/.github/workflows/nix-cache.yml
     secrets:
@@ -29,7 +29,7 @@ jobs:
 
   publish:
     name: Publish GitHub Release
-    needs: nix
+    needs: nix-cache
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

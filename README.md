@@ -174,7 +174,7 @@ Extend the preset from `.github/renovate.json`:
 
 A preset change applies to every consumer on its next Renovate run, without a devkit release. Pin the reference to `github>hakula139/devkit#v1` to take preset changes only with a devkit release, or to `#v1.2.3` to take them when you bump the reference.
 
-The preset automerges daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates, all with squash, so the repository must allow squash merging. Every other update opens for review. A devkit major arrives in the `devkit` group's own PR, which moves the `@v1` references and, through the preset's custom manager, the `github:hakula139/devkit/v1` flake reference. That manager leaves `flake.lock` alone, so run `nix flake update devkit` on that PR before merging it.
+The preset automerges daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates, all with squash, so the repository must allow squash merging. Every other update opens for review. A devkit major arrives in the `devkit` group's own PR, which moves the `@v1` references, the `#v1` preset reference, and, through the preset's custom manager, the `github:hakula139/devkit/v1` flake reference. That manager leaves `flake.lock` alone, so run `nix flake update devkit` on that PR before merging it.
 
 ## Development
 

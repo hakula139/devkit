@@ -8,7 +8,7 @@ use std/assert
 
 const FILTER_FILE = path self "tagged-ci.jq"
 
-def verdict [runs: table]: nothing -> record {
+def tagged-ci [runs: table]: nothing -> record {
   (
     [{workflow_runs: $runs}]
     | to json
@@ -57,7 +57,7 @@ def "test the verdict" [] {
   ]
 
   for case in $cases {
-    let result = (verdict $case.runs)
+    let result = (tagged-ci $case.runs)
     assert equal $result.exit_code 0 $"($case.name): ($result.stderr)"
 
     assert equal ($result.stdout | str trim) $case.expected $case.name

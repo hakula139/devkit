@@ -1,6 +1,8 @@
 {
   "config": {
     "code-block-style": { "style": "fenced" },
+    // The consistent default would adopt the asterisks dprint keeps in intraword *partial*ly.
+    "emphasis-style": { "style": "underscore" },
     "line-length": false,
     "no-duplicate-heading": { "siblings_only": true },
     "ol-prefix": { "style": "ordered" },

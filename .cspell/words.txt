@@ -22,3 +22,4 @@ substituters
 taiki
 taplo
 venv
+WakaTime

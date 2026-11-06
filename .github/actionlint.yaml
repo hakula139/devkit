@@ -5,3 +5,6 @@ paths:
       # (rhysd/actionlint#711). Drop these ignores once it does.
       - 'action "\$/[^"]+" in invalid format'
       - 'reusable workflow call "\$/[^"]+"'
+      # actionlint's bundled metadata predates `client-id` in create-github-app-token v3.
+      - 'missing input "app-id" which is required by action "actions/create-github-app-token@v3"'
+      - 'input "client-id" is not defined in action "actions/create-github-app-token@v3"'

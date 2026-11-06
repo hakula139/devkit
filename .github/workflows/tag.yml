@@ -25,18 +25,31 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions:
-      contents: write
     steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Move the major tag
         run: |
-          major=${GITHUB_REF_NAME%%.*}
-          latest=$(git tag --list "$major.*" --sort=-v:refname | grep -v -m 1 -- -)
+          major="${GITHUB_REF_NAME%%.*}"
+          latest=$(
+            git tag \
+              --list "$major.*" \
+              --sort=-v:refname \
+              | grep \
+                -v \
+                -m 1 -- -
+          )
           if [[ "$latest" != "$GITHUB_REF_NAME" ]]; then
             echo "Skipping the major tag, since $latest is newer than $GITHUB_REF_NAME"
             exit 0

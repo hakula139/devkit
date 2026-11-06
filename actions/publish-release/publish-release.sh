@@ -8,7 +8,11 @@ set -euo pipefail
 
 parse-changelog CHANGELOG.md "${GITHUB_REF_NAME#v}" >release-notes.md
 
-options=(--verify-tag --title "$GITHUB_REF_NAME" --notes-file release-notes.md)
+options=(
+  --verify-tag
+  --title "$GITHUB_REF_NAME"
+  --notes-file release-notes.md
+)
 if [[ "$GITHUB_REF_NAME" == *-* ]]; then
   options+=(--prerelease)
 fi

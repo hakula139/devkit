@@ -39,7 +39,12 @@ jobs:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
           SYSTEM: ${{ matrix.system }}
         run: |
-          store_path=$(nix build --no-link --print-out-paths --print-build-logs .#default.out)
+          pin="${GITHUB_REPOSITORY#*/}-${GITHUB_REF_NAME}-${SYSTEM}"
+          store_path=$(
+            nix build .#default.out \
+              --no-link \
+              --print-out-paths \
+              --print-build-logs
+          )
           cachix push "$CACHIX_NAME" "$store_path"
-          cachix pin "$CACHIX_NAME" "${GITHUB_REPOSITORY#*/}-${GITHUB_REF_NAME}-${SYSTEM}" \
-            "$store_path" --keep-revisions 1
+          cachix pin "$CACHIX_NAME" "$pin" "$store_path" --keep-revisions 1

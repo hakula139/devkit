@@ -11,7 +11,9 @@ while true; do
     gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&per_page=100" \
       --paginate \
       --slurp \
-      | jq -r -f "$GITHUB_ACTION_PATH/verdict.jq"
+      | jq \
+        -r \
+        -f "$GITHUB_ACTION_PATH/verdict.jq"
   ); then
     echo "::error::Could not read the runs of .github/workflows/ci.yml, which tagged-ci waits for."
     exit 1

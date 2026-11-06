@@ -68,7 +68,11 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
    ```bash
    git fetch origin
-   git tag v1.2.3 "$(gh pr view 123 --json mergeCommit --jq .mergeCommit.oid)"
+   git tag v1.2.3 "$(
+     gh pr view 123 \
+       --json mergeCommit \
+       --jq .mergeCommit.oid
+   )"
    git push origin v1.2.3
    ```
 
@@ -130,11 +134,13 @@ The `nix` job pins the cache as `release.yml` does, so it needs a package that b
 
 ```bash
 dir=$(mktemp -d)
-gh release download -R taiki-e/parse-changelog \
-  -p 'parse-changelog-x86_64-unknown-linux-musl.tar.gz' --dir "$dir"
+gh release download \
+  -R taiki-e/parse-changelog \
+  -p 'parse-changelog-x86_64-unknown-linux-musl.tar.gz' \
+  --dir "$dir"
 tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
-"$dir/parse-changelog" CHANGELOG.md 1.2.3 >"$dir/notes.md" &&
-  gh release edit v1.2.3 --notes-file "$dir/notes.md"
+"$dir/parse-changelog" CHANGELOG.md 1.2.3 >"$dir/notes.md" \
+  && gh release edit v1.2.3 --notes-file "$dir/notes.md"
 ```
 
 ### Restore a tag's cache pin
@@ -166,9 +172,11 @@ gh workflow run nix-cache.yml --ref v1.2.3
 
 Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit's `packages.default` has no `version` and its `tag.yml` checks none. devkit's `nix-cache.yml` also runs on dispatch, so `gh workflow run nix-cache.yml --ref v1.2.3` restores one of its pins without a thin caller.
 
+Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
+
 Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
 
-The tag ruleset may protect `v1.2.3` from updates and deletion, but it must let `tag.yml` move the major tag with `contents: write`.
+The tag ruleset may protect `v1.2.3` from updates and deletion, but it must let the release app move the major tag.
 
 ### Roll back
 

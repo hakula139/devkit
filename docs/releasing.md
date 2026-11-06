@@ -4,7 +4,7 @@ devkit publishes a moving major tag. Consumers reference `@v1` for actions and w
 
 ## Release your repository
 
-A repository releases from its own `tag.yml`, which calls devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marked as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. The repository needs these before its first release:
+A repository releases from its own `tag.yml`, which calls devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marking it as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. The repository needs these before its first release:
 
 - CI runs from `.github/workflows/ci.yml` on pushes to the default branch, since `tagged-ci` counts only push and dispatched runs of that workflow on the tagged commit.
 - `packages.default` exposes a `version` attribute, and it builds on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
@@ -69,7 +69,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
      --prepend CHANGELOG.md
    ```
 
-   The draft keeps `feat`, `fix`, `perf`, and any `!` title, so a PR that changes what consumers see takes one of those types. git-cliff counts the commits it skips, and `-vv` lists them.
+   The draft keeps `feat`, `fix`, `perf`, and any `!` title, so a PR that changes what consumers see uses one of those types. git-cliff counts the commits it skips, and `-vv` lists them.
 
    A stable section covers its prereleases. For a prerelease such as `v1.3.0-rc.2`, add `--tag-pattern '^v[0-9]'` so the section starts at the previous tag of any kind.
 
@@ -89,13 +89,13 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
    git push origin v1.2.3
    ```
 
-If the tagged commit has no passing push or dispatched CI run, rerun its failed CI jobs or dispatch one with `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once that run passes.
+If the tagged commit has no passing push or dispatched CI run, rerun its failed CI jobs or dispatch a run with `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once that run passes.
 
-To restore a deleted pin, check out the tag on each system it pins, `x86_64-linux` and `aarch64-darwin`, and run `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`.
+To restore a deleted pin, check out the tag on each system it pins (`x86_64-linux` and `aarch64-darwin`) and run `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`.
 
 ### Write your own release workflow
 
-A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
+A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run alongside its `version` job and its own `build` job, which uploads the archives as artifacts:
 
 ```yaml
 tagged-ci:
@@ -139,13 +139,13 @@ publish:
           dist/my-tool-aarch64-darwin.tar.gz
 ```
 
-A repository whose package builds on fewer systems drops the `nix-cache` job and lists `tagged-ci` in its place in `publish`'s `needs`.
+A repository whose package builds on fewer systems drops the `nix-cache` job and replaces it with `tagged-ci` in `publish`'s `needs`.
 
 `assets` takes newline-separated globs relative to the repository root. The step fails when a named file is missing or a glob matches nothing. Name each file, since a glob that matches only some archives publishes a partial set.
 
 ### Republish release notes
 
-`publish-release` writes the notes once. To refresh them from an edited `CHANGELOG.md`, fetch `parse-changelog` and edit the release only if the parse succeeds. Replace `x86_64-unknown-linux-musl` below with your system's target, such as `aarch64-apple-darwin` on a Mac:
+`publish-release` writes the notes once. To refresh them from an edited `CHANGELOG.md`, fetch `parse-changelog` and edit the release only if parsing succeeds. Replace `x86_64-unknown-linux-musl` below with your system's target, such as `aarch64-apple-darwin` on a Mac:
 
 ```bash
 dir=$(mktemp -d)
@@ -160,11 +160,11 @@ tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
 
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package, and running step 1's command without `--config-url`, so git-cliff reads the `cliff.toml` the release ships. Its `tag.yml` runs `tagged-ci` and `publish-release` directly and pins nothing in the cache.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, but skip the version bump, since devkit publishes no package, and run step 1's command without `--config-url` so git-cliff reads the `cliff.toml` shipped in the release. Its `tag.yml` runs `tagged-ci` and `publish-release` directly without pinning anything in the cache.
 
-Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
+Moving the major tag requires the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write permissions. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 
-Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag, as does moving the shared `cliff.toml` or changing its `header`, since `--prepend` replaces an existing header only when it matches exactly. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
+Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. Moving the shared `cliff.toml` or changing its `header` also requires one, since `--prepend` replaces an existing header only when it matches exactly. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
 
 ### Roll back
 

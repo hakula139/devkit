@@ -33,7 +33,8 @@ gh api "$endpoint" \
   "enforcement": "active",
   "conditions": {
     "ref_name": {
-      "include": ["~DEFAULT_BRANCH"]
+      "include": ["~DEFAULT_BRANCH"],
+      "exclude": []
     }
   },
   "bypass_actors": [
@@ -77,7 +78,7 @@ gh api "$endpoint" \
 EOF
 ```
 
-Actor 5 is the admin repository role, and integration 15368 is GitHub Actions, so a status of the same name from another app does not satisfy the check.
+Actor 5 is the admin repository role, and integration 15368 is GitHub Actions, so a status of the same name from another app does not satisfy the check. The empty `exclude` list stays, because GitHub rejects a `ref_name` condition without one even though its REST schema marks the field optional.
 
 ## Make releases immutable
 

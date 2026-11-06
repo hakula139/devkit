@@ -10,6 +10,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 | `nu-test`, `nu-check`, or `nuTests`                                                       | [Nushell test runner](docs/nu-test.md)                 |
 | An action, a reusable workflow, the git-cliff config, a release, or a versioning decision | [Releasing](docs/releasing.md)                         |
 | The Renovate preset                                                                       | [Renovate preset](README.md#adopt-the-renovate-preset) |
+| A repository setting, the branch ruleset, or a label                                      | [GitHub conventions](docs/github.md)                   |
 
 ## Layout
 
@@ -18,7 +19,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── .cspell/       # Project spelling dictionary
 ├── .github/       # actionlint, Dependabot, and Renovate configs, and the CI and release workflows
 ├── actions/       # setup-nix, ci-result, tagged-ci, and publish-release composite actions
-├── docs/          # Hooks, the Nushell test runner, and releasing
+├── docs/          # Hooks, the Nushell test runner, releasing, and the GitHub conventions
 ├── nix/           # Hook baseline, library, Nushell tooling, and tests
 ├── CHANGELOG.md   # Release notes, one section per tag
 ├── cliff.toml     # The shared git-cliff config that drafts each release section

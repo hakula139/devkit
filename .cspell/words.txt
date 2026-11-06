@@ -2,6 +2,7 @@ cachix
 devkit
 direnv
 dont
+eeef
 envrc
 hakula
 mypy

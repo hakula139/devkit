@@ -3,7 +3,6 @@
     "code-block-style": { "style": "fenced" },
     "code-fence-style": { "style": "backtick" },
     "emphasis-style": { "style": "underscore" },
-    "first-line-heading": false,
     "heading-style": { "style": "atx" },
     "line-length": false,
     "no-duplicate-heading": { "siblings_only": true },

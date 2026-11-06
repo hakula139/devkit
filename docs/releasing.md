@@ -8,7 +8,7 @@ A repository releases from its own `tag.yml`, which calls devkit's `release.yml`
 
 - CI runs from `.github/workflows/ci.yml` on pushes to the default branch, since `tagged-ci` counts only push and dispatched runs of that workflow on the tagged commit.
 - `packages.default` exposes a `version` attribute, and it builds on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
-- `CHANGELOG.md` has a section titled with the tag number without `v`, such as `## [1.2.3]`.
+- `CHANGELOG.md` has a section titled with the tag number without `v`, such as `## 1.2.3`.
 - The `CACHIX_AUTH_TOKEN` secret can push and pin the `hakula` Cachix cache.
 
 ```yaml
@@ -59,7 +59,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 ### Cut a release
 
-1. Bump the package version to the release number, and draft the release section in `CHANGELOG.md` from the conventional commit titles since the previous stable tag with devkit's shared git-cliff config:
+1. Bump the package version to the release number, and draft the release section in `CHANGELOG.md` with devkit's shared git-cliff config:
 
    ```bash
    nix run nixpkgs#git-cliff -- \
@@ -69,9 +69,11 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
      --prepend CHANGELOG.md
    ```
 
+   The draft keeps `feat`, `fix`, `perf`, and any `!` title, so a PR that changes what consumers see takes one of those types. git-cliff counts the commits it skips, and `-vv` lists them.
+
    A stable section covers its prereleases. For a prerelease such as `v1.3.0-rc.2`, add `--tag-pattern '^v[0-9]'` so the section starts at the previous tag of any kind.
 
-   Edit the draft for users, stating what changed and what a consumer must do, and lift migration notes from the PR descriptions. PRs leave `CHANGELOG.md` alone. Fold any `## [Unreleased]` entries written before this practice into the draft and delete that section, and if the file ends with compare links, add the new tag's and drop `[Unreleased]`'s.
+   Edit the draft for users, stating what changed and what a consumer must do, and lift migration notes from the PR descriptions. Only the release PR edits `CHANGELOG.md`. Fold any Unreleased section into the draft and delete it.
 
 2. Merge the release PR.
 
@@ -158,11 +160,11 @@ tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
 
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package, and running `git cliff` without `--config-url`, so it reads the `cliff.toml` the release ships. Its `tag.yml` runs `tagged-ci` and `publish-release` directly and pins nothing in the cache.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package, and running step 1's command without `--config-url`, so git-cliff reads the `cliff.toml` the release ships. Its `tag.yml` runs `tagged-ci` and `publish-release` directly and pins nothing in the cache.
 
 Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 
-Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag, as does moving the shared `cliff.toml`. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
+Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag, as does moving the shared `cliff.toml` or changing its `header`, since `--prepend` replaces an existing header only when it matches exactly. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
 
 ### Roll back
 

@@ -8,13 +8,14 @@ Shared development tooling for Hakula's repositories.
 
 ## Contents
 
-| Piece             | Purpose                                                                       | Reference                                                                                                 |
-| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, and system helpers | `github:hakula139/devkit/v1`                                                                              |
-| Composite actions | Install Nix with the shared cache, gate a run, and release a version          | `hakula139/devkit/actions/setup-nix@v1`, `.../ci-result@v1`, `.../tagged-ci@v1`, `.../publish-release@v1` |
-| CI workflow       | Run `nix flake check` on Linux and macOS                                      | `hakula139/devkit/.github/workflows/nix.yml@v1`                                                           |
-| Release workflows | Check the tagged commit, pin the cache, and publish the release               | `hakula139/devkit/.github/workflows/release.yml@v1`, `.../nix-cache.yml@v1`                               |
-| Renovate preset   | Share the update policy, release-age floors, and grouping                     | `github>hakula139/devkit`                                                                                 |
+| Piece             | Purpose                                                                                           | Reference                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, and system helpers                     | `github:hakula139/devkit/v1`                                                                              |
+| Composite actions | Install Nix with the shared cache, gate a run, and release a version                              | `hakula139/devkit/actions/setup-nix@v1`, `.../ci-result@v1`, `.../tagged-ci@v1`, `.../publish-release@v1` |
+| CI workflow       | Run `nix flake check` on Linux and macOS                                                          | `hakula139/devkit/.github/workflows/nix.yml@v1`                                                           |
+| Release workflows | Check the tagged commit, pin the cache, and publish the release                                   | `hakula139/devkit/.github/workflows/release.yml@v1`, `.../nix-cache.yml@v1`                               |
+| git-cliff config  | Draft each release's `CHANGELOG.md` section from the conventional commit titles                   | `https://raw.githubusercontent.com/hakula139/devkit/v1/cliff.toml`                                        |
+| Renovate preset   | Share the update policy, release-age floors, and grouping                                         | `github>hakula139/devkit`                                                                                 |
 
 ## Adopt the flake
 

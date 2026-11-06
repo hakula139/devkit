@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - The baseline's `actionlint` is the unpatched nixpkgs package, which the binary cache supplies, and a consumer that needs the `queue` key adds `'unexpected key "queue" for "concurrency" section'` to its `.github/actionlint.yaml` ignores.
+- A releasing repository no longer needs a `nix-cache.yml` caller, since a deleted pin is restored locally. An existing caller still works, since it uses `workflow_call`.
+
+### Removed
+
+- `packages.default`, the bundle of `nu-check` and `nu-test`. This breaks anyone who uses that output, but no consumer does.
 
 ## [1.0.0-rc.2] - 2026-11-06
 

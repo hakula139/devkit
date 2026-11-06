@@ -6,7 +6,6 @@ on:
       CACHIX_AUTH_TOKEN:
         description: Token that pushes and pins the `hakula` Cachix cache
         required: true
-  workflow_dispatch:
 
 permissions:
   contents: read

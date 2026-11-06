@@ -4,13 +4,12 @@ devkit publishes a moving major tag. Consumers reference `@v1` for actions and w
 
 ## Release your repository
 
-A repository releases from its own `tag.yml`, which calls devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marked as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. The repository needs these before its first release:
+A repository releases from its own `tag.yml`, which calls devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marked as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. A deleted pin is restored locally with `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`. The repository needs these before its first release:
 
 - CI runs from `.github/workflows/ci.yml` on pushes to the default branch, since `tagged-ci` counts only push and dispatched runs of that workflow on the tagged commit.
 - `packages.default` exposes a `version` attribute, and it builds on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
 - `CHANGELOG.md` has a section titled with the tag number without `v`, such as `## [1.2.3]`.
 - The `CACHIX_AUTH_TOKEN` secret can push and pin the `hakula` Cachix cache.
-- The [cache caller](#restore-a-tags-cache-pin), which restores a lost pin, is committed.
 
 ```yaml
 # .github/workflows/tag.yml
@@ -124,7 +123,7 @@ publish:
           dist/my-tool-aarch64-darwin.tar.gz
 ```
 
-The `nix` job pins the cache as `release.yml` does, so it needs a package that builds on both systems the prerequisites name. A repository whose package builds on fewer systems drops the job and lists `tagged-ci` in its place under `publish`, and its tags then have no pin to restore.
+The `nix` job pins the cache as `release.yml` does, so it needs a package that builds on both systems the prerequisites name. A repository whose package builds on fewer systems drops the job and lists `tagged-ci` in its place under `publish`.
 
 `assets` takes newline-separated globs relative to the repository root. The step fails when a named file is missing or a glob matches nothing. Name each file, since a glob that matches only some archives publishes a partial set.
 
@@ -143,34 +142,9 @@ tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
   && gh release edit v1.2.3 --notes-file "$dir/notes.md"
 ```
 
-### Restore a tag's cache pin
-
-`release.yml` pins the `out` output of `packages.default` on `x86_64-linux` and `aarch64-darwin` as `<repository>-<tag>-<system>`, such as `my-tool-v1.2.3-x86_64-linux`, which keeps it in the cache. If a pin goes missing, such as after a manual deletion, dispatch a thin caller on the tag. A dispatch runs the workflow file as it exists at the tag, so the caller must be committed before the tag:
-
-```yaml
-# .github/workflows/nix-cache.yml
-name: Nix Cache
-
-on:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  nix:
-    uses: hakula139/devkit/.github/workflows/nix-cache.yml@v1
-    secrets:
-      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-```
-
-```bash
-gh workflow run nix-cache.yml --ref v1.2.3
-```
-
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit's `packages.default` has no `version` and its `tag.yml` checks none. devkit's `nix-cache.yml` also runs on dispatch, so `gh workflow run nix-cache.yml --ref v1.2.3` restores one of its pins without a thin caller.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit's `tag.yml` runs `tagged-ci` and `publish-release` directly. devkit publishes no package, so its release pins nothing in the cache.
 
 Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 

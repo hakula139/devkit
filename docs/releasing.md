@@ -81,7 +81,7 @@ To restore a deleted pin, check out the tag on each system it pins, `x86_64-linu
 
 ### Write your own release workflow
 
-A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions and cache workflow from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
+A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
 
 ```yaml
 tagged-ci:
@@ -94,7 +94,7 @@ tagged-ci:
     - name: Wait for CI on the tagged commit
       uses: hakula139/devkit/actions/tagged-ci@v1
 
-nix:
+nix-cache:
   needs: tagged-ci
   uses: hakula139/devkit/.github/workflows/nix-cache.yml@v1
   secrets:
@@ -102,7 +102,7 @@ nix:
 
 publish:
   name: Publish GitHub Release
-  needs: [version, nix, build]
+  needs: [version, nix-cache, build]
   runs-on: ubuntu-latest
   timeout-minutes: 10
   permissions:
@@ -125,7 +125,7 @@ publish:
           dist/my-tool-aarch64-darwin.tar.gz
 ```
 
-The `nix` job pins the cache as `release.yml` does, so it needs a package that builds on both systems the prerequisites name. A repository whose package builds on fewer systems drops the job and lists `tagged-ci` in its place under `publish`.
+A repository whose package builds on fewer systems drops the `nix-cache` job and lists `tagged-ci` in its place in `publish`'s `needs`.
 
 `assets` takes newline-separated globs relative to the repository root. The step fails when a named file is missing or a glob matches nothing. Name each file, since a glob that matches only some archives publishes a partial set.
 
@@ -146,13 +146,11 @@ tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
 
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package. Its `tag.yml` runs `tagged-ci` and `publish-release` directly and pins nothing in the cache.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package.
 
 Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 
 Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
-
-The tag ruleset may protect `v1.2.3` from updates and deletion, but it must let the release app move the major tag.
 
 ### Roll back
 

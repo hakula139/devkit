@@ -8,13 +8,13 @@ Shared development tooling for Hakula's repositories.
 
 ## Contents
 
-| Piece             | Purpose                                                                                           | Reference                                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, the package-bound library, and systems | `github:hakula139/devkit/v1`                                                                              |
-| Composite actions | Install Nix with the shared cache, gate a run, and release a version                              | `hakula139/devkit/actions/setup-nix@v1`, `.../ci-result@v1`, `.../tagged-ci@v1`, `.../publish-release@v1` |
-| CI workflow       | Run `nix flake check` on Linux and macOS                                                          | `hakula139/devkit/.github/workflows/nix.yml@v1`                                                           |
-| Release workflows | Check the tagged commit, pin the cache, and publish the release                                   | `hakula139/devkit/.github/workflows/release.yml@v1`, `.../nix-cache.yml@v1`                               |
-| Renovate preset   | Share the update policy, release-age floors, and grouping                                         | `github>hakula139/devkit`                                                                                 |
+| Piece             | Purpose                                                                       | Reference                                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, and system helpers | `github:hakula139/devkit/v1`                                                                              |
+| Composite actions | Install Nix with the shared cache, gate a run, and release a version          | `hakula139/devkit/actions/setup-nix@v1`, `.../ci-result@v1`, `.../tagged-ci@v1`, `.../publish-release@v1` |
+| CI workflow       | Run `nix flake check` on Linux and macOS                                      | `hakula139/devkit/.github/workflows/nix.yml@v1`                                                           |
+| Release workflows | Check the tagged commit, pin the cache, and publish the release               | `hakula139/devkit/.github/workflows/release.yml@v1`, `.../nix-cache.yml@v1`                               |
+| Renovate preset   | Share the update policy, release-age floors, and grouping                     | `github>hakula139/devkit`                                                                                 |
 
 ## Adopt the flake
 
@@ -48,8 +48,6 @@ outputs =
       };
     in
     {
-      checks.pre-commit = preCommit.check;
-
       devShells.default = pkgs.mkShell {
         name = "my-tool-dev";
         packages = [
@@ -58,8 +56,9 @@ outputs =
         inputsFrom = [
           preCommit.shell
         ];
-        env.MY_VAR = "value";
       };
+
+      checks.pre-commit = preCommit.check;
     }
   );
 ```
@@ -68,19 +67,15 @@ outputs =
 
 - Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
 - Start the repository's `.envrc` with `# shellcheck shell=bash`, as devkit's does, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
-- Add a `cspell.json` that names a project dictionary, as devkit's does with `.cspell/words.txt`, since cspell otherwise rejects words such as `devkit`, `nixpkgs`, and `pkgs` above. devkit's `.editorconfig`, `.markdownlint-cli2.jsonc`, and `.prettierrc.json` are starting points for the indentation, Markdown, and Prettier hooks, and the workflow snippets in these docs follow that `.prettierrc.json`.
+- Add a `cspell.json` that names a project dictionary, as devkit's does with `.cspell/words.txt`, since cspell otherwise rejects words such as `devkit`, `nixpkgs`, and `pkgs` above.
 
 A devkit minor release can make a consumer's lock-maintenance PR fail, as [Release devkit](docs/releasing.md#release-devkit) explains.
 
 ## Adopt the Nushell tooling
 
-A Nushell repository adds its tests and its package to the same attribute set:
+A Nushell repository adds its package and its tests to the same attribute set:
 
 ```nix
-checks.tests = dk.nuTests {
-  src = ./.;
-};
-
 packages.default = dk.mkNuApplication {
   pname = "my-tool";
   version = "0.1.0";
@@ -88,6 +83,10 @@ packages.default = dk.mkNuApplication {
   skills = [
     ./skills/my-tool
   ];
+};
+
+checks.tests = dk.nuTests {
+  src = ./.;
 };
 ```
 

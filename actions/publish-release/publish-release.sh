@@ -6,12 +6,12 @@
 
 set -euo pipefail
 
-parse-changelog CHANGELOG.md "${GITHUB_REF_NAME#v}" >release-notes.md
+notes=$(parse-changelog CHANGELOG.md "${GITHUB_REF_NAME#v}")
 
 options=(
   --verify-tag
   --title "$GITHUB_REF_NAME"
-  --notes-file release-notes.md
+  --notes "$notes"
 )
 if [[ "$GITHUB_REF_NAME" == *-* ]]; then
   options+=(--prerelease)

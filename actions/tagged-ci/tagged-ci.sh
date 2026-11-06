@@ -13,7 +13,7 @@ while true; do
       --slurp \
       | jq \
         -r \
-        -f "$GITHUB_ACTION_PATH/verdict.jq"
+        -f "$GITHUB_ACTION_PATH/tagged-ci.jq"
   ); then
     echo "::error::Could not read the runs of .github/workflows/ci.yml, which tagged-ci waits for."
     exit 1

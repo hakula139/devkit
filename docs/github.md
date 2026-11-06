@@ -1,6 +1,6 @@
 # GitHub conventions
 
-Every Hakula repository starts from these GitHub defaults and uses no milestones, since a release ships when it is ready and the range since the last tag shows what it holds. A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets on private repositories require GitHub Pro.
+Every Hakula repository starts from these GitHub defaults and uses no milestones, since a release ships when it is ready and the range since the last tag shows what it holds. A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets need GitHub Pro there.
 
 Run the commands from a checkout of the repository with admin credentials, since `gh` fills `{owner}` and `{repo}` from the checkout.
 

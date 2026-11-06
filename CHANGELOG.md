@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - The baseline's `actionlint` is the unpatched nixpkgs package, which the binary cache supplies, and a consumer that needs the `queue` key adds `'unexpected key "queue" for "concurrency" section'` to its `.github/actionlint.yaml` ignores.
-- A releasing repository no longer needs a `nix-cache.yml` caller, because a deleted pin is restored locally. An existing caller keeps working, since devkit's `nix-cache.yml` still accepts `workflow_call`.
+- A releasing repository no longer needs a `nix-cache.yml` caller, because a deleted pin is restored locally. An existing caller keeps working, since devkit's `nix-cache.yml` still takes `workflow_call`.
 - `release.yml`'s cache job is named `nix-cache`, so a release run's checks read `release / nix-cache / Pin (<system>)` in place of `release / nix / Pin (<system>)`.
 
 ### Removed
@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- `nu-test` installs a test file's stubs when the file's directory name contains glob characters such as `[1]`.
+- `nu-test` installs a test file's stubs when the file's directory name holds glob characters such as `[1]`.
 - `publish-release` passes the release notes to `gh` without writing them to a file, so an `assets` glob that matches `*.md` no longer attaches a `release-notes.md` to the release.
 
 ## 1.0.0-rc.2 - 2026-11-06

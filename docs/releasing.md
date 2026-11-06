@@ -89,7 +89,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
    git push origin v1.2.3
    ```
 
-If the tagged commit has no passing push or dispatched CI run, rerun its failed CI jobs or dispatch a run with `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once it passes.
+If the tagged commit has no passing push or dispatched CI run, rerun its failed CI jobs or dispatch a run with `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once that run passes.
 
 To restore a deleted pin, check out the tag on each system it pins (`x86_64-linux` and `aarch64-darwin`) and run `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`.
 

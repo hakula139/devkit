@@ -24,9 +24,7 @@ let
 
   source = lib.fileset.toSource {
     root = src;
-    fileset = lib.fileset.intersection (lib.fileset.fileFilter (file: file.hasExt "nu") src) (
-      lib.fileset.fileFilter packagedFile src
-    );
+    fileset = lib.fileset.fileFilter (file: file.hasExt "nu" && packagedFile file) src;
   };
 
   pathArgs = lib.optionalString (

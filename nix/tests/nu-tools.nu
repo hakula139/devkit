@@ -124,8 +124,8 @@ def main [] {
     | complete
     | get stderr
     | lines
-    | where {|line| $line | str starts-with "TMPDIR=" }
-    | each {|line| $line | str replace "TMPDIR=" "" }
+    | parse "TMPDIR={path}"
+    | get path
   )
   assert equal ($paths | length) 2 "each failing test prints its TMPDIR"
   assert not equal $paths.0 $paths.1 "each test gets its own TMPDIR"

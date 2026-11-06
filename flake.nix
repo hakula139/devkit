@@ -74,8 +74,8 @@
           pkgs:
           import ./nix/lib.nix {
             inherit pkgs git-hooks-nix;
-            nushell = nushellFor pkgs;
             inherit (skillHelpers) packagedFile skillSource;
+            nushell = nushellFor pkgs;
           };
       };
     }
@@ -209,7 +209,7 @@
               [ -x ${lib.getExe minimal} ]
               [ "$(ls ${fixture}/share/devkit-fixture)" = greet ]
               [ -x ${fixture}/share/devkit-fixture/greet ]
-              [ ! -e ${fixture}/share/skills/fixture/scripts/hello.test.nu ]
+              [ ! -e ${fixture}/share/skills/fixture/scripts/skipped.test.nu ]
               [ -x ${links."skills/fixture".source}/scripts/hello.sh ]
               touch "$out"
             '';

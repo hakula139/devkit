@@ -4,22 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.0.0-rc.3 - 2026-11-06
 
-### Changed
+### Breaking changes
 
-- The baseline's `actionlint` is the unpatched nixpkgs package, which the binary cache supplies, and a consumer that needs the `queue` key adds `'unexpected key "queue" for "concurrency" section'` to its `.github/actionlint.yaml` ignores.
-- A releasing repository no longer needs a `nix-cache.yml` caller, because a deleted pin is restored locally. An existing caller keeps working, since devkit's `nix-cache.yml` still takes `workflow_call`.
-- `release.yml`'s cache job is named `nix-cache`, so a release run's checks read `release / nix-cache / Pin (<system>)` in place of `release / nix / Pin (<system>)`.
+- The flake no longer exports `packages.default`, the bundle of `nu-check` and `nu-test`. Build both from your own package set with `devkit.lib.mkLib pkgs`. No known consumer uses the output.
 
-### Removed
+### Added
 
-- `packages.default`, the bundle of `nu-check` and `nu-test`. This breaks anyone who uses that output, but no consumer does.
+- A `dprint` baseline hook formats Markdown before `markdownlint-cli2` lints it, using its own config, so a repository's `dprint.json` doesn't apply to Markdown. A repository's lock-maintenance PR fails until it adopts dprint's formatting, which `nix develop -c prek run --all-files` applies. Keep `emphasis-style: underscore` in `.markdownlint-cli2.jsonc`, since under the `consistent` default the two hooks rewrite each other's output on any file with intraword emphasis.
+- A `doctoc` baseline hook fills a table of contents through `###` headings, without a title line, between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers, and leaves a file without them untouched. A repository can drop its own `doctoc` hook, and one whose TOC was built with other flags fails its lock-maintenance PR until the hook regenerates it. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source.
+- `cliff.toml`, a shared git-cliff config that drafts a release's `CHANGELOG.md` section from `feat`, `fix`, `perf`, and `!` PR titles under unbracketed `## 1.2.3 - <date>` headings, as "Cut a release" in `docs/releasing.md` shows. Start `CHANGELOG.md` with the config's `header` exactly, since `--prepend` replaces only an identical header, and delete any trailing compare-link definitions. Until `v1.0.0` creates the `v1` tag, fetch the config from the `v1.0.0-rc.3` tag.
+- `docs/github.md` gives the default branch ruleset, release immutability, repository and security settings, and labels, with the `gh` commands that apply them.
 
 ### Fixed
 
+- `nu-test` explains the `(load)` failure of a test file that prints to stdout or exits while it loads, where it used to show only the stray output or crash with `Can't convert to record` and leave a scratch directory behind.
 - `nu-test` installs a test file's stubs when the file's directory name holds glob characters such as `[1]`.
 - `publish-release` passes the release notes to `gh` without writing them to a file, so an `assets` glob that matches `*.md` no longer attaches a `release-notes.md` to the release.
+
+### Changed
+
+- `.markdownlint-cli2.jsonc` no longer disables `first-line-heading`. A repository that switches to the shared PR template in `hakula139/.github` drops the setting along with its own template copy.
+- The baseline's `actionlint` rejects `queue` in a `concurrency` section. A repository that uses it adds `'unexpected key "queue" for "concurrency" section'` to its `.github/actionlint.yaml` ignores.
+- A releasing repository can delete its `nix-cache.yml` caller, since `docs/releasing.md` now restores a deleted pin locally. An existing caller keeps working.
 
 ## 1.0.0-rc.2 - 2026-11-06
 

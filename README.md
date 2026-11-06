@@ -153,6 +153,8 @@ jobs:
 
 Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
 
+`nix.yml` runs only `nix flake check`, which builds the `checks` outputs and not `packages`, so expose the package as a check to have CI build it: `checks.<system>.package = self.packages.<system>.default`.
+
 Make `CI Result` the required check in the branch ruleset, and add every new check job to its `needs`. The gate skips a job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
 
 Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to it only from the default branch. Create a `CACHIX_AUTH_TOKEN` secret to enable the push.
@@ -173,6 +175,8 @@ Extend the preset from `.github/renovate.json`:
 ```
 
 A preset change applies to every consumer on its next Renovate run, without a devkit release. Pin the reference to `github>hakula139/devkit#v1` to take preset changes only with a devkit release, or to `#v1.2.3` to take them when you bump the reference.
+
+A flake ref pins the major tag, as in `github:hakula139/devkit/v1`, and the preset's custom manager updates only that form, leaving a full-version ref such as `github:hakula139/devkit/v1.0.0-rc.1` unchanged.
 
 The preset automerges daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates, all with squash, so the repository must allow squash merging. Every other update opens for review. A devkit major arrives in the `devkit` group's own PR, which moves the `@v1` references, the `#v1` preset reference, and, through the preset's custom manager, the `github:hakula139/devkit/v1` flake reference. That manager leaves `flake.lock` alone, so run `nix flake update devkit` on that PR before merging it.
 

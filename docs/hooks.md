@@ -21,7 +21,7 @@ The baseline enables these hooks:
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings, and devkit's own config files are working examples, whose `.prettierrc.json` the workflow snippets in these docs follow.
 
-`dprint` formats Markdown before `markdownlint-cli2` lints it, so `.markdownlint-cli2.jsonc` sets only the rules that dprint's output leaves open.
+`dprint` formats Markdown before `markdownlint-cli2` lints it. The style rules in `.markdownlint-cli2.jsonc` match dprint's output, so the same style applies where dprint doesn't format, such as a `<!-- dprint-ignore -->` block.
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 

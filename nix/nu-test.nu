@@ -55,7 +55,14 @@ def plan-file [file: string]: nothing -> record {
     try {
       $found.stdout
       | from json
-      | each {|name| {file: $file, name: $name, path: $path, scratch: $scratch, stubs: $stubs} }
+      | each {|name|
+        if ($name =~ '^test [A-Za-z0-9 ,.:-]+$') {
+          {file: $file, name: $name, path: $path, scratch: $scratch, stubs: $stubs}
+        } else {
+          let message = "A test name may hold only letters, digits, spaces, and `,.:-`."
+          {file: $file, name: $name, run: {exit_code: 1, stdout: "", stderr: $message}}
+        }
+      }
     } catch {
       [(load-failure $file $found)]
     }
@@ -64,7 +71,7 @@ def plan-file [file: string]: nothing -> record {
   {scratch: $scratch, jobs: $jobs}
 }
 
-# Run `job` in a fresh `TMPDIR` under its file's scratch, or return the load failure.
+# Run `job` in a fresh `TMPDIR` under its file's scratch, or return any discovery failure.
 def run-job [job: record]: nothing -> record {
   if ($job.run? != null) {
     return $job

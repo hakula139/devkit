@@ -60,6 +60,17 @@ def main [] {
       stdout: ["PASS nu-tools/fails.test.nu: test passes" "1 passed, 1 failed"]
     }
     {
+      name: "a test name with a semicolon is rejected without running it"
+      tool: nu-test
+      args: ["nu-tools/semi.test.nu"]
+      exit_code: 1
+      stdout: ["0 passed, 1 failed"]
+      stderr: [
+        "FAIL nu-tools/semi.test.nu: test semi; print INJECT"
+        "A test name may hold only letters, digits, spaces, and `,.:-`."
+      ]
+    }
+    {
       name: "a run without tests fails and says why"
       tool: nu-test
       args: []

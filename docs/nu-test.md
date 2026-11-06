@@ -4,7 +4,7 @@
 
 ## Write a test
 
-A test is a command named `test <behavior>` in a `.test.nu` file, with assertions from `std/assert`. Name the behavior in plain words without punctuation, since the runner calls each test by its bare name, and a quote or `#` breaks that call.
+A test is a command named `test <behavior>` in a `.test.nu` file, with assertions from `std/assert`. A test name may hold only letters, digits, spaces, and `,.:-`, since the runner passes it to `nu --commands` as source text, where a quote, `;`, or `#` ends or breaks the command.
 
 - **One process per test.** The runner collects test names from the files and runs the tests in parallel, each in its own `nu` process, so a test that changes its environment or exits cannot affect the others.
 - **Load failures are tests.** A file that fails to parse or whose test names cannot be read reports a `(load)` entry with its output and counts as a failure. A file that prints while loading cannot report its test names, so it fails too.

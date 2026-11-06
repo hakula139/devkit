@@ -5,6 +5,7 @@
 {
   pkgs,
   git-hooks-nix,
+  nu-check,
 }:
 
 {
@@ -65,6 +66,11 @@ let
         };
 
         nixfmt.enable = true;
+
+        nu-check = {
+          package = nu-check;
+          entry = lib.getExe config.hooks.nu-check.package;
+        };
 
         # Markdown stays out of Prettier, which drops the blank line before nested items.
         prettier = {

@@ -4,9 +4,10 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 ## Read before you edit
 
-| When the change touches                  | Read                   |
-| ---------------------------------------- | ---------------------- |
-| The pre-commit baseline or the dev shell | [Hooks](docs/hooks.md) |
+| When the change touches                  | Read                                   |
+| ---------------------------------------- | -------------------------------------- |
+| The pre-commit baseline or the dev shell | [Hooks](docs/hooks.md)                 |
+| `nu-test`, `nu-check`, or `nuTests`      | [Nushell test runner](docs/nu-test.md) |
 
 ## Layout
 
@@ -15,9 +16,9 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── .cspell/       # Project spelling dictionary
 ├── .github/       # actionlint and Dependabot configs, and the CI workflows
 ├── actions/       # setup-nix and ci-result composite actions
-├── docs/          # Hooks
-├── nix/           # Hook baseline, library, and tests
-├── flake.nix      # The exported `lib`, checks, and dev shell
+├── docs/          # Hooks and the Nushell test runner
+├── nix/           # Hook baseline, library, Nushell tooling, and tests
+├── flake.nix      # The exported `lib`, package, checks, and dev shell
 └── README.md      # What each piece is and how a repository adopts it
 ```
 

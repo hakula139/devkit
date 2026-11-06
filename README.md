@@ -7,11 +7,11 @@ Shared development tooling for Hakula's repositories.
 
 ## Contents
 
-| Piece             | Purpose                                                            | Reference                                                       |
-| ----------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Nix flake         | Share hooks, the dev shell, the package-bound library, and systems | `github:hakula139/devkit`                                       |
-| Composite actions | Install Nix with the shared cache, and gate a run on its jobs      | `hakula139/devkit/actions/setup-nix@main`, `.../ci-result@main` |
-| CI workflow       | Run `nix flake check` on Linux and macOS                           | `hakula139/devkit/.github/workflows/nix.yml@main`               |
+| Piece             | Purpose                                                                                           | Reference                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, the package-bound library, and systems | `github:hakula139/devkit`                                       |
+| Composite actions | Install Nix with the shared cache, and gate a run on its jobs                                     | `hakula139/devkit/actions/setup-nix@main`, `.../ci-result@main` |
+| CI workflow       | Run `nix flake check` on Linux and macOS                                                          | `hakula139/devkit/.github/workflows/nix.yml@main`               |
 
 ## Adopt the flake
 
@@ -65,6 +65,48 @@ outputs =
 - Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
 - Start the repository's `.envrc` with `# shellcheck shell=bash`, as devkit's does, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
 - Add a `cspell.json` that names a project dictionary, as devkit's does with `.cspell/words.txt`, since cspell otherwise rejects words such as `devkit`, `nixpkgs`, and `pkgs` above. devkit's `.editorconfig`, `.markdownlint-cli2.jsonc`, and `.prettierrc.json` are starting points for the indentation, Markdown, and Prettier hooks.
+
+## Adopt the Nushell tooling
+
+A Nushell repository adds its tests and its package to the same attribute set:
+
+```nix
+checks.tests = dk.nuTests {
+  src = ./.;
+};
+
+packages.default = dk.mkNuApplication {
+  pname = "my-tool";
+  version = "0.1.0";
+  src = ./src;
+  skills = [
+    ./skills/my-tool
+  ];
+};
+```
+
+[Nushell test runner](docs/nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`. It packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`, and copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill. It sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
+
+`mkNuApplication`, `nuTests`, and the `nu-*` tools run on `dk.nushell`, which is the consumer's `pkgs.nushell` when it is 0.116 or later, and otherwise the one from devkit's `nixpkgs-unstable` input, so `nixpkgs-unstable` must not follow a stable nixpkgs.
+
+The same `devkit.lib` provides the skill option and links for a Home Manager module:
+
+```nix
+options.programs.my-tool.skillDirectories = lib.mkOption devkit.lib.skillDirectoriesOption;
+
+config = lib.mkIf cfg.enable {
+  home.packages = [
+    cfg.package
+  ];
+  home.file = devkit.lib.skillLinks {
+    inherit (cfg) package;
+    name = "my-tool";
+    directories = cfg.skillDirectories;
+  };
+};
+```
+
+A skill link's `name` must equal its skill directory's basename.
 
 ## Adopt the CI workflow and the gate
 

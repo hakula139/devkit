@@ -22,6 +22,10 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 
+## Check Nushell files
+
+The baseline's `nu-check` hook runs `dk.nu-check`, the `--ide-check` wrapper, on Nushell files, and stays off until `hooks.nu-check.enable = true;`. No hook runs `nufmt`, which reindents to four spaces, so only `editorconfig-checker` checks their indentation, against a `[*.nu]` section in `.editorconfig` such as devkit's.
+
 ## Set up the dev shell and the check
 
 `preCommit` returns `check` and `shell`. `hooks` applies to both runs, and `devHooks` only to the shell. A hook named in `devHooks` is disabled in `check`, even when `hooks` enables its nixpkgs counterpart, so a lockfile-pinned tool never runs at its older sandboxed version, and CI runs no `devHooks` entry.

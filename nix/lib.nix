@@ -5,6 +5,9 @@
 {
   pkgs,
   git-hooks-nix,
+  nushell,
+  packagedFile,
+  skillSource,
 }:
 
 let
@@ -15,9 +18,20 @@ let
       name = command;
       text = "exec ${runner} ${command} \"$@\"";
     };
+
+  writeNuBin =
+    name:
+    pkgs.writers.makeScriptWriter {
+      interpreter = "${pkgs.lib.getExe nushell} --no-config-file";
+    } "/bin/${name}";
+
+  nu-check = writeNuBin "nu-check" ./nu-check.nu;
+  nu-test = writeNuBin "nu-test" ./nu-test.nu;
 in
 {
-  preCommit = import ./hooks.nix { inherit pkgs git-hooks-nix; };
+  inherit nu-check nu-test nushell;
+
+  preCommit = import ./hooks.nix { inherit pkgs git-hooks-nix nu-check; };
   nodeTool = lockedTool [
     pkgs.nodejs_26
     pkgs.pnpm_12
@@ -25,4 +39,13 @@ in
   uvTool = lockedTool [
     pkgs.uv
   ] "uv run --locked";
+  nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
+  mkNuApplication = import ./mk-nu-application.nix {
+    inherit
+      pkgs
+      nushell
+      packagedFile
+      skillSource
+      ;
+  };
 }

@@ -19,6 +19,7 @@
   # ------------------------------------------------------------------------------------------------
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     git-hooks-nix = {
       url = "github:cachix/git-hooks.nix";
@@ -33,6 +34,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       git-hooks-nix,
       ...
     }:
@@ -50,6 +52,15 @@
         lib.zipAttrsWith (_: lib.mergeAttrsList) (
           map (system: lib.mapAttrs (_: value: { ${system} = value; }) (f system)) systemList
         );
+
+      nushellFor =
+        pkgs:
+        if lib.versionAtLeast pkgs.nushell.version "0.116" then
+          pkgs.nushell
+        else
+          nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.nushell;
+
+      skillHelpers = import ./nix/skill-links.nix { inherit lib; };
     in
     # ----------------------------------------------------------------------------------------------
     # Library
@@ -57,7 +68,15 @@
     {
       lib = {
         inherit eachSystem systems;
-        mkLib = pkgs: import ./nix/lib.nix { inherit pkgs git-hooks-nix; };
+        inherit (skillHelpers) skillDirectoriesOption skillLinks skillSource;
+
+        mkLib =
+          pkgs:
+          import ./nix/lib.nix {
+            inherit pkgs git-hooks-nix;
+            inherit (skillHelpers) packagedFile skillSource;
+            nushell = nushellFor pkgs;
+          };
       };
     }
     // eachSystem systems (
@@ -68,6 +87,15 @@
 
         preCommit = dk.preCommit {
           src = ./.;
+          hooks.nu-check.enable = true;
+        };
+
+        tools = pkgs.symlinkJoin {
+          name = "devkit";
+          paths = [
+            dk.nu-check
+            dk.nu-test
+          ];
         };
       in
       {
@@ -141,13 +169,66 @@
                 x86_64-linux = "x86_64-linux";
               };
             pkgs.emptyFile;
+
+          actions = dk.nuTests {
+            src = ./actions;
+            runtimeInputs = [ pkgs.jq ];
+          };
+
+          nu-tools = pkgs.runCommand "devkit-nu-tools" { nativeBuildInputs = [ tools ]; } ''
+            ${lib.getExe dk.nushell} --no-config-file ${./nix/tests}/nu-tools.nu
+            touch "$out"
+          '';
+
+          nu-application =
+            let
+              version = "0.1.0";
+              src = ./nix/tests/fixtures/nu-application;
+
+              fixture = dk.mkNuApplication {
+                inherit version src;
+                pname = "devkit-fixture";
+                entry = "greet";
+                skills = [ (src + "/skills/fixture") ];
+                runtimeInputs = [ pkgs.ripgrep ];
+              };
+
+              minimal = dk.mkNuApplication {
+                inherit version src;
+                pname = "greet";
+              };
+
+              links = self.lib.skillLinks {
+                package = fixture;
+                name = "fixture";
+                directories = [ "skills" ];
+              };
+            in
+            pkgs.runCommand "devkit-nu-application" { } ''
+              [ "$(${lib.getExe fixture} Ada)" = "hello, Ada" ]
+              [ -x ${lib.getExe minimal} ]
+              [ "$(ls ${fixture}/share/devkit-fixture)" = greet ]
+              [ -x ${fixture}/share/devkit-fixture/greet ]
+              [ ! -e ${fixture}/share/skills/fixture/scripts/skipped.test.nu ]
+              [ -x ${links."skills/fixture".source}/scripts/hello.sh ]
+              touch "$out"
+            '';
         };
+
+        # ------------------------------------------------------------------------------------------
+        # Packages
+        # ------------------------------------------------------------------------------------------
+        packages.default = tools;
 
         # ------------------------------------------------------------------------------------------
         # Dev shell
         # ------------------------------------------------------------------------------------------
         devShells.default = pkgs.mkShell {
           name = "devkit-dev";
+          packages = [
+            dk.nushell
+            dk.nu-test
+          ];
           inputsFrom = [
             preCommit.shell
           ];

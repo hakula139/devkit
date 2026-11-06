@@ -1,0 +1,62 @@
+name: Tag Release
+
+on:
+  push:
+    tags: ['v[0-9]+.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    permissions:
+      actions: read
+      contents: write
+    uses: $/.github/workflows/release.yml
+    secrets:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+  major-tag:
+    name: Move the Major Tag
+    if: ${{ !contains(github.ref_name, '-') }}
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-workflows: write
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Move the major tag
+        run: |
+          major="${GITHUB_REF_NAME%%.*}"
+          latest=$(
+            git tag \
+              --list "$major.*" \
+              --sort=-v:refname \
+              | grep \
+                -v \
+                -m 1 \
+                -e -
+          )
+          if [[ "$latest" != "$GITHUB_REF_NAME" ]]; then
+            echo "Skipping the major tag, since $latest is newer than $GITHUB_REF_NAME"
+            exit 0
+          fi
+
+          git tag -f "$major"
+          git push origin "refs/tags/$major" --force

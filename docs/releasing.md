@@ -1,0 +1,188 @@
+# Releasing
+
+devkit publishes a moving major tag. Consumers reference `@v1` for actions and workflows and `github:hakula139/devkit/v1` for the flake, so a fix reaches every repository on its next CI run or lock-maintenance PR.
+
+## Release your repository
+
+A repository releases from its own `tag.yml`, which calls devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marked as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. The repository needs these before its first release:
+
+- CI runs from `.github/workflows/ci.yml` on pushes to the default branch, since `tagged-ci` counts only push and dispatched runs of that workflow on the tagged commit.
+- `packages.default` exposes a `version` attribute, and it builds on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
+- `CHANGELOG.md` has a section titled with the tag number without `v`, such as `## [1.2.3]`.
+- The `CACHIX_AUTH_TOKEN` secret can push and pin the `hakula` Cachix cache.
+- The [cache caller](#restore-a-tags-cache-pin), which restores a lost pin, is committed.
+
+```yaml
+# .github/workflows/tag.yml
+name: Tag Release
+
+on:
+  push:
+    tags: ['v[0-9]+.*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  version:
+    name: Check Tag Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Nix
+        uses: hakula139/devkit/actions/setup-nix@v1
+
+      - name: Check the package version
+        run: |
+          version=$(nix eval --raw .#default.version)
+          if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
+            exit 1
+          fi
+
+  release:
+    needs: version
+    permissions:
+      actions: read
+      contents: write
+    uses: hakula139/devkit/.github/workflows/release.yml@v1
+    secrets:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+```
+
+GitHub only lets a called workflow downgrade the caller's token, so the release job needs both permissions. The concurrency group stops a tag pushed again from racing the earlier run's release.
+
+### Cut a release
+
+1. Bump the package version to the release number, and draft the release section in `CHANGELOG.md` by hand, stating for users what changed and what a consumer must do.
+
+2. Merge the release PR.
+
+3. Tag the release PR's squash commit by SHA, since a later PR may already sit on `main`:
+
+   ```bash
+   git fetch origin
+   git tag v1.2.3 "$(
+     gh pr view 123 \
+       --json mergeCommit \
+       --jq .mergeCommit.oid
+   )"
+   git push origin v1.2.3
+   ```
+
+If the tagged commit has no passing push or dispatched CI run, rerun its failed CI jobs or dispatch one with `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once that run passes.
+
+### Write your own release workflow
+
+A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions and cache workflow from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
+
+```yaml
+tagged-ci:
+  name: Check Tagged Commit CI
+  runs-on: ubuntu-latest
+  timeout-minutes: 120
+  permissions:
+    actions: read
+  steps:
+    - name: Wait for CI on the tagged commit
+      uses: hakula139/devkit/actions/tagged-ci@v1
+
+nix:
+  needs: tagged-ci
+  uses: hakula139/devkit/.github/workflows/nix-cache.yml@v1
+  secrets:
+    CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+publish:
+  name: Publish GitHub Release
+  needs: [version, nix, build]
+  runs-on: ubuntu-latest
+  timeout-minutes: 10
+  permissions:
+    contents: write
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v8
+      with:
+        path: dist
+        merge-multiple: true
+
+    - name: Publish release
+      uses: hakula139/devkit/actions/publish-release@v1
+      with:
+        assets: |
+          dist/my-tool-x86_64-linux.tar.gz
+          dist/my-tool-aarch64-darwin.tar.gz
+```
+
+The `nix` job pins the cache as `release.yml` does, so it needs a package that builds on both systems the prerequisites name. A repository whose package builds on fewer systems drops the job and lists `tagged-ci` in its place under `publish`, and its tags then have no pin to restore.
+
+`assets` takes newline-separated globs relative to the repository root. The step fails when a named file is missing or a glob matches nothing. Name each file, since a glob that matches only some archives publishes a partial set.
+
+### Republish release notes
+
+`publish-release` writes the notes once. To refresh them from an edited `CHANGELOG.md`, fetch `parse-changelog` and edit the release only if the parse succeeds. Replace `x86_64-unknown-linux-musl` below with your system's target, such as `aarch64-apple-darwin` on a Mac:
+
+```bash
+dir=$(mktemp -d)
+gh release download \
+  -R taiki-e/parse-changelog \
+  -p 'parse-changelog-x86_64-unknown-linux-musl.tar.gz' \
+  --dir "$dir"
+tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
+"$dir/parse-changelog" CHANGELOG.md 1.2.3 >"$dir/notes.md" \
+  && gh release edit v1.2.3 --notes-file "$dir/notes.md"
+```
+
+### Restore a tag's cache pin
+
+`release.yml` pins the `out` output of `packages.default` on `x86_64-linux` and `aarch64-darwin` as `<repository>-<tag>-<system>`, such as `my-tool-v1.2.3-x86_64-linux`, which keeps it in the cache. If a pin goes missing, such as after a manual deletion, dispatch a thin caller on the tag. A dispatch runs the workflow file as it exists at the tag, so the caller must be committed before the tag:
+
+```yaml
+# .github/workflows/nix-cache.yml
+name: Nix Cache
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nix:
+    uses: hakula139/devkit/.github/workflows/nix-cache.yml@v1
+    secrets:
+      CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+```
+
+```bash
+gh workflow run nix-cache.yml --ref v1.2.3
+```
+
+## Release devkit
+
+Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit's `packages.default` has no `version` and its `tag.yml` checks none. devkit's `nix-cache.yml` also runs on dispatch, so `gh workflow run nix-cache.yml --ref v1.2.3` restores one of its pins without a thin caller.
+
+Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
+
+Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
+
+The tag ruleset may protect `v1.2.3` from updates and deletion, but it must let the release app move the major tag.
+
+### Roll back
+
+Force-move the major tag back to the previous release:
+
+```bash
+git tag -f v1 v1.2.2
+git push origin refs/tags/v1 --force
+```

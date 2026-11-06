@@ -1,0 +1,19 @@
+name: Publish release
+description: Publish the tag's `CHANGELOG.md` section as its GitHub Release
+
+inputs:
+  assets:
+    description: Newline-separated globs to attach, relative to the repository root
+
+runs:
+  using: composite
+  steps:
+    - name: Install changelog parser
+      uses: taiki-e/install-action@parse-changelog
+
+    - name: Publish release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        ASSETS: ${{ inputs.assets }}
+      run: bash "$GITHUB_ACTION_PATH/publish-release.sh"

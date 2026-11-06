@@ -5,3 +5,9 @@ paths:
       # (rhysd/actionlint#711). Drop these ignores once it does.
       - 'action "\$/[^"]+" in invalid format'
       - 'reusable workflow call "\$/[^"]+"'
+  .github/workflows/tag.yml:
+    ignore:
+      # actionlint's popular-actions data predates `client-id` in create-github-app-token v3
+      # (rhysd/actionlint#770). Drop these ignores once it lands.
+      - 'missing input "app-id" which is required by action "actions/create-github-app-token@v3"'
+      - 'input "client-id" is not defined in action "actions/create-github-app-token@v3"'

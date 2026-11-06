@@ -7,11 +7,12 @@ Shared development tooling for Hakula's repositories.
 
 ## Contents
 
-| Piece             | Purpose                                                                                           | Reference                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, the package-bound library, and systems | `github:hakula139/devkit`                                       |
-| Composite actions | Install Nix with the shared cache, and gate a run on its jobs                                     | `hakula139/devkit/actions/setup-nix@main`, `.../ci-result@main` |
-| CI workflow       | Run `nix flake check` on Linux and macOS                                                          | `hakula139/devkit/.github/workflows/nix.yml@main`               |
+| Piece             | Purpose                                                                                           | Reference                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, the package-bound library, and systems | `github:hakula139/devkit/v1`                                                                              |
+| Composite actions | Install Nix with the shared cache, gate a run, and release a version                              | `hakula139/devkit/actions/setup-nix@v1`, `.../ci-result@v1`, `.../tagged-ci@v1`, `.../publish-release@v1` |
+| CI workflow       | Run `nix flake check` on Linux and macOS                                                          | `hakula139/devkit/.github/workflows/nix.yml@v1`                                                           |
+| Release workflows | Check the tagged commit, pin the cache, and publish the release                                   | `hakula139/devkit/.github/workflows/release.yml@v1`, `.../nix-cache.yml@v1`                               |
 
 ## Adopt the flake
 
@@ -19,7 +20,7 @@ devkit needs nixpkgs 26.05 or later, since `nodeTool` pins `nodejs_26` and `pnpm
 
 ```nix
 devkit = {
-  url = "github:hakula139/devkit";
+  url = "github:hakula139/devkit/v1";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```
@@ -64,7 +65,9 @@ outputs =
 
 - Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
 - Start the repository's `.envrc` with `# shellcheck shell=bash`, as devkit's does, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
-- Add a `cspell.json` that names a project dictionary, as devkit's does with `.cspell/words.txt`, since cspell otherwise rejects words such as `devkit`, `nixpkgs`, and `pkgs` above. devkit's `.editorconfig`, `.markdownlint-cli2.jsonc`, and `.prettierrc.json` are starting points for the indentation, Markdown, and Prettier hooks.
+- Add a `cspell.json` that names a project dictionary, as devkit's does with `.cspell/words.txt`, since cspell otherwise rejects words such as `devkit`, `nixpkgs`, and `pkgs` above. devkit's `.editorconfig`, `.markdownlint-cli2.jsonc`, and `.prettierrc.json` are starting points for the indentation, Markdown, and Prettier hooks, and the workflow snippets in these docs follow that `.prettierrc.json`.
+
+A devkit minor release can make a consumer's lock-maintenance PR fail, as [Release devkit](docs/releasing.md#release-devkit) explains.
 
 ## Adopt the Nushell tooling
 
@@ -129,7 +132,7 @@ concurrency:
 
 jobs:
   nix:
-    uses: hakula139/devkit/.github/workflows/nix.yml@main
+    uses: hakula139/devkit/.github/workflows/nix.yml@v1
     secrets:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
@@ -144,7 +147,7 @@ jobs:
       actions: read
     steps:
       - name: Check results
-        uses: hakula139/devkit/actions/ci-result@main
+        uses: hakula139/devkit/actions/ci-result@v1
 ```
 
 Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
@@ -152,6 +155,10 @@ Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still 
 Make `CI Result` the required check in the branch ruleset, and add every new check job to its `needs`. The gate skips a job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
 
 Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to it only from the default branch. Create a `CACHIX_AUTH_TOKEN` secret to enable the push.
+
+## Adopt the release workflow
+
+[Releasing](docs/releasing.md) covers the release caller and its prerequisites, the tag-versus-package check, and the cache pin.
 
 ## Development
 

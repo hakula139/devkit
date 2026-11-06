@@ -1,6 +1,7 @@
 cachix
 devkit
 direnv
+doctoc
 dont
 envrc
 hakula

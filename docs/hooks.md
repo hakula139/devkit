@@ -39,7 +39,9 @@ preCommit = dk.preCommit {
   src = ./.;
   hooks = {
     prettier.files = "\\.(js|mjs|json|jsonc|ya?ml)$";
-    trim-trailing-whitespace.excludes = [ "\\.patch$" ];
+    trim-trailing-whitespace.excludes = [
+      "\\.patch$"
+    ];
   };
 };
 ```

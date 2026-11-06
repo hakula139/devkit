@@ -51,7 +51,9 @@ outputs =
         packages = [
           pkgs.ripgrep
         ];
-        inputsFrom = [ preCommit.shell ];
+        inputsFrom = [
+          preCommit.shell
+        ];
         env.MY_VAR = "value";
       };
     }

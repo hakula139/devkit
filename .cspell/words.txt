@@ -15,7 +15,6 @@ pname
 prek
 pypi
 rhysd
-ruamel
 shfmt
 statix
 stdenv

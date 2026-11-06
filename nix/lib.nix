@@ -38,7 +38,5 @@ in
     pkgs.uv
   ] "uv run --locked";
   nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
-  mkNuApplication = import ./mk-nu-application.nix {
-    inherit pkgs nushell;
-  };
+  mkNuApplication = import ./mk-nu-application.nix { inherit pkgs nushell; };
 }

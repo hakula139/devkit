@@ -27,7 +27,6 @@ let
 
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
         actionlint.enable = true;
-
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
         check-yaml.enable = true;

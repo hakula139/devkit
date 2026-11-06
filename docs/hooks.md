@@ -22,9 +22,9 @@ The baseline enables these hooks:
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings. devkit's own config files are working examples, and the workflow snippets in these docs follow its `.prettierrc.json`.
 
-`dprint` formats Markdown before `markdownlint-cli2` lints it. The style rules in `.markdownlint-cli2.jsonc` match dprint's output, so the same style applies where dprint doesn't format, such as in a `<!-- dprint-ignore -->` block.
+`doctoc` fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, and leaves a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
 
-`doctoc` fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, and leaves a file without them untouched. Keep links out of headings, since doctoc builds a reference-linked heading's anchor from its raw source and `markdownlint-cli2` passes the broken entry.
+`dprint` formats Markdown before `markdownlint-cli2` lints it. The style rules in `.markdownlint-cli2.jsonc` match dprint's output, so the same style applies where dprint doesn't format, such as in a `<!-- dprint-ignore -->` block.
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 

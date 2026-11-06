@@ -1,0 +1,68 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "security:minimumReleaseAgeCrate",
+    "security:minimumReleaseAgeNpm",
+    "security:minimumReleaseAgePypi"
+  ],
+  "timezone": "Asia/Shanghai",
+  "nix": {
+    "enabled": true
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": ["* 4-8 * * *"]
+  },
+  "prConcurrentLimit": 3,
+  "dependencyDashboard": false,
+  "assignees": ["hakula139"],
+  "assignAutomerge": true,
+  "automergeStrategy": "squash",
+  "labels": ["dependencies"],
+  "semanticCommits": "enabled",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)flake\\.nix$/"],
+      "matchStrings": ["github:hakula139/devkit/v(?<currentValue>\\d+)"],
+      "depNameTemplate": "hakula139/devkit",
+      "datasourceTemplate": "github-tags",
+      "extractVersionTemplate": "^v(?<version>\\d+)$"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Rust dependencies",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["rust-toolchain"],
+      "automerge": true
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Node dependencies",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["nix"],
+      "groupName": "flake inputs",
+      "semanticCommitScope": "flake",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "matchDepNames": ["hakula139/devkit"],
+      "groupName": "devkit",
+      "versioning": "github-actions"
+    }
+  ]
+}

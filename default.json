@@ -26,10 +26,10 @@
     {
       "customType": "regex",
       "managerFilePatterns": ["/(^|/)flake\\.nix$/"],
-      "matchStrings": ["github:hakula139/devkit/v(?<currentValue>\\d+)(?:[^.\\d])"],
+      "matchStrings": ["github:hakula139/devkit/(?<currentValue>v\\d+)[^.\\d]"],
       "depNameTemplate": "hakula139/devkit",
       "datasourceTemplate": "github-tags",
-      "extractVersionTemplate": "^v(?<version>\\d+)$"
+      "extractVersionTemplate": "^(?<version>v\\d+)$"
     }
   ],
   "packageRules": [

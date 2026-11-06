@@ -213,8 +213,6 @@
               [ -x ${links."skills/fixture".source}/scripts/hello.sh ]
               touch "$out"
             '';
-
-          package = self.packages.${system}.default;
         };
 
         # ------------------------------------------------------------------------------------------

@@ -10,14 +10,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- `.editorconfig` sets the shell formatting properties for `*.zsh` as well as `*.sh`.
-- devkit exposes `packages.default` as `checks.package`, and the README tells a consumer to do the same, so `nix flake check` builds the package.
-- The README states that a flake ref pins the major tag.
+- The README tells a consumer to expose `checks.<system>.package = self.packages.<system>.default`, so `nix.yml`'s `nix flake check` builds the package.
 
 ### Fixed
 
-- `.markdownlint-cli2.jsonc` disables `first-line-heading`, so a PR template that starts with `## Summary` passes the baseline hook.
-- The Renovate preset's custom manager matches a flake ref only when it pins a bare major tag, leaving a full-version ref such as `v1.0.0-rc.1` unchanged instead of rewriting its major prefix.
+- `.markdownlint-cli2.jsonc` is a starting point that disables `first-line-heading`, so a PR template that starts with `## Summary` passes the baseline hook. Copy the setting into a consumer's file.
+- `.editorconfig` is a starting point whose shell section now covers `*.zsh` as well as `*.sh`. Copy the section into a consumer's file.
+- The Renovate preset's custom manager matches only a flake reference that pins the major tag, such as `github:hakula139/devkit/v1`, leaving a full-version ref such as `v1.0.0-rc.1` unchanged instead of rewriting its major prefix into a malformed reference.
 
 ## [1.0.0-rc.1] - 2026-11-06
 

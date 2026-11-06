@@ -81,7 +81,7 @@ To restore a deleted pin, check out the tag on each system it pins, `x86_64-linu
 
 ### Write your own release workflow
 
-A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions and cache workflow from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
+A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run beside its `version` job and the repository's own `build` job, which uploads the archives as artifacts:
 
 ```yaml
 tagged-ci:
@@ -125,7 +125,7 @@ publish:
           dist/my-tool-aarch64-darwin.tar.gz
 ```
 
-A repository whose package builds on fewer systems drops the `nix-cache` job and lists `tagged-ci` under `publish`.
+A repository whose package builds on fewer systems drops the `nix-cache` job and lists `tagged-ci` in its place in `publish`'s `needs`.
 
 `assets` takes newline-separated globs relative to the repository root. The step fails when a named file is missing or a glob matches nothing. Name each file, since a glob that matches only some archives publishes a partial set.
 

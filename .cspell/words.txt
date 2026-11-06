@@ -1,0 +1,17 @@
+cachix
+devkit
+direnv
+envrc
+hakula
+mypy
+nixfmt
+nixos
+nixpkgs
+pkgs
+prek
+rhysd
+shfmt
+statix
+substituters
+taplo
+venv

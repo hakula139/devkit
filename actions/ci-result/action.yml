@@ -1,0 +1,12 @@
+name: CI result
+description: Fail unless every completed job in the gate's workflow succeeded or was skipped
+
+runs:
+  using: composite
+  steps:
+    - name: Check results
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GATE_ID: ${{ job.check_run_id }}
+      run: bash "$GITHUB_ACTION_PATH/ci-result.sh"

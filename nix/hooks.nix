@@ -24,6 +24,7 @@ let
       strongKind = "asterisks";
     };
 
+    # Language plugins would also rewrite fenced examples inside Markdown.
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
@@ -52,7 +53,8 @@ let
 
         dprint = {
           enable = true;
-          entry = "${lib.getExe pkgs.dprint} fmt";
+          package = pkgs.dprint;
+          entry = "${lib.getExe config.hooks.dprint.package} fmt";
           args = [
             "--config=${dprintConfig}"
             "--allow-no-files"

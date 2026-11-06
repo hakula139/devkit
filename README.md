@@ -48,8 +48,6 @@ outputs =
       };
     in
     {
-      checks.pre-commit = preCommit.check;
-
       devShells.default = pkgs.mkShell {
         name = "my-tool-dev";
         packages = [
@@ -59,6 +57,8 @@ outputs =
           preCommit.shell
         ];
       };
+
+      checks.pre-commit = preCommit.check;
     }
   );
 ```
@@ -73,13 +73,9 @@ A devkit minor release can make a consumer's lock-maintenance PR fail, as [Relea
 
 ## Adopt the Nushell tooling
 
-A Nushell repository adds its tests and its package to the same attribute set:
+A Nushell repository adds its package and its tests to the same attribute set:
 
 ```nix
-checks.tests = dk.nuTests {
-  src = ./.;
-};
-
 packages.default = dk.mkNuApplication {
   pname = "my-tool";
   version = "0.1.0";
@@ -87,6 +83,10 @@ packages.default = dk.mkNuApplication {
   skills = [
     ./skills/my-tool
   ];
+};
+
+checks.tests = dk.nuTests {
+  src = ./.;
 };
 ```
 

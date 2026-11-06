@@ -18,7 +18,7 @@ The baseline enables these hooks:
 | `sort-file-contents`                                                         | The order of `.cspell/words.txt`                   |                            |
 | `taplo`                                                                      | TOML                                               |                            |
 
-git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings, and devkit's own config files are working examples.
+git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings, and devkit's own config files are working examples, whose `.prettierrc.json` the workflow snippets in these docs follow.
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 

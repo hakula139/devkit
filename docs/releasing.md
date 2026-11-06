@@ -59,7 +59,19 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 ### Cut a release
 
-1. Bump the package version to the release number, and draft the release section in `CHANGELOG.md` by hand, stating for users what changed and what a consumer must do.
+1. Bump the package version to the release number, and draft the release section in `CHANGELOG.md` from the conventional commit titles since the previous stable tag with devkit's shared git-cliff config:
+
+   ```bash
+   nix run nixpkgs#git-cliff -- \
+     --config-url https://raw.githubusercontent.com/hakula139/devkit/v1/cliff.toml \
+     --unreleased \
+     --tag v1.2.3 \
+     --prepend CHANGELOG.md
+   ```
+
+   A stable section covers its prereleases. For a prerelease such as `v1.3.0-rc.2`, add `--tag-pattern '^v[0-9]'` so the section starts at the previous tag of any kind.
+
+   Edit the draft for users, stating what changed and what a consumer must do, and lift migration notes from the PR descriptions. PRs leave `CHANGELOG.md` alone. Fold any `## [Unreleased]` entries written before this practice into the draft and delete that section, and if the file ends with compare links, add the new tag's and drop `[Unreleased]`'s.
 
 2. Merge the release PR.
 
@@ -146,11 +158,11 @@ tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
 
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit publishes no package, and running `git cliff` without `--config-url`, so it reads the `cliff.toml` the release ships. Its `tag.yml` runs `tagged-ci` and `publish-release` directly and pins nothing in the cache.
 
 Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 
-Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
+Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag, as does moving the shared `cliff.toml`. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
 
 ### Roll back
 

@@ -21,6 +21,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── docs/          # Hooks, the Nushell test runner, and releasing
 ├── nix/           # Hook baseline, library, Nushell tooling, and tests
 ├── CHANGELOG.md   # Release notes, one section per tag
+├── cliff.toml     # The shared git-cliff config that drafts each release section
 ├── default.json   # The Renovate preset consumers extend
 ├── flake.nix      # The exported `lib`, checks, and dev shell
 └── README.md      # What each piece is and how a repository adopts it

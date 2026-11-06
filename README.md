@@ -166,7 +166,7 @@ Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to
 
 ## Adopt the release workflow
 
-[Releasing](docs/releasing.md) covers the release caller and its prerequisites, the tag-versus-package check, and the cache pin.
+[Releasing](docs/releasing.md) covers the release caller and its prerequisites, the tag-versus-package check, the cache pin, and drafting the `CHANGELOG.md` section with the shared git-cliff config.
 
 ## Adopt the Renovate preset
 

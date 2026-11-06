@@ -18,6 +18,15 @@
 let
   inherit (pkgs) lib;
 
+  dprintConfig = (pkgs.formats.json { }).generate "dprint.json" {
+    markdown = {
+      emphasisKind = "underscores";
+      strongKind = "asterisks";
+    };
+
+    plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
+  };
+
   baseline =
     { config, ... }:
     {
@@ -40,6 +49,17 @@ let
         };
 
         deadnix.enable = true;
+
+        dprint = {
+          enable = true;
+          entry = "${lib.getExe pkgs.dprint} fmt";
+          args = [
+            "--config=${dprintConfig}"
+            "--allow-no-files"
+          ];
+          files = "\\.md$";
+        };
+
         editorconfig-checker.enable = true;
         end-of-file-fixer.enable = true;
 

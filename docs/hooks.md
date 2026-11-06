@@ -10,6 +10,7 @@ The baseline enables these hooks:
 | `check-yaml`                                                                 | YAML syntax                                        |                            |
 | `cspell`                                                                     | Spelling in every file                             | `cspell.json`              |
 | `deadnix`, `nixfmt`, and `statix`                                            | Nix                                                |                            |
+| `dprint`                                                                     | Markdown formatting                                |                            |
 | `editorconfig-checker`                                                       | The properties `.editorconfig` sets, in every file | `.editorconfig`            |
 | `markdownlint-cli2`                                                          | Markdown                                           | `.markdownlint-cli2.jsonc` |
 | `prettier`                                                                   | JavaScript, JSON, and YAML                         | `.prettierrc.json`         |
@@ -19,6 +20,8 @@ The baseline enables these hooks:
 | `taplo`                                                                      | TOML                                               |                            |
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings, and devkit's own config files are working examples, whose `.prettierrc.json` the workflow snippets in these docs follow.
+
+`dprint` formats Markdown before `markdownlint-cli2` lints it, so `.markdownlint-cli2.jsonc` sets only the rules that dprint's output leaves open.
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 

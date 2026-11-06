@@ -1,14 +1,9 @@
 {
   "config": {
     "code-block-style": { "style": "fenced" },
-    "code-fence-style": { "style": "backtick" },
-    "emphasis-style": { "style": "underscore" },
-    "heading-style": { "style": "atx" },
     "line-length": false,
     "no-duplicate-heading": { "siblings_only": true },
     "ol-prefix": { "style": "ordered" },
-    "strong-style": { "style": "asterisk" },
-    "ul-style": { "style": "dash" },
   },
 
   "gitignore": true,

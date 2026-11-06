@@ -41,10 +41,6 @@ def load-failure [file: string, run: record]: nothing -> record {
 def plan-file [file: string]: nothing -> record {
   let path = ($file | path expand)
   let scratch = (mktemp --directory)
-  if not ($file | path exists) {
-    return {scratch: $scratch, jobs: [(load-failure $file {stdout: "File not found", stderr: ""})]}
-  }
-
   let stubs = ($scratch | path join "stubs")
   install-stubs $file $stubs
   let query = "scope commands | where name starts-with 'test ' | get name | to json"

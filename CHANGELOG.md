@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The baseline's `actionlint` is the unpatched nixpkgs package, which the binary cache supplies, and a consumer that needs the `queue` key adds an `.github/actionlint.yaml` ignore.
+- `nu-test` reports a path that does not exist through its load-failure path, printing Nushell's file-not-found diagnostic.
+
 ## [1.0.0-rc.2] - 2026-11-06
 
 ### Changed

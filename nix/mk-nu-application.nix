@@ -5,8 +5,6 @@
 {
   pkgs,
   nushell,
-  packagedFile,
-  skillSource,
 }:
 
 {
@@ -21,6 +19,7 @@
 
 let
   inherit (pkgs) lib;
+  inherit (import ./skill-links.nix { inherit lib; }) packagedFile skillSource;
 
   source = lib.fileset.toSource {
     root = src;

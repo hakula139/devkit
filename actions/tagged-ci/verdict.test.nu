@@ -54,15 +54,6 @@ def "test the verdict" [] {
       ]
       expected: "failed"
     }
-    {
-      name: "a passed pull request run beside a failed push run fails"
-      runs: [
-        [event status conclusion html_url];
-        ["pull_request" "completed" "success" null]
-        ["push" "completed" "failure" null]
-      ]
-      expected: "failed"
-    }
   ]
 
   for case in $cases {

@@ -34,5 +34,7 @@ jobs:
 
       - name: Run flake check
         run: >-
-          nix flake check --keep-going --print-build-logs
+          nix flake check
+          --keep-going
+          --print-build-logs
           ${{ matrix.os == 'Linux' && '--all-systems' || '' }}

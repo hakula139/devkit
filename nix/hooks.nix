@@ -30,7 +30,9 @@ let
   baseline =
     { config, ... }:
     {
-      excludes = [ "(^|/)fixtures/" ];
+      excludes = [
+        "(^|/)fixtures/"
+      ];
 
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
         actionlint = {
@@ -72,7 +74,9 @@ let
 
         shellcheck = {
           enable = true;
-          exclude_types = [ "zsh" ];
+          exclude_types = [
+            "zsh"
+          ];
         };
 
         # Formatting flags disable shfmt's EditorConfig settings.
@@ -129,7 +133,9 @@ in
   inherit check;
 
   shell = pkgs.mkShell {
-    packages = dev.enabledPackages ++ [ dev.config.package ];
+    packages = dev.enabledPackages ++ [
+      dev.config.package
+    ];
 
     # Use shared hooks to avoid the relative path bug in linked worktrees (git-hooks.nix#688).
     # Serialize installation, and leave sibling repositories that borrow this shell untouched.
@@ -137,7 +143,11 @@ in
       unset PYTHONPATH
       if top=$(${git} rev-parse --show-toplevel 2>/dev/null) &&
         ${cmp} -s ${src + "/flake.nix"} "$top/flake.nix"; then
-        common=$(${git} rev-parse --path-format=absolute --git-common-dir)
+        common=$(
+          ${git} rev-parse \
+            --path-format=absolute \
+            --git-common-dir
+        )
         (
           ${flock} 9
           ${dev.config.installationScript}

@@ -1,6 +1,6 @@
 root = true
 
-# shfmt uses these EditorConfig extensions. Unmatched shell files use its default tabs.
+# shfmt reads these EditorConfig properties, and uses tabs for a shell file no section covers.
 [*.sh]
 indent_style = space
 indent_size = 2

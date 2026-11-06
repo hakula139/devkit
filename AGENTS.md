@@ -26,7 +26,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 - Run the pre-commit hooks on every commit. In each new checkout or worktree, run `nix develop -c true` once to install them. Never bypass the hooks with `--no-verify` or `PRE_COMMIT_ALLOW_NO_CONFIG`. When a hook, test, or CI job fails, fix its cause.
 - Wrap code and comments at 100 columns, counting the indent, end section banners at column 100, and keep a single-line string literal whole at any length.
 - Update whatever the change makes stale: the README's adoption snippets and the docs page that owns the changed contract.
-- Workflows use `$/` self-repository references for both actions and job-level reusable workflow calls. `$/` always resolves against the repository of the file it appears in, so a caller at any ref runs that ref's actions and workflows. Do not replace it with `./` or a hard-coded tag.
+- Workflows use `$/` self-repository references for both actions and job-level reusable workflow calls. `$/` resolves against the repository of the file it appears in, at the commit that is running, so a caller at any ref runs that ref's actions and workflows. Do not replace it with `./` or a hard-coded tag.
 - Link only public material in issues, pull requests, and their comments, and never reference local working notes, private paths, or private repositories.
 
 ## Verification

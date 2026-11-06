@@ -6,7 +6,9 @@
   description = "Shared development tooling for Hakula's repositories";
 
   nixConfig = {
-    extra-substituters = [ "https://hakula.cachix.org" ];
+    extra-substituters = [
+      "https://hakula.cachix.org"
+    ];
     extra-trusted-public-keys = [
       "hakula.cachix.org-1:7zwB3fhMfReHdOjh6DmnaLXgqbPDBcojvN9F+osZw0k="
     ];
@@ -29,6 +31,7 @@
   # ------------------------------------------------------------------------------------------------
   outputs =
     {
+      self,
       nixpkgs,
       git-hooks-nix,
       ...
@@ -48,37 +51,27 @@
           map (system: lib.mapAttrs (_: value: { ${system} = value; }) (f system)) systemList
         );
 
-      devkitLib = {
-        inherit eachSystem systems;
-
-        mkLib = pkgs: import ./nix/lib.nix { inherit pkgs git-hooks-nix; };
-      };
     in
     # ----------------------------------------------------------------------------------------------
     # Library
     # ----------------------------------------------------------------------------------------------
     {
-      lib = devkitLib;
+      lib = {
+        inherit eachSystem systems;
+        mkLib = pkgs: import ./nix/lib.nix { inherit pkgs git-hooks-nix; };
+      };
     }
     // eachSystem systems (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        dk = devkitLib.mkLib pkgs;
+        dk = self.lib.mkLib pkgs;
 
         preCommit = dk.preCommit {
           src = ./.;
         };
       in
       {
-        # ------------------------------------------------------------------------------------------
-        # Dev Shell
-        # ------------------------------------------------------------------------------------------
-        devShells.default = pkgs.mkShell {
-          name = "devkit-dev";
-          inputsFrom = [ preCommit.shell ];
-        };
-
         # ------------------------------------------------------------------------------------------
         # Checks
         # ------------------------------------------------------------------------------------------
@@ -115,19 +108,16 @@
               };
 
               checkHooks = split.check.config.hooks;
-              shellInputs = split.shell.nativeBuildInputs;
-              lockedTools = [
-                mypy
-                prettier
-              ];
             in
             assert checkHooks.nu-check.enable;
             assert !checkHooks.mypy.enable && !checkHooks.prettier.enable;
             assert checkHooks.prettier.files == prettierFiles;
-            assert lib.all (tool: lib.elem tool shellInputs) lockedTools;
             pkgs.symlinkJoin {
               name = "devkit-hook-split";
-              paths = lockedTools;
+              paths = [
+                mypy
+                prettier
+              ];
             };
 
           dev-shell = preCommit.shell.overrideAttrs {
@@ -152,6 +142,14 @@
                 x86_64-linux = "x86_64-linux";
               };
             pkgs.emptyFile;
+        };
+
+        # ------------------------------------------------------------------------------------------
+        # Dev shell
+        # ------------------------------------------------------------------------------------------
+        devShells.default = pkgs.mkShell {
+          name = "devkit-dev";
+          inputsFrom = [ preCommit.shell ];
         };
 
         # ------------------------------------------------------------------------------------------

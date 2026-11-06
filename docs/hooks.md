@@ -54,7 +54,6 @@ devHooks = {
     enable = true;
     package = dk.uvTool "mypy";
   };
-
   prettier.package = dk.nodeTool "prettier";
 };
 ```

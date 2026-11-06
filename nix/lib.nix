@@ -18,6 +18,11 @@ let
 in
 {
   preCommit = import ./hooks.nix { inherit pkgs git-hooks-nix; };
-  nodeTool = lockedTool [ pkgs.nodejs_26 pkgs.pnpm_12 ] "pnpm exec";
-  uvTool = lockedTool [ pkgs.uv ] "uv run --locked";
+  nodeTool = lockedTool [
+    pkgs.nodejs_26
+    pkgs.pnpm_12
+  ] "pnpm exec";
+  uvTool = lockedTool [
+    pkgs.uv
+  ] "uv run --locked";
 }

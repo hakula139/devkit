@@ -51,6 +51,18 @@ let
 
         deadnix.enable = true;
 
+        doctoc = {
+          enable = true;
+          package = pkgs.doctoc;
+          entry = lib.getExe config.hooks.doctoc.package;
+          args = [
+            "--update-only"
+            "--notitle"
+            "--maxlevel=3"
+          ];
+          files = "\\.md$";
+        };
+
         dprint = {
           enable = true;
           package = pkgs.dprint;

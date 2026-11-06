@@ -1,6 +1,7 @@
 cachix
 devkit
 direnv
+doctoc
 dont
 envrc
 hakula
@@ -8,6 +9,7 @@ mypy
 nixfmt
 nixos
 nixpkgs
+notitle
 nufmt
 nuon
 pkgs

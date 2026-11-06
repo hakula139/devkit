@@ -10,6 +10,7 @@ The baseline enables these hooks:
 | `check-yaml`                                                                 | YAML syntax                                        |                            |
 | `cspell`                                                                     | Spelling in every file                             | `cspell.json`              |
 | `deadnix`, `nixfmt`, and `statix`                                            | Nix                                                |                            |
+| `doctoc`                                                                     | Markdown tables of contents                        |                            |
 | `dprint`                                                                     | Markdown formatting                                |                            |
 | `editorconfig-checker`                                                       | The properties `.editorconfig` sets, in every file | `.editorconfig`            |
 | `markdownlint-cli2`                                                          | Markdown                                           | `.markdownlint-cli2.jsonc` |
@@ -20,6 +21,8 @@ The baseline enables these hooks:
 | `taplo`                                                                      | TOML                                               |                            |
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings. devkit's own config files are working examples, and the workflow snippets in these docs follow its `.prettierrc.json`.
+
+`doctoc` fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, and leaves a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
 
 `dprint` formats Markdown before `markdownlint-cli2` lints it. The style rules in `.markdownlint-cli2.jsonc` match dprint's output, so the same style applies where dprint doesn't format, such as in a `<!-- dprint-ignore -->` block.
 

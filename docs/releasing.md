@@ -172,7 +172,7 @@ gh workflow run nix-cache.yml --ref v1.2.3
 
 Cut a devkit release as [Cut a release](#cut-a-release) describes, skipping the version bump, since devkit's `packages.default` has no `version` and its `tag.yml` checks none. devkit's `nix-cache.yml` also runs on dispatch, so `gh workflow run nix-cache.yml --ref v1.2.3` restores one of its pins without a thin caller.
 
-Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token`, requesting only Contents and Workflows write, for the push.
+Moving the major tag needs the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets, and `tag.yml` mints a token from them with `actions/create-github-app-token` for the push.
 
 Any change that breaks an existing caller of an action, a reusable workflow, a `lib` function, or a flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
 

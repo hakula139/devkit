@@ -18,16 +18,6 @@
 let
   inherit (pkgs) lib;
 
-  # rhysd/actionlint@644076a accepts the `queue` key. Drop the patch once a release ships it.
-  actionlint = pkgs.actionlint.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ [
-      (pkgs.fetchpatch {
-        url = "https://github.com/rhysd/actionlint/commit/644076a59742c2d1540ebd4686eab3c308f0e562.patch";
-        hash = "sha256-Lpd7CTkLbzgvAZV2H8G4GTUoPNDCK7PiW3A40+cquUk=";
-      })
-    ];
-  });
-
   baseline =
     { config, ... }:
     {
@@ -36,11 +26,7 @@ let
       ];
 
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
-        actionlint = {
-          enable = true;
-          package = actionlint;
-        };
-
+        actionlint.enable = true;
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
         check-yaml.enable = true;

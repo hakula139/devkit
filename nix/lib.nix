@@ -6,8 +6,6 @@
   pkgs,
   git-hooks-nix,
   nushell,
-  packagedFile,
-  skillSource,
 }:
 
 let
@@ -40,12 +38,5 @@ in
     pkgs.uv
   ] "uv run --locked";
   nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
-  mkNuApplication = import ./mk-nu-application.nix {
-    inherit
-      pkgs
-      nushell
-      packagedFile
-      skillSource
-      ;
-  };
+  mkNuApplication = import ./mk-nu-application.nix { inherit pkgs nushell; };
 }

@@ -19,21 +19,7 @@ A test is a command named `test <behavior>` in a `.test.nu` file, with assertion
 
 ## Run one file directly
 
-List both packages in the dev shell, so that `nu` is the check's Nushell and `nu-test` is on `PATH`:
-
-```nix
-devShells.default = pkgs.mkShell {
-  packages = [
-    dk.nushell
-    dk.nu-test
-  ];
-  inputsFrom = [
-    preCommit.shell
-  ];
-};
-```
-
-The check runs from the `src` root, so run `nu-test <file>...` there, with paths relative to it, to reproduce a failure.
+Add `dk.nushell` and `dk.nu-test` to the dev shell's `packages`, which the [README](../README.md#adopt-the-flake) shows how to define, so `nu` is the check's Nushell and `nu-test` is on `PATH`. The check runs from the `src` root, so run `nu-test <file>...` there, with paths relative to it, to reproduce a failure.
 
 ## Check a script without running it
 

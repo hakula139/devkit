@@ -74,7 +74,6 @@
           pkgs:
           import ./nix/lib.nix {
             inherit pkgs git-hooks-nix;
-            inherit (skillHelpers) packagedFile skillSource;
             nushell = nushellFor pkgs;
           };
       };

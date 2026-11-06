@@ -30,7 +30,7 @@ The baseline's `nu-check` hook runs `dk.nu-check`, the `--ide-check` wrapper, on
 
 `preCommit` returns `check` and `shell`. `hooks` applies to both runs, and `devHooks` only to the shell. A hook named in `devHooks` is disabled in `check`, even when `hooks` enables its nixpkgs counterpart, so a lockfile-pinned tool never runs at its older sandboxed version, and CI runs no `devHooks` entry.
 
-List `preCommit.shell` in the `inputsFrom` of the repository's `pkgs.mkShell`, which puts the hook packages and `prek` after the shell's own `packages` and `nativeBuildInputs`, so a consumer toolchain wins on `PATH`. Its `shellHook` starts with `unset PYTHONPATH`, since `nix develop` inherits an outer value that would shadow a uv venv.
+List `preCommit.shell` in the `inputsFrom` of the repository's `pkgs.mkShell`, which puts the hook packages and `prek` after the shell's own `packages` and `nativeBuildInputs`, so a consumer toolchain wins on `PATH`. Its `shellHook` starts with `unset PYTHONPATH`, since the hook packages' Python setup hook sets it and `nix develop` inherits any outer value, either of which would shadow a uv venv.
 
 `src` must be the flake's root, with that flake at the checkout root. The shell installs the hooks on entry only when `src/flake.nix` matches the checkout's `flake.nix`, so a shell borrowed from a sibling repository leaves that checkout alone. The installer clears a local `core.hooksPath`, so a repository that needs one sets it in its own `shellHook`, which runs after the installer.
 

@@ -19,12 +19,11 @@ def nu-run [file: string, body: string, tmp: string, stubs: string]: nothing -> 
   }
 }
 
-# Install each `<name>.stub.nu` beside `file` in `dir` as an executable `<name>`, whose shebang
+# Install each `<name>.stub.nu` in `source` into `dir` as an executable `<name>`, whose shebang
 # names this interpreter by its store path, since the build sandbox has no `/usr/bin/env`.
-def install-stubs [file: string, dir: string]: nothing -> nothing {
+def install-stubs [source: string, dir: string]: nothing -> nothing {
   mkdir $dir
-  let source = ($file | path expand | path dirname)
-  for stub in (ls $source | where name ends-with ".stub.nu" | get name) {
+  for stub in (glob ($source | path join "*.stub.nu")) {
     let target = ($dir | path join ($stub | path basename | str replace ".stub.nu" ""))
     let script = (open --raw $stub | str replace --regex '^#!.*\n?' "")
     $"#!($nu.current-exe) --no-config-file\n($script)" | save $target
@@ -41,12 +40,8 @@ def load-failure [file: string, run: record]: nothing -> record {
 def plan-file [file: string]: nothing -> record {
   let path = ($file | path expand)
   let scratch = (mktemp --directory)
-  if not ($file | path exists) {
-    return {scratch: $scratch, jobs: [(load-failure $file {stdout: "File not found", stderr: ""})]}
-  }
-
   let stubs = ($scratch | path join "stubs")
-  install-stubs $file $stubs
+  install-stubs ($path | path dirname) $stubs
   let query = "scope commands | where name starts-with 'test ' | get name | to json"
   let found = (nu-run $path $query $scratch $stubs)
   let jobs = if $found.exit_code != 0 {

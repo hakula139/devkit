@@ -38,14 +38,6 @@ def main [] {
       stderr: []
     }
     {
-      name: "a missing file fails to load"
-      tool: nu-test
-      args: ["nu-tools/missing.test.nu"]
-      exit_code: 1
-      stdout: ["0 passed, 1 failed"]
-      stderr: ["FAIL nu-tools/missing.test.nu: (load)" "File not found"]
-    }
-    {
       name: "each load failure counts"
       tool: nu-test
       args: ["nu-tools/broken.test.nu" "nu-tools/noisy.test.nu"]
@@ -87,7 +79,7 @@ def main [] {
       stderr: ["nu-tools/invalid-utf8.nu: Non-UTF8 string"]
     }
     {
-      name: "every file is checked, and an error names its line and column"
+      name: "an error names its line and column"
       tool: nu-check
       args: ["nu-tools/stubs.test.nu" "nu-tools/positions.nu" "nu-tools/shebang.stub.nu"]
       exit_code: 1

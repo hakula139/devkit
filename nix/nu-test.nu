@@ -3,10 +3,6 @@
 # ==================================================================================================
 # Nushell Test Runner
 # ==================================================================================================
-# A test is a command named `test <behavior>` in a `.test.nu` file. Each runs in its own `nu`
-# process with its own `TMPDIR`, so a test that changes its environment or exits cannot affect the
-# others. Each `<name>.stub.nu` beside a test file is installed as `<name>` in `NU_TEST_STUBS`.
-# ==================================================================================================
 
 def nu-run [file: string, body: string, tmp: string, stubs: string]: nothing -> record {
   with-env {TMPDIR: $tmp, NU_TEST_STUBS: $stubs} {
@@ -23,7 +19,7 @@ def nu-run [file: string, body: string, tmp: string, stubs: string]: nothing -> 
 # names this interpreter by its store path, since the build sandbox has no `/usr/bin/env`.
 def install-stubs [source: string, dir: string]: nothing -> nothing {
   mkdir $dir
-  for stub in (glob ($source | path join "*.stub.nu")) {
+  for stub in (ls $source | where name ends-with ".stub.nu" | get name) {
     let target = ($dir | path join ($stub | path basename | str replace ".stub.nu" ""))
     let script = (open --raw $stub | str replace --regex '^#!.*\n?' "")
     $"#!($nu.current-exe) --no-config-file\n($script)" | save $target
@@ -35,18 +31,18 @@ def load-failure [file: string, run: record]: nothing -> record {
   {file: $file, name: "(load)", run: ($run | upsert exit_code 1)}
 }
 
-# Create the scratch directory and stubs for `file`, then return them with one job per test, or
-# one job carrying the load failure when the file does not load.
+# Create the scratch directory for `file`, install its stubs once it loads, then return the
+# directory with one job per test, or one job carrying the load failure when the file does not load.
 def plan-file [file: string]: nothing -> record {
   let path = ($file | path expand)
   let scratch = (mktemp --directory)
   let stubs = ($scratch | path join "stubs")
-  install-stubs ($path | path dirname) $stubs
   let query = "scope commands | where name starts-with 'test ' | get name | to json"
   let found = (nu-run $path $query $scratch $stubs)
   let jobs = if $found.exit_code != 0 {
     [(load-failure $file $found)]
   } else {
+    install-stubs ($path | path dirname) $stubs
     try {
       $found.stdout
       | from json

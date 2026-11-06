@@ -1,12 +1,12 @@
 #!/usr/bin/env nu
 
 # ==================================================================================================
-# Tagged CI Verdict Tests
+# Tagged CI Filter Tests
 # ==================================================================================================
 
 use std/assert
 
-const FILTER_FILE = path self "verdict.jq"
+const FILTER_FILE = path self "tagged-ci.jq"
 
 def verdict [runs: table]: nothing -> record {
   (

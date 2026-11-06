@@ -50,7 +50,6 @@
         lib.zipAttrsWith (_: lib.mergeAttrsList) (
           map (system: lib.mapAttrs (_: value: { ${system} = value; }) (f system)) systemList
         );
-
     in
     # ----------------------------------------------------------------------------------------------
     # Library

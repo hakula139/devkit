@@ -36,7 +36,11 @@ def install-stubs [source: string, dir: string]: nothing -> nothing {
 }
 
 def load-failure [file: string, run: record]: nothing -> record {
-  {file: $file, name: "(load)", run: ($run | upsert exit_code 1)}
+  {
+    file: $file
+    name: "(load)"
+    run: ($run | upsert exit_code 1)
+  }
 }
 
 # Create the scratch directory for `file`, install its stubs once it loads, then return the
@@ -59,10 +63,24 @@ def plan-file [file: string]: nothing -> record {
       $names
       | each {|name|
         if ($name =~ '^test [A-Za-z0-9 ,.:-]+$') {
-          {file: $file, name: $name, path: $path, scratch: $scratch, stubs: $stubs}
+          {
+            file: $file
+            name: $name
+            path: $path
+            scratch: $scratch
+            stubs: $stubs
+          }
         } else {
           let message = "A test name may hold only letters, digits, spaces, and `,.:-`."
-          {file: $file, name: $name, run: {exit_code: 1, stdout: "", stderr: $message}}
+          {
+            file: $file
+            name: $name
+            run: {
+              exit_code: 1
+              stdout: ""
+              stderr: $message
+            }
+          }
         }
       }
     } else {
@@ -81,7 +99,11 @@ def run-job [job: record]: nothing -> record {
   }
 
   let tmp = (mktemp --directory --tmpdir-path $job.scratch)
-  {file: $job.file, name: $job.name, run: (nu-run $job.path $job.name $tmp $job.stubs)}
+  {
+    file: $job.file
+    name: $job.name
+    run: (nu-run $job.path $job.name $tmp $job.stubs)
+  }
 }
 
 # Run every test in the given files, exiting nonzero if any fails or none run.

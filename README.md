@@ -67,8 +67,6 @@ outputs =
 `devkit.lib` holds the pure helpers, and `dk = devkit.lib.mkLib pkgs` binds `pkgs` once for the rest. [Hooks](docs/hooks.md) lists the hooks and the config files they read, and covers the dev and check split, `preCommit.shell`, and the lockfile-pinned tools.
 
 - Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
-- Start the repository's `.envrc` with `# shellcheck shell=bash`, as devkit's does, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
-- Add a `cspell.json` that names a project dictionary, as devkit's does with `.cspell/words.txt`, since cspell otherwise rejects words such as `devkit`, `nixpkgs`, and `pkgs` above.
 
 A devkit minor release can make a consumer's lock-maintenance PR fail, as [Release devkit](docs/releasing.md#release-devkit) explains.
 

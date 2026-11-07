@@ -2,23 +2,23 @@
 
 The baseline enables these hooks:
 
-| Hook                                                                         | Checks                                             | Config                      |
-| ---------------------------------------------------------------------------- | -------------------------------------------------- | --------------------------- |
-| `actionlint`                                                                 | Workflows                                          | `.github/actionlint.yaml`   |
-| `check-added-large-files`                                                    | Every file                                         |                             |
-| `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` | Every text file                                    |                             |
-| `check-yaml`                                                                 | YAML syntax                                        |                             |
-| `cspell`                                                                     | Spelling in every file                             | `cspell.json`               |
-| `deadnix`, `nixfmt`, and `statix`                                            | Nix                                                |                             |
-| `doctoc`                                                                     | Markdown tables of contents                        |                             |
-| `dprint`                                                                     | Markdown formatting                                |                             |
-| `editorconfig-checker`                                                       | The properties `.editorconfig` sets, in every file | `.editorconfig`             |
-| `markdownlint-cli2`                                                          | Markdown                                           | `.markdownlint-cli2.jsonc`  |
-| `prettier`                                                                   | JavaScript, TypeScript, JSON, and YAML             | `.prettierrc.json`          |
-| `shellcheck`                                                                 | Every shell file except zsh                        |                             |
-| `shfmt`                                                                      | Every shell file, zsh included                     | `.editorconfig`             |
-| `sort-file-contents`                                                         | The order of `.cspell/words.txt`                   |                             |
-| `taplo`                                                                      | TOML                                               | `.taplo.toml`, `taplo.toml` |
+| Hook                                                                         | Checks                                             | Config                     |
+| ---------------------------------------------------------------------------- | -------------------------------------------------- | -------------------------- |
+| `actionlint`                                                                 | Workflows                                          | `.github/actionlint.yaml`  |
+| `check-added-large-files`                                                    | Every file                                         |                            |
+| `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` | Every text file                                    |                            |
+| `check-yaml`                                                                 | YAML syntax                                        |                            |
+| `cspell`                                                                     | Spelling in every file                             | `cspell.json`              |
+| `deadnix`, `nixfmt`, and `statix`                                            | Nix                                                |                            |
+| `doctoc`                                                                     | Markdown tables of contents                        |                            |
+| `dprint`                                                                     | Markdown formatting                                |                            |
+| `editorconfig-checker`                                                       | The properties `.editorconfig` sets, in every file | `.editorconfig`            |
+| `markdownlint-cli2`                                                          | Markdown                                           | `.markdownlint-cli2.jsonc` |
+| `prettier`                                                                   | JavaScript, TypeScript, JSON, and YAML             | `.prettierrc.json`         |
+| `shellcheck`                                                                 | Every shell file except zsh                        |                            |
+| `shfmt`                                                                      | Every shell file, zsh included                     | `.editorconfig`            |
+| `sort-file-contents`                                                         | The order of `.cspell/words.txt`                   |                            |
+| `taplo`                                                                      | TOML                                               | `.taplo.toml`              |
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings. devkit's own config files are working examples, and the workflow snippets in these docs follow its `.prettierrc.json`.
 
@@ -29,6 +29,8 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 
 Prettier uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. EditorConfig and configuration lookup are disabled, keeping personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
+
+Taplo uses the source root's `.taplo.toml` when present and otherwise runs with its defaults. Automatic configuration lookup is disabled, keeping personal configuration out of repository checks.
 
 ## Check Nushell files
 

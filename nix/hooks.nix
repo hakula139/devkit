@@ -29,10 +29,11 @@ let
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
-  taploConfig = lib.findFirst builtins.pathExists (pkgs.writeText "taplo.toml" "") [
-    (src + "/.taplo.toml")
-    (src + "/taplo.toml")
-  ];
+  taploConfig =
+    if builtins.pathExists (src + "/.taplo.toml") then
+      src + "/.taplo.toml"
+    else
+      pkgs.writeText "taplo.toml" "";
 
   baseline =
     { config, ... }:

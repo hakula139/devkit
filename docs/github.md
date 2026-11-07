@@ -1,6 +1,6 @@
 # GitHub conventions
 
-Every Hakula repository starts from these GitHub defaults and uses no milestones, since a release ships when it is ready and the range since the last tag shows what it holds.
+Every Hakula repository starts from these GitHub defaults and uses no milestones.
 
 A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets need GitHub Pro there.
 
@@ -10,9 +10,9 @@ Run the commands from a checkout of the repository with admin credentials, since
 
 The ruleset blocks deleting and force-pushing the default branch, and requires a pull request for every change:
 
-- `CI Result` must pass on a branch that is up to date with the default branch. A personal account has no merge queue, so the up-to-date check is the only guard against two green pull requests breaking the default branch together.
-- Every review thread must be resolved, so an unaddressed comment blocks the merge.
-- No approval is required, since a sole maintainer cannot approve their own pull request.
+- `CI Result` must pass on a branch that is up to date with the default branch.
+- Every review thread must be resolved.
+- No approval is required.
 - The admin role can bypass the ruleset in an emergency.
 
 The command creates the `main` ruleset, or replaces an existing one:
@@ -94,7 +94,7 @@ gh api repos/{owner}/{repo}/immutable-releases --method PUT
 
 - **Merge methods: squash only.** The changelog is drafted from each squashed commit's conventional title.
 - **Squash commit title and body: `PR_TITLE` and `PR_BODY`.** The pull request description carries the rationale into the commit body.
-- **`delete_branch_on_merge`: on.** A merged branch has nothing left to keep.
+- **`delete_branch_on_merge`: on.**
 - **`allow_auto_merge`: on.** Renovate's platform automerge merges the moment checks pass.
 - **Wiki, Projects, and Discussions: off.** Docs live in the repository. A repository with a community turns Discussions on.
 - **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.

@@ -4,7 +4,7 @@ devkit publishes a moving major tag. Consumers reference `@v1` for actions and w
 
 ## Release your repository
 
-Follow [Cut a release](#cut-a-release) for the shared release procedure. Keep a repository's version files and policy, notes source, validation commands, workflows, publishing targets, and recovery restrictions in its local release documentation, and link here for the common procedure.
+Follow [Cut a release](#cut-a-release) for the shared release procedure. A repository's local release documentation supplies its version files and policy, notes source, validation commands, workflows, publishing targets, and recovery restrictions. Keep those contracts with the repository and link here for the common procedure.
 
 A repository whose two-system Nix package uses changelog-based notes can release from its own `tag.yml` by calling devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marking it as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. Before its first release, the caller needs:
 
@@ -77,7 +77,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
    A stable section covers its prereleases. For a prerelease such as `v1.3.0-rc.2`, add `--tag-pattern '^v[0-9]'` so the section starts at the previous tag of any kind.
 
-   Use `--prepend`, since regenerating the entire file drops curated sections and compare links. Only the release PR adds a release section, so fold any Unreleased section into it and delete Unreleased. Preserve the repository's changelog format and add the compare reference when its format requires one: compare a stable release with the previous stable tag, compare a prerelease with the previous tag, and link the first release to its release page when no previous tag exists.
+   Use `--prepend`, since regenerating the entire file drops curated sections and compare links. Only the release PR adds a release section. Fold any Unreleased section into it and delete Unreleased. Preserve the repository's changelog format and add the compare reference when its format requires one. A stable release compares with the previous stable tag, and a prerelease with the previous tag. For the first release, link to its release page when there is no previous tag.
 
    For generated GitHub notes or annotated-tag notes, prepare that source as the repository specifies without introducing a changelog solely to follow this procedure.
 
@@ -109,7 +109,7 @@ Read the PR descriptions wherever titles leave the effect unclear:
 
 - Start a stable release from the curated prerelease sections it rolls up, preserving their entries and adding subsequent changes, since regenerating solely from titles can lose wording and entries excluded by the commit filter.
 - Describe only changes the PRs made, covering what users can now do, what no longer breaks, what works differently, and migration steps.
-- Merge entries for one user-visible change while preserving every PR link, fold fixes to a feature introduced in the same release into that feature's entry, keep the main change's scope, and split a PR across entries when it has unrelated effects.
+- Merge entries for one user-visible change, preserving every PR link. Fold fixes to a feature introduced in the same release into that feature's entry. Keep the main change's scope, and split a PR across entries when it has unrelated effects.
 - Group entries by their effect, keeping breaking changes under Breaking changes, and drop entries with no user-visible effect, such as CI-only or test-only fixes.
 - Order each group by user impact and preserve scope labels. Lead with highlights when warranted, curating them by the same rules.
 
@@ -175,7 +175,7 @@ A repository whose package builds on fewer systems drops the `nix-cache` job and
 
 ### Republish release notes
 
-`publish-release` writes the notes once. To refresh them from an edited `CHANGELOG.md`, fetch `parse-changelog` and edit the release only if parsing succeeds, replacing `x86_64-unknown-linux-musl` below with your system's target, such as `aarch64-apple-darwin` on a Mac:
+`publish-release` writes the notes once. To refresh them from an edited `CHANGELOG.md`, fetch `parse-changelog` and edit the release only if parsing succeeds. Replace `x86_64-unknown-linux-musl` below with your system's target, such as `aarch64-apple-darwin` on a Mac:
 
 ```bash
 dir=$(mktemp -d)

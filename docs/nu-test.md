@@ -27,7 +27,7 @@ Add `dk.nushell` and `dk.nu-test` to the dev shell's `packages` (which the [READ
 
 ## Check a script without running it
 
-`dk.nu-check` runs Nushell's `--ide-check` on each file to catch mismatched delimiters and the arity of local `def`s, but it treats a mistyped command as an external call, so run the script once for real too. Diagnostics take these forms:
+`dk.nu-check` runs Nushell's `--ide-check` on each file to catch mismatched delimiters and wrong argument counts in calls to local `def`s. Because Nushell treats a mistyped command as an external call, run the script once for real too. Diagnostics take these forms:
 
 - A file's own error prints as `<file>:<line>:<column>: <message>`, the format editors link. The column counts bytes, matching Nushell's own diagnostics.
 - An error inside a module the file loads prints as `<file>: <message> (in a module it loads)`.

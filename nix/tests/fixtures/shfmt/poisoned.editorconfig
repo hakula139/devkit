@@ -1,7 +1,0 @@
-root = true
-
-[*]
-indent_style = space
-indent_size = 8
-binary_next_line = false
-switch_case_indent = false

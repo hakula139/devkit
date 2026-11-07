@@ -65,8 +65,6 @@ outputs =
 
 Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
 
-A devkit minor release can make a consumer's lock-maintenance PR fail, as [Release devkit](docs/releasing.md#release-devkit) explains.
-
 ## Adopt the Nushell tooling
 
 A Nushell repository adds its package and tests to the same attribute set:

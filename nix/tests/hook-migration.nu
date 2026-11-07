@@ -40,14 +40,24 @@ def main [source: path, shell_hook: path] {
         }]
       }]
     } | to json | save "old-config.json"
-    ^pre-commit install --config old-config.json --hook-type pre-commit --hook-type pre-push
+    (
+      ^pre-commit install
+        --config old-config.json
+        --hook-type pre-commit
+        --hook-type pre-push
+    )
 
     for iteration in [1 2] {
       let installed = (^bash $shell_hook | complete)
       assert equal $installed.exit_code 0 $installed.stderr
+      assert (".pre-commit-config.yaml" | path exists) $installed.stderr
 
       for name in ["pre-commit" "pre-push"] {
-        let args = if $name == "pre-push" { ["--" "fixture" "https://example.com/project.git"] } else { [] }
+        let args = if $name == "pre-push" {
+          ["--" "fixture" "https://example.com/project.git"]
+        } else {
+          []
+        }
         let run = (^git hook run $name ...$args | complete)
         assert equal $run.exit_code 0 $"($name), installation ($iteration): ($run.stderr)"
       }

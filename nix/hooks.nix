@@ -43,10 +43,16 @@ let
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
         actionlint = {
           enable = true;
-          # actionlint 1.7.12 predates valid syntax (rhysd/actionlint#657 and #669).
+          package = pkgs.actionlint.overrideAttrs (old: {
+            patches = (old.patches or [ ]) ++ [
+              (pkgs.fetchpatch {
+                url = "https://github.com/rhysd/actionlint/commit/644076a59742c2d1540ebd4686eab3c308f0e562.patch";
+                hash = "sha256-Lpd7CTkLbzgvAZV2H8G4GTUoPNDCK7PiW3A40+cquUk=";
+              })
+            ];
+          });
+          # actionlint's v3 metadata predates the client-id input (rhysd/actionlint#669).
           args = [
-            "-ignore"
-            ''unexpected key "queue" for "concurrency" section\. expected one of "cancel-in-progress", "group"''
             "-ignore"
             ''(missing input "app-id" which is required by action|input "client-id" is not defined in action) "actions/create-github-app-token@v3"''
           ];

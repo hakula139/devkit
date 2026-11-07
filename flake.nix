@@ -203,6 +203,9 @@
                   };
               };
               shellHook = pkgs.writeText "hook-migration.sh" fixture.shell.shellHook;
+              nixStore = pkgs.writers.makeScriptWriter {
+                interpreter = "${lib.getExe dk.nushell} --no-config-file";
+              } "/bin/nix-store" ./nix/tests/nix-store.stub.nu;
             in
             pkgs.runCommand "devkit-hook-migration"
               {
@@ -211,6 +214,7 @@
                   pkgs.git
                   pkgs.pre-commit
                   dk.nushell
+                  nixStore
                 ];
               }
               ''

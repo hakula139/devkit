@@ -29,14 +29,14 @@ let
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
-  taploConfig = lib.findFirst builtins.pathExists (pkgs.writeText "taplo.toml" "") [
-    (src + "/.taplo.toml")
-    (src + "/taplo.toml")
-  ];
-
   prettierConfig = lib.findFirst builtins.pathExists (json.generate "prettier.json" { }) [
     (src + "/.prettierrc.json")
     (src + "/.prettierrc")
+  ];
+
+  taploConfig = lib.findFirst builtins.pathExists (pkgs.writeText "taplo.toml" "") [
+    (src + "/.taplo.toml")
+    (src + "/taplo.toml")
   ];
 
   baseline =

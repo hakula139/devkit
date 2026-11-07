@@ -40,7 +40,7 @@ The baseline's `nu-check` hook runs `dk.nu-check`, the `--ide-check` wrapper, on
 
 List `preCommit.shell` in the `inputsFrom` of the repository's `pkgs.mkShell`. This places the hook packages and `prek` after the shell's own `packages` and `nativeBuildInputs`, so a consumer toolchain wins on `PATH`. Its `shellHook` starts with `unset PYTHONPATH`, since the hook packages' Python setup hook sets that variable and `nix develop` inherits any outer value, either of which would shadow a uv venv.
 
-`src` must be the flake's root, with that flake at the checkout root. The shell installs the hooks on entry only when `src/flake.nix` matches the checkout's `flake.nix`, so a shell borrowed from a sibling repository leaves that checkout alone. The installer clears any local `core.hooksPath`, so a repository that needs one must set it in its own `shellHook`, which runs after the installer.
+The shell installs the hooks when entered from a Git checkout. The generated configuration is registered as an indirect Nix GC root before installing prek's configured stages. The configuration path must be absent or a symlink into the Nix store. Installation is serialized across linked worktrees.
 
 ## Override a hook
 

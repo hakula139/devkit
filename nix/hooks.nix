@@ -17,9 +17,9 @@
 
 let
   inherit (pkgs) lib;
-  jsonFormat = pkgs.formats.json { };
+  json = pkgs.formats.json { };
 
-  dprintConfig = jsonFormat.generate "dprint.json" {
+  dprintConfig = json.generate "dprint.json" {
     markdown = {
       emphasisKind = "underscores";
       strongKind = "asterisks";
@@ -34,7 +34,7 @@ let
     (src + "/taplo.toml")
   ];
 
-  prettierConfig = lib.findFirst builtins.pathExists (jsonFormat.generate "prettier.json" { }) [
+  prettierConfig = lib.findFirst builtins.pathExists (json.generate "prettier.json" { }) [
     (src + "/.prettierrc.json")
     (src + "/.prettierrc")
   ];
@@ -51,6 +51,7 @@ let
           enable = true;
           package = pkgs.callPackage ../packages/actionlint { };
         };
+
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
         check-yaml.enable = true;
@@ -139,6 +140,7 @@ let
         };
 
         statix.enable = true;
+
         taplo = {
           enable = true;
           args = [
@@ -175,7 +177,6 @@ let
   dev = run [ { hooks = devHooks; } ];
   check = run [ { hooks = lib.mapAttrs (_: _: { enable = lib.mkForce false; }) devHooks; } ];
 
-  cmp = lib.getExe' pkgs.diffutils "cmp";
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
   hookTypes = lib.remove "manual" dev.config.installStages;
@@ -188,29 +189,29 @@ in
       dev.config.package
     ];
 
-    # Use shared hooks to avoid the relative path bug in linked worktrees (git-hooks.nix#688).
-    # Serialize installation, and leave sibling repositories that borrow this shell untouched.
     shellHook = ''
       unset PYTHONPATH
-      if top=$(${git} rev-parse --show-toplevel 2>/dev/null) &&
-        ${cmp} -s ${src + "/flake.nix"} "$top/flake.nix"; then
+      if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
         common=$(
           ${git} rev-parse \
             --path-format=absolute \
             --git-common-dir
         )
         (
+          set -e
           ${flock} 9
-          ${git} config --local --unset-all core.hooksPath || true
-          ${dev.config.installationScript}
-          ${git} config --local --unset-all core.hooksPath || true
-          if [ "$(readlink "$top/${dev.config.configPath}")" = "${dev.config.configFile}" ]; then
-            for hookType in ${lib.escapeShellArgs hookTypes}; do
-              ${lib.getExe dev.config.package} install \
-                --config ${lib.escapeShellArg dev.config.configPath} \
-                --hook-type "$hookType"
-            done
-          fi
+          ${lib.getExe' pkgs.nix "nix-store"} \
+            --add-root "$top/${dev.config.configPath}" \
+            --indirect \
+            --realise ${dev.config.configFile}
+          ${lib.getExe dev.config.package} install \
+            --config ${lib.escapeShellArg dev.config.configPath} \
+            ${lib.escapeShellArgs (
+              lib.concatMap (hookType: [
+                "--hook-type"
+                hookType
+              ]) hookTypes
+            )}
         ) 9>"$common/git-hooks.lock"
       fi
     '';

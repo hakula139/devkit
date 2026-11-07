@@ -175,27 +175,33 @@ in
 
     shellHook = ''
       unset PYTHONPATH
+
       if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
         common=$(
           ${git} rev-parse \
             --path-format=absolute \
             --git-common-dir
         )
+
         (
           set -e
           ${flock} 9
+
           ${lib.getExe' pkgs.nix "nix-store"} \
             --add-root "$top/${dev.config.configPath}" \
             --indirect \
             --realise ${dev.config.configFile}
-          ${lib.getExe dev.config.package} install \
-            --config ${lib.escapeShellArg dev.config.configPath} \
-            ${lib.escapeShellArgs (
-              lib.concatMap (hookType: [
-                "--hook-type"
-                hookType
-              ]) hookTypes
-            )}
+
+          ${lib.optionalString (hookTypes != [ ]) ''
+            ${lib.getExe dev.config.package} install \
+              --config ${lib.escapeShellArg dev.config.configPath} \
+              ${lib.escapeShellArgs (
+                lib.concatMap (hookType: [
+                  "--hook-type"
+                  hookType
+                ]) hookTypes
+              )}
+          ''}
         ) 9>"$common/git-hooks.lock"
       fi
     '';

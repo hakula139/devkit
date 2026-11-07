@@ -4,7 +4,16 @@ devkit publishes a moving major tag. Consumers reference `@v1` for actions and w
 
 ## Release your repository
 
-Follow [Cut a release](#cut-a-release) for the shared release procedure. A repository's local release documentation supplies its version files and policy, notes source, validation commands, workflows, publishing targets, and recovery restrictions. Keep those contracts with the repository and link here for the common procedure.
+Follow [Cut a release](#cut-a-release) for the shared release procedure. A repository's local release documentation supplies:
+
+- Version files and policy.
+- Notes source.
+- Validation commands.
+- Workflows.
+- Publishing targets.
+- Recovery restrictions.
+
+Keep those contracts in the repository and link here for the shared procedure.
 
 A repository whose two-system Nix package uses changelog-based notes can release from its own `tag.yml` by calling devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marking it as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. Before its first release, the caller needs:
 

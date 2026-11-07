@@ -48,7 +48,8 @@ nix flake check --all-systems
 Give each rule one home and link to it from other pages. Add a constraint to this file or `docs/` only if it is invisible, is destructive, or has already cost someone a debugging session, and leave out whatever a model can read from the flake, an action, or the tests.
 
 - `README.md` is for a repository deciding whether and how to adopt a piece.
-- `AGENTS.md` is for whoever changes the code, and `docs/` serves both contributors and adopters.
+- `AGENTS.md` is for whoever changes the code.
+- `docs/` serves both contributors and adopters.
 
 ## Code review
 

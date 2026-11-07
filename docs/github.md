@@ -4,85 +4,22 @@ Every Hakula repository starts from these GitHub defaults and uses no milestones
 
 A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets need GitHub Pro there.
 
-Run the commands from a checkout of the repository with admin credentials, since `gh` fills `{owner}` and `{repo}` from the checkout.
+Use admin credentials, and run commands containing `{owner}` and `{repo}` from a checkout of the target repository.
 
 ## Apply the branch ruleset
 
 The ruleset blocks deleting and force-pushing the default branch, and requires a pull request for every change:
 
-- `CI Result` must pass on a branch that is up to date with the default branch.
+- `CI Result` from GitHub Actions must pass on a branch that is up to date with the default branch.
 - Every review thread must be resolved.
 - No approval is required.
 - The admin role can bypass the ruleset in an emergency.
 
-The command creates the `main` ruleset, or replaces an existing one:
+From a devkit checkout, apply [the main ruleset](../.github/rulesets/main.json) to a repository:
 
 ```bash
-endpoint=repos/{owner}/{repo}/rulesets
-method=POST
-id=$(gh api "$endpoint" --jq '.[] | select(.name == "main") | .id')
-if [[ -n "$id" ]]; then
-  endpoint+="/$id"
-  method=PUT
-fi
-gh api "$endpoint" \
-  --method "$method" \
-  --input - \
-  <<'EOF'
-{
-  "name": "main",
-  "target": "branch",
-  "enforcement": "active",
-  "conditions": {
-    "ref_name": {
-      "include": ["~DEFAULT_BRANCH"],
-      "exclude": []
-    }
-  },
-  "bypass_actors": [
-    {
-      "actor_id": 5,
-      "actor_type": "RepositoryRole",
-      "bypass_mode": "always"
-    }
-  ],
-  "rules": [
-    {
-      "type": "deletion"
-    },
-    {
-      "type": "non_fast_forward"
-    },
-    {
-      "type": "pull_request",
-      "parameters": {
-        "required_approving_review_count": 0,
-        "dismiss_stale_reviews_on_push": false,
-        "require_code_owner_review": false,
-        "require_last_push_approval": false,
-        "required_review_thread_resolution": true
-      }
-    },
-    {
-      "type": "required_status_checks",
-      "parameters": {
-        "strict_required_status_checks_policy": true,
-        "required_status_checks": [
-          {
-            "context": "CI Result",
-            "integration_id": 15368
-          }
-        ]
-      }
-    }
-  ]
-}
-EOF
+bash scripts/apply-ruleset.sh OWNER/REPO
 ```
-
-- Actor 5 is the admin repository role.
-- Integration 15368 is GitHub Actions, so a status of the same name from another app does not satisfy the check.
-- GitHub rejects a `ref_name` condition without an `exclude` list, even though its REST schema marks the field optional.
 
 ## Make releases immutable
 

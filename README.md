@@ -6,20 +6,9 @@
 
 Shared development tooling for Hakula's repositories.
 
-## Contents
-
-| Piece             | Purpose                                                                         | Reference                                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Nix flake         | Share hooks, the dev shell, Nushell testing and packaging, and system helpers   | `github:hakula139/devkit/v1`                                                                              |
-| Composite actions | Install Nix with the shared cache, gate a run, and release a version            | `hakula139/devkit/actions/setup-nix@v1`, `.../ci-result@v1`, `.../tagged-ci@v1`, `.../publish-release@v1` |
-| CI workflow       | Run `nix flake check` on Linux and macOS                                        | `hakula139/devkit/.github/workflows/nix.yml@v1`                                                           |
-| Release workflows | Check the tagged commit, pin the cache, and publish the release                 | `hakula139/devkit/.github/workflows/release.yml@v1`, `.../nix-cache.yml@v1`                               |
-| git-cliff config  | Draft each release's `CHANGELOG.md` section from the conventional commit titles | `https://raw.githubusercontent.com/hakula139/devkit/v1/cliff.toml`                                        |
-| Renovate preset   | Share the update policy, release-age floors, and grouping                       | `github>hakula139/devkit`                                                                                 |
-
 ## Adopt the flake
 
-devkit needs nixpkgs 26.05 or later, since `nodeTool` pins `nodejs_26` and `pnpm_12`.
+devkit needs nixpkgs 26.05 or later.
 
 ```nix
 devkit = {
@@ -28,7 +17,10 @@ devkit = {
 };
 ```
 
-`devkit.lib.systems` and `devkit.lib.eachSystem` replace `flake-utils`, and `eachSystem` merges each system's attribute set, so an output that a system omits is absent there:
+`devkit.lib.systems` and `devkit.lib.eachSystem` replace `flake-utils`:
+
+- `devkit.lib.systems` lists the shared target systems.
+- `devkit.lib.eachSystem` merges each system's attribute set, leaving any output that a system omits absent on that system.
 
 ```nix
 outputs =
@@ -46,6 +38,11 @@ outputs =
 
       preCommit = dk.preCommit {
         src = ./.;
+        hooks = {
+          deadnix.enable = true;
+          nixfmt.enable = true;
+          statix.enable = true;
+        };
       };
     in
     {
@@ -64,15 +61,15 @@ outputs =
   );
 ```
 
-`devkit.lib` holds the pure helpers, and `dk = devkit.lib.mkLib pkgs` binds `pkgs` once for the rest. [Hooks](docs/hooks.md) lists the hooks and the config files they read, and covers the dev and check split, `preCommit.shell`, and the lockfile-pinned tools.
+`devkit.lib` holds the pure helpers, and `dk = devkit.lib.mkLib pkgs` binds `pkgs` once for the rest. See [Hooks](docs/hooks.md) for hook setup and configuration.
 
-- Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
+Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
 
 A devkit minor release can make a consumer's lock-maintenance PR fail, as [Release devkit](docs/releasing.md#release-devkit) explains.
 
 ## Adopt the Nushell tooling
 
-A Nushell repository adds its package and its tests to the same attribute set:
+A Nushell repository adds its package and tests to the same attribute set:
 
 ```nix
 packages.default = dk.mkNuApplication {
@@ -89,11 +86,16 @@ checks.tests = dk.nuTests {
 };
 ```
 
-[Nushell test runner](docs/nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`. It packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`, and copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill. It sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
+[Nushell test runner](docs/nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` packages the application as follows:
+
+- Reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`.
+- Packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`.
+- Copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill.
+- Sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
 
 `mkNuApplication`, `nuTests`, and the `nu-*` tools run on `dk.nushell`, which is the consumer's `pkgs.nushell` when it is 0.116 or later, and otherwise the one from devkit's `nixpkgs-unstable` input, so `nixpkgs-unstable` must not follow a stable nixpkgs.
 
-The same `devkit.lib` provides the skill option and links for a Home Manager module:
+`devkit.lib` also provides the skill option and links for a Home Manager module:
 
 ```nix
 options.programs.my-tool.skillDirectories = lib.mkOption devkit.lib.skillDirectoriesOption;
@@ -153,19 +155,19 @@ jobs:
 
 Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
 
-`nix.yml` runs only `nix flake check`, which builds the `checks` outputs and not `packages`, so expose the package as a check to have CI build it:
+`nix.yml` runs only `nix flake check`, which builds only the `checks` outputs, not `packages`, so expose the package as a check to have CI build it:
 
 ```nix
 checks.package = self.packages.${system}.default;
 ```
 
-The [branch ruleset](docs/github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips a job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
+The [branch ruleset](docs/github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
 
-Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to it only from the default branch. Create a `CACHIX_AUTH_TOKEN` secret to enable the push.
+Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to it only from the default branch. Create a `CACHIX_AUTH_TOKEN` secret to enable pushing.
 
 ## Adopt the release workflow
 
-[Releasing](docs/releasing.md) covers the release caller and its prerequisites, the tag-versus-package check, the cache pin, and drafting the `CHANGELOG.md` section with the shared git-cliff config.
+See [Releasing](docs/releasing.md) for release setup and the release procedure.
 
 ## Adopt the Renovate preset
 
@@ -178,13 +180,20 @@ Extend the preset from `.github/renovate.json`:
 }
 ```
 
-A preset change applies to every consumer on its next Renovate run, without a devkit release. Pin the reference to `github>hakula139/devkit#v1` to take preset changes only with a devkit release, or to `#v1.2.3` to take them when you bump the reference.
+- `github>hakula139/devkit` picks up preset changes on the next Renovate run without waiting for a devkit release.
+- `github>hakula139/devkit#v1` picks up preset changes only on a devkit release.
+- `github>hakula139/devkit#v1.2.3` picks up preset changes only when you bump the reference.
 
-The preset automerges daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates, all with squash, so the repository must allow squash merging. Every other update opens for review. A devkit major arrives in the `devkit` group's own PR, which moves the `@v1` references, the `#v1` preset reference, and, through the preset's custom manager, a flake reference that pins the major tag, such as `github:hakula139/devkit/v1`. The manager leaves a full-version ref and `flake.lock` alone, so run `nix flake update devkit` on that PR before merging it.
+The preset's merge policy requires squash merging:
+
+- Daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates automerge with squash.
+- Every other update opens for review.
+
+A devkit major update opens a separate `devkit` PR that updates the `@v1` references, the `#v1` preset reference, and major-tag flake references such as `github:hakula139/devkit/v1`. Full-version references and `flake.lock` stay unchanged. Run `nix flake update devkit` on that PR before merging it.
 
 ## Adopt the GitHub conventions
 
-[GitHub conventions](docs/github.md) covers the branch ruleset, immutable releases, the repository and security settings, and the labels that a repository starts from.
+See [GitHub conventions](docs/github.md) for repository defaults.
 
 ## Development
 

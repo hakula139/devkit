@@ -1,10 +1,8 @@
 # GitHub conventions
 
-Every Hakula repository starts from these GitHub defaults and uses no milestones.
+These conventions provide defaults for public repositories, and you can extend the required checks and labels to fit each repository.
 
-A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets need GitHub Pro there.
-
-Use admin credentials, and run commands containing `{owner}` and `{repo}` from a checkout of the target repository.
+Use authenticated `gh` and Nushell to run each command from a devkit checkout, with the target repository as `OWNER/REPO`.
 
 ## Apply the branch ruleset
 
@@ -18,15 +16,17 @@ The ruleset blocks deleting and force-pushing the default branch, and requires a
 From a devkit checkout, apply [the main ruleset](../.github/rulesets/main.json) to a repository:
 
 ```bash
-bash scripts/apply-ruleset.sh OWNER/REPO
+nu scripts/github.nu ruleset OWNER/REPO
 ```
+
+The helper replaces the named `main` ruleset. For project-specific required checks, pass `--config` with a repository-maintained JSON file.
 
 ## Make releases immutable
 
 Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable, so [republishing notes](releasing.md#republish-release-notes) still works. The major tag, such as `v1`, has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
 
 ```bash
-gh api repos/{owner}/{repo}/immutable-releases --method PUT
+nu scripts/github.nu immutable-releases OWNER/REPO
 ```
 
 ## Apply the repository settings
@@ -35,26 +35,11 @@ gh api repos/{owner}/{repo}/immutable-releases --method PUT
 - **Squash commit title and body: `PR_TITLE` and `PR_BODY`.** The pull request description carries the rationale into the commit body.
 - **`delete_branch_on_merge`: on.**
 - **`allow_auto_merge`: on.** Renovate's platform automerge merges the moment checks pass.
-- **Wiki, Projects, and Discussions: off.** Docs live in the repository. A repository with a community turns Discussions on.
+- **Wiki: off.** Docs live in the repository, and you can enable Projects and Discussions as needed.
 - **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
 
 ```bash
-gh api repos/{owner}/{repo} \
-  --method PATCH \
-  -F allow_squash_merge=true \
-  -F allow_merge_commit=false \
-  -F allow_rebase_merge=false \
-  -f squash_merge_commit_title=PR_TITLE \
-  -f squash_merge_commit_message=PR_BODY \
-  -F delete_branch_on_merge=true \
-  -F allow_auto_merge=true \
-  -F has_wiki=false \
-  -F has_projects=false \
-  -F has_discussions=false
-gh api repos/{owner}/{repo}/actions/permissions/workflow \
-  --method PUT \
-  -f default_workflow_permissions=read \
-  -F can_approve_pull_request_reviews=false
+nu scripts/github.nu settings OWNER/REPO
 ```
 
 ## Turn on the security features
@@ -64,61 +49,17 @@ gh api repos/{owner}/{repo}/actions/permissions/workflow \
 - **Secret scanning with push protection:** Keeps credentials out of the history.
 
 ```bash
-gh api repos/{owner}/{repo}/vulnerability-alerts --method PUT
-gh api repos/{owner}/{repo}/automated-security-fixes --method DELETE
-gh api repos/{owner}/{repo}/private-vulnerability-reporting --method PUT
-gh api repos/{owner}/{repo} \
-  --method PATCH \
-  -f 'security_and_analysis[secret_scanning][status]=enabled' \
-  -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
+nu scripts/github.nu security OWNER/REPO
 ```
 
 ## Set up the labels
 
-The labels are GitHub's defaults that carry meaning, plus the one the Renovate preset applies:
+Create or update the [shared labels](../.github/labels.json) while preserving the repository's custom labels.
 
-<!-- cspell:ignore eeef -->
-
-| Label              | Color    | Description                                 |
-| ------------------ | -------- | ------------------------------------------- |
-| `accessibility`    | `f143ab` | Barrier affecting people with disabilities  |
-| `bug`              | `d73a4a` | Something isn't working                     |
-| `dependencies`     | `0366d6` | Pull requests that update a dependency file |
-| `documentation`    | `0075ca` | Improvements or additions to documentation  |
-| `enhancement`      | `a2eeef` | New feature or request                      |
-| `good first issue` | `7057ff` | Good for newcomers                          |
-| `help wanted`      | `008672` | Extra attention is needed                   |
-
-Labels do not mirror commit types, since a pull request's title already carries its type and the changelog groups by it. `bug`, `enhancement`, and `documentation` sort issues, which have no commit type, along with the pull requests that resolve them. Every other label is removed, including GitHub's `duplicate`, `invalid`, and `wontfix`, which the "duplicate" and "not planned" close reasons replace.
-
-The commands create or update each label in the table, then delete every other label. Deleting a label permanently removes it from every issue and pull request.
+Use lowercase `area: <component>` labels for repository-defined components, and apply multiple area labels to an issue when needed. Pass component names without the prefix, or omit them to apply only the shared labels:
 
 ```bash
-labels=$(
-  cat <<'EOF'
-accessibility|f143ab|Barrier affecting people with disabilities
-bug|d73a4a|Something isn't working
-dependencies|0366d6|Pull requests that update a dependency file
-documentation|0075ca|Improvements or additions to documentation
-enhancement|a2eeef|New feature or request
-good first issue|7057ff|Good for newcomers
-help wanted|008672|Extra attention is needed
-EOF
-)
-while IFS='|' read -r name color description; do
-  gh label create "$name" \
-    --color "$color" \
-    --description "$description" \
-    --force
-done <<<"$labels"
-gh label list \
-  --limit 1000 \
-  --json name \
-  --jq '.[].name' \
-  | grep -vxF "$(sed 's/|.*//' <<<"$labels")" \
-  | while read -r name; do
-    gh label delete "$name" --yes
-  done
+nu scripts/github.nu labels OWNER/REPO cli parser
 ```
 
 ## Inherit the community files

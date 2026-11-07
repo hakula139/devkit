@@ -184,17 +184,10 @@ A repository whose package builds on fewer systems drops the `nix-cache` job and
 
 ### Republish release notes
 
-`publish-release` writes the notes once. To refresh them from an edited `CHANGELOG.md`, fetch `parse-changelog` and edit the release only if parsing succeeds. Replace `x86_64-unknown-linux-musl` below with your system's target, such as `aarch64-apple-darwin` on a Mac:
+`publish-release` writes the release notes once. To update them after editing `CHANGELOG.md`, run the following from a checkout of the target repository with an authenticated `gh`, Nushell, and [`parse-changelog`](https://github.com/taiki-e/parse-changelog#installation) on `PATH`:
 
 ```bash
-dir=$(mktemp -d)
-gh release download \
-  -R taiki-e/parse-changelog \
-  -p 'parse-changelog-x86_64-unknown-linux-musl.tar.gz' \
-  --dir "$dir"
-tar -xzf "$dir"/parse-changelog-*.tar.gz -C "$dir"
-"$dir/parse-changelog" CHANGELOG.md 1.2.3 >"$dir/notes.md" \
-  && gh release edit v1.2.3 --notes-file "$dir/notes.md"
+nu <devkit-source>/scripts/github.nu release-notes OWNER/REPO v1.2.3
 ```
 
 ## Release devkit
@@ -203,7 +196,7 @@ Cut a devkit release as [Cut a release](#cut-a-release) describes, using its loc
 
 Moving the major tag requires the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write permissions. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets.
 
-Any change that breaks an existing caller of an action, reusable workflow, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. Moving the shared `cliff.toml` or changing its `header` also requires one, since `--prepend` replaces an existing header only when it matches exactly. A new or stricter baseline hook ships in a minor release even when it reports findings, so each consumer's lock-maintenance PR fails until its findings are fixed on the Renovate branch.
+Any change that breaks an existing caller of an action, reusable workflow, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. Moving the shared `cliff.toml` or changing its `header` also requires one, since `--prepend` replaces an existing header only when it matches exactly. New or stricter baseline hooks ship in a minor release.
 
 ### Roll back
 

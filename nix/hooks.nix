@@ -205,6 +205,7 @@ in
       unset PYTHONPATH
 
       if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
+        # Linked worktrees share hooks, so their common Git directory owns the install lock.
         common=$(
           ${git} rev-parse \
             --path-format=absolute \
@@ -215,11 +216,15 @@ in
           set -e
           ${flock} 9
 
+          # Keep hook tools alive through the config's GC root.
+          # Nix refuses to replace a checkout-owned regular file.
           ${lib.getExe' pkgs.nix "nix-store"} \
             --add-root "$top/${dev.config.configPath}" \
             --indirect \
             --realise ${dev.config.configFile}
 
+          # Refresh shims even with unchanged config, preserving core.hooksPath.
+          # Empty stage arguments would make prek install pre-commit by default.
           ${lib.optionalString (hookTypes != [ ]) ''
             ${lib.getExe dev.config.package} install \
               --config ${lib.escapeShellArg dev.config.configPath} \

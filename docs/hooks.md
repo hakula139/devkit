@@ -25,7 +25,7 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 ## Configure the baseline
 
 - **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
-- **dprint and markdownlint-cli2:** dprint formats Markdown before markdownlint-cli2 runs, and markdownlint-cli2 then checks the rules in `.markdownlint-cli2.jsonc`, including inside `<!-- dprint-ignore -->` blocks.
+- **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 then checks it against `.markdownlint-cli2.jsonc`, including content inside `<!-- dprint-ignore -->` blocks.
 - **Prettier:** Uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. EditorConfig and configuration lookup are disabled to keep personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
 - **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults. Automatic configuration lookup is disabled to keep personal configuration out of repository checks.
 
@@ -46,7 +46,7 @@ Set `hooks.nu-check.enable = true;` to check Nushell files with `dk.nu-check`. `
 
 Add `preCommit.shell` to the `inputsFrom` of the repository's `pkgs.mkShell`. The shell's own `packages` and `nativeBuildInputs` take precedence over hook packages on `PATH`.
 
-Entering the dev shell from a Git checkout installs the hooks, provided the configuration path is absent or a symlink into the Nix store.
+Entering the dev shell from a Git checkout installs the hooks. The configuration path must be absent or a symlink into the Nix store.
 
 ## Override a hook
 

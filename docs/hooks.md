@@ -28,6 +28,8 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 
+Prettier uses the source root's `.prettierrc.json` or `.prettierrc`, falling back to its defaults, with EditorConfig disabled. This keeps personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
+
 ## Check Nushell files
 
 The baseline's `nu-check` hook runs `dk.nu-check`, the `--ide-check` wrapper, on Nushell files, and stays off until `hooks.nu-check.enable = true;`. Because `nufmt` reindents to four spaces, no hook runs it, and only `editorconfig-checker` checks Nushell indentation against a `[*.nu]` section in `.editorconfig` such as devkit's.

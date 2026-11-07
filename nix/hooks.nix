@@ -33,6 +33,13 @@ let
     (src + "/taplo.toml")
   ];
 
+  prettierConfig =
+    lib.findFirst builtins.pathExists ((pkgs.formats.json { }).generate "prettier.json" { })
+      [
+        (src + "/.prettierrc.json")
+        (src + "/.prettierrc")
+      ];
+
   baseline =
     { config, ... }:
     {
@@ -116,6 +123,10 @@ let
         prettier = {
           enable = true;
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
+          settings = {
+            configPath = "${prettierConfig}";
+            no-editorconfig = true;
+          };
         };
 
         shellcheck = {
@@ -181,19 +192,25 @@ let
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
   hookTypes = lib.unique (
-    map (
-      stage:
-      if
-        builtins.elem stage [
-          "commit"
-          "merge-commit"
-          "push"
-        ]
-      then
-        "pre-${stage}"
-      else
-        stage
-    ) (lib.remove "manual" dev.config.installStages)
+    map
+      (
+        stage:
+        if
+          builtins.elem stage [
+            "commit"
+            "merge-commit"
+            "push"
+          ]
+        then
+          "pre-${stage}"
+        else
+          stage
+      )
+      (
+        lib.remove "manual" (
+          if dev.config.installStages == [ ] then [ "pre-commit" ] else dev.config.installStages
+        )
+      )
   );
 in
 {
@@ -230,6 +247,15 @@ in
             }
           ''}
           ${dev.config.installationScript}
+          ${lib.optionalString (hookTypes != [ ]) ''
+            if [ "$(readlink "$top/${dev.config.configPath}")" = "${dev.config.configFile}" ]; then
+              ${lib.concatMapStringsSep "\n" (hookType: ''
+                ${lib.getExe dev.config.package} install \
+                  --config ${lib.escapeShellArg dev.config.configPath} \
+                  --hook-type ${lib.escapeShellArg hookType}
+              '') hookTypes}
+            fi
+          ''}
         ) 9>"$common/git-hooks.lock"
       fi
     '';

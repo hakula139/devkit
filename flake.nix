@@ -193,8 +193,15 @@
                     enable = lib.mkForce false;
                   })
                   // {
-                    check-merge-conflicts = {
+                    migration-fixture = {
                       enable = true;
+                      entry = toString (
+                        pkgs.writeShellScript "managed-hook-fixture" ''
+                          printf '%s\n' current >> new.log
+                        ''
+                      );
+                      always_run = true;
+                      pass_filenames = false;
                       stages = [
                         "pre-commit"
                         "pre-push"
@@ -213,6 +220,7 @@
                   pkgs.bash
                   pkgs.git
                   pkgs.pre-commit
+                  pkgs.prek
                   dk.nushell
                   nixStore
                 ];

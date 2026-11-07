@@ -217,7 +217,7 @@ in
           ${flock} 9
 
           # Keep hook tools alive through the config's GC root.
-          # Nix refuses to replace a checkout-owned regular file.
+          # Nix refuses to replace an existing regular file.
           ${lib.getExe' pkgs.nix "nix-store"} \
             --add-root "$top/${dev.config.configPath}" \
             --indirect \

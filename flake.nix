@@ -177,8 +177,48 @@
 
           actions = dk.nuTests {
             src = ./actions;
-            runtimeInputs = [ pkgs.jq ];
+            runtimeInputs = [
+              pkgs.bash
+              pkgs.jq
+            ];
           };
+
+          hook-migration =
+            let
+              src = pkgs.writeTextDir "flake.nix" "{}";
+              fixture = dk.preCommit {
+                inherit src;
+                hooks =
+                  lib.genAttrs (builtins.attrNames preCommit.check.config.hooks) (_: {
+                    enable = lib.mkForce false;
+                  })
+                  // {
+                    check-merge-conflicts = {
+                      enable = true;
+                      stages = [
+                        "pre-commit"
+                        "pre-push"
+                      ];
+                    };
+                  };
+              };
+              shellHook = pkgs.writeText "hook-migration.sh" fixture.shell.shellHook;
+            in
+            pkgs.runCommand "devkit-hook-migration"
+              {
+                nativeBuildInputs = [
+                  pkgs.bash
+                  pkgs.git
+                  pkgs.pre-commit
+                  dk.nushell
+                ];
+              }
+              ''
+                export HOME="$TMPDIR/home"
+                mkdir "$HOME"
+                nu --no-config-file ${./nix/tests/hook-migration.nu} ${src} ${shellHook}
+                touch "$out"
+              '';
 
           nu-tools =
             pkgs.runCommand "devkit-nu-tools"

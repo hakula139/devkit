@@ -142,10 +142,7 @@ let
 
         taplo = {
           enable = true;
-          args = [
-            "--no-auto-config"
-            "--config=${taploConfig}"
-          ];
+          args = [ "--config=${taploConfig}" ];
         };
 
         trim-trailing-whitespace = {

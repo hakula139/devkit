@@ -26,8 +26,8 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 - **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
 - **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 then checks it against `.markdownlint-cli2.jsonc`, including content inside `<!-- dprint-ignore -->` blocks.
-- **Prettier:** Uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. EditorConfig and configuration lookup are disabled to keep personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
-- **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults. Automatic configuration lookup is disabled to keep personal configuration out of repository checks.
+- **Prettier:** Uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
+- **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults.
 
 ### Exclude fixtures
 

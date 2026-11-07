@@ -136,6 +136,11 @@
             expectedBuilderLogEntries = [ "SC2086" ];
           };
 
+          shfmt = import ./nix/tests/shfmt.nix {
+            inherit pkgs;
+            shfmt = preCommit.check.config.hooks.shfmt;
+          };
+
           hook-defaults =
             let
               defaults = dk.preCommit { src = ./.; };

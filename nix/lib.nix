@@ -9,6 +9,8 @@
 }:
 
 let
+  actionlint = pkgs.callPackage ../packages/actionlint { };
+
   lockedTool =
     runtimeInputs: runner: command:
     pkgs.writeShellApplication {
@@ -29,7 +31,14 @@ in
 {
   inherit nu-check nu-test nushell;
 
-  preCommit = import ./hooks.nix { inherit pkgs git-hooks-nix nu-check; };
+  preCommit = import ./hooks.nix {
+    inherit
+      pkgs
+      git-hooks-nix
+      actionlint
+      nu-check
+      ;
+  };
   nodeTool = lockedTool [
     pkgs.nodejs_26
     pkgs.pnpm_12

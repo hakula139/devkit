@@ -18,7 +18,7 @@ The shared hook configurations cover:
 | `markdownlint-cli2`                                                      | Markdown                           | `.markdownlint-cli2.jsonc` |
 | `prettier`                                                               | JavaScript, TypeScript, JSON, YAML | `.prettierrc.json`         |
 | `shellcheck`                                                             | Every shell file except zsh        |                            |
-| `shfmt`                                                                  | Every shell file, zsh included     | `.editorconfig`            |
+| `shfmt`                                                                  | Every shell file, zsh included     |                            |
 | `sort-file-contents`                                                     | The order of `.cspell/words.txt`   |                            |
 | `taplo`                                                                  | TOML                               | `.taplo.toml`              |
 
@@ -73,7 +73,10 @@ preCommit = dk.preCommit {
 
 ## Run a lockfile-pinned tool
 
-`dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`, and `dk.uvTool "<command>"` returns one that runs `uv run --locked <command>`. Enable the builtin hook and set its `package` under `devHooks`:
+- `dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`.
+- `dk.uvTool "<command>"` returns a package that runs `uv run --locked <command>`.
+
+Enable the builtin hook and set its `package` under `devHooks`:
 
 ```nix
 devHooks = {

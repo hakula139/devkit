@@ -5,6 +5,7 @@
 {
   pkgs,
   git-hooks-nix,
+  actionlint,
   nu-check,
 }:
 
@@ -30,10 +31,10 @@ let
   };
 
   taploConfig =
-    if builtins.pathExists (src + "/.taplo.toml") then
-      src + "/.taplo.toml"
-    else
-      pkgs.writeText "taplo.toml" "";
+    let
+      configPath = src + "/.taplo.toml";
+    in
+    if builtins.pathExists configPath then configPath else pkgs.writeText "taplo.toml" "";
 
   baseline =
     { config, ... }:
@@ -44,7 +45,7 @@ let
 
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
         actionlint = {
-          package = pkgs.callPackage ../packages/actionlint { };
+          package = actionlint;
         };
 
         check-added-large-files.enable = true;
@@ -113,6 +114,9 @@ let
         # Formatting flags disable shfmt's EditorConfig settings.
         shfmt = {
           settings = {
+            binary-next-line = true;
+            case-indent = true;
+            indent = 2;
             language-dialect = null;
             simplify = false;
           };

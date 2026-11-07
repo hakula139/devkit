@@ -18,6 +18,10 @@
 
 let
   inherit (pkgs) lib;
+
+  # ------------------------------------------------------------------------------------------------
+  # Formatter configuration
+  # ------------------------------------------------------------------------------------------------
   json = pkgs.formats.json { };
 
   dprintConfig = json.generate "dprint.json" {
@@ -36,6 +40,9 @@ let
     in
     if builtins.pathExists configPath then configPath else pkgs.writeText "taplo.toml" "";
 
+  # ------------------------------------------------------------------------------------------------
+  # Hook defaults
+  # ------------------------------------------------------------------------------------------------
   baseline =
     { config, ... }:
     {
@@ -140,6 +147,9 @@ let
       };
     };
 
+  # ------------------------------------------------------------------------------------------------
+  # Hook evaluation
+  # ------------------------------------------------------------------------------------------------
   # Mirrors git-hooks.nix's own overlay, so the hooks build from the consumer's package set.
   gitHooksRun = pkgs.callPackage "${git-hooks-nix}/nix/run.nix" {
     tools = import "${git-hooks-nix}/nix/call-tools.nix" pkgs;
@@ -161,6 +171,9 @@ let
   dev = run [ { hooks = devHooks; } ];
   check = run [ { hooks = lib.mapAttrs (_: _: { enable = lib.mkForce false; }) devHooks; } ];
 
+  # ------------------------------------------------------------------------------------------------
+  # Hook installation
+  # ------------------------------------------------------------------------------------------------
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
 

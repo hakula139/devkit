@@ -2,23 +2,23 @@
 
 The baseline enables these hooks:
 
-| Hook                                                                         | Checks                                 | Config                     |
-| ---------------------------------------------------------------------------- | -------------------------------------- | -------------------------- |
-| `actionlint`                                                                 | Workflows                              | `.github/actionlint.yaml`  |
-| `check-added-large-files`                                                    | Every file                             |                            |
-| `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` | Every text file                        |                            |
-| `check-yaml`                                                                 | YAML syntax                            |                            |
-| `cspell`                                                                     | Spelling in every file                 | `cspell.json`              |
-| `deadnix`, `nixfmt`, and `statix`                                            | Nix                                    |                            |
-| `doctoc`                                                                     | Markdown tables of contents            |                            |
-| `dprint`                                                                     | Markdown formatting                    |                            |
-| `editorconfig-checker`                                                       | EditorConfig properties                | `.editorconfig`            |
-| `markdownlint-cli2`                                                          | Markdown                               | `.markdownlint-cli2.jsonc` |
-| `prettier`                                                                   | JavaScript, TypeScript, JSON, and YAML | `.prettierrc.json`         |
-| `shellcheck`                                                                 | Every shell file except zsh            |                            |
-| `shfmt`                                                                      | Every shell file, zsh included         | `.editorconfig`            |
-| `sort-file-contents`                                                         | The order of `.cspell/words.txt`       |                            |
-| `taplo`                                                                      | TOML                                   | `.taplo.toml`              |
+| Hook                                                                     | Checks                             | Config                     |
+| ------------------------------------------------------------------------ | ---------------------------------- | -------------------------- |
+| `actionlint`                                                             | Workflows                          | `.github/actionlint.yaml`  |
+| `check-added-large-files`                                                | Every file                         |                            |
+| `check-merge-conflicts`, `end-of-file-fixer`, `trim-trailing-whitespace` | Every text file                    |                            |
+| `check-yaml`                                                             | YAML syntax                        |                            |
+| `cspell`                                                                 | Spelling in every file             | `cspell.json`              |
+| `deadnix`, `nixfmt`, `statix`                                            | Nix                                |                            |
+| `doctoc`                                                                 | Markdown tables of contents        |                            |
+| `dprint`                                                                 | Markdown formatting                |                            |
+| `editorconfig-checker`                                                   | EditorConfig properties            | `.editorconfig`            |
+| `markdownlint-cli2`                                                      | Markdown                           | `.markdownlint-cli2.jsonc` |
+| `prettier`                                                               | JavaScript, TypeScript, JSON, YAML | `.prettierrc.json`         |
+| `shellcheck`                                                             | Every shell file except zsh        |                            |
+| `shfmt`                                                                  | Every shell file, zsh included     | `.editorconfig`            |
+| `sort-file-contents`                                                     | The order of `.cspell/words.txt`   |                            |
+| `taplo`                                                                  | TOML                               | `.taplo.toml`              |
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings, and devkit's own config files are working examples.
 

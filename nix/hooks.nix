@@ -32,7 +32,7 @@ let
 
   taploConfig =
     let
-      configPath = src + "/.taplo.toml";
+      configPath = "${src}/.taplo.toml";
     in
     if builtins.pathExists configPath then configPath else pkgs.writeText "taplo.toml" "";
 

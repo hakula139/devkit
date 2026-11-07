@@ -163,7 +163,21 @@ let
 
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
-  hookTypes = lib.remove "manual" dev.config.installStages;
+  hookTypes = lib.unique (
+    map (
+      stage:
+      if
+        lib.elem stage [
+          "commit"
+          "merge-commit"
+          "push"
+        ]
+      then
+        "pre-${stage}"
+      else
+        stage
+    ) (lib.remove "manual" dev.config.installStages)
+  );
 in
 {
   inherit check;

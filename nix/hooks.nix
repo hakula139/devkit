@@ -29,11 +29,6 @@ let
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
-  prettierConfig = lib.findFirst builtins.pathExists (json.generate "prettier.json" { }) [
-    (src + "/.prettierrc.json")
-    (src + "/.prettierrc")
-  ];
-
   taploConfig = lib.findFirst builtins.pathExists (pkgs.writeText "taplo.toml" "") [
     (src + "/.taplo.toml")
     (src + "/taplo.toml")
@@ -112,7 +107,7 @@ let
           enable = true;
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
           settings = {
-            configPath = "${prettierConfig}";
+            configPath = "${src}/.prettierrc.json";
             no-editorconfig = true;
           };
         };

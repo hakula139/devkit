@@ -107,7 +107,10 @@ let
           enable = true;
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
           settings = {
-            configPath = "${src}/.prettierrc.json";
+            configPath = lib.optionalString (builtins.pathExists (
+              src + "/.prettierrc.json"
+            )) "${src}/.prettierrc.json";
+            no-config = config.hooks.prettier.settings.configPath == "";
             no-editorconfig = true;
           };
         };

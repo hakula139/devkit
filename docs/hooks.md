@@ -28,7 +28,7 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 
-Prettier requires `.prettierrc.json` at the source root and runs with EditorConfig disabled. This keeps personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
+Prettier uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. EditorConfig and configuration lookup are disabled, keeping personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
 
 ## Check Nushell files
 

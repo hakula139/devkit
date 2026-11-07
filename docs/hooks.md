@@ -1,6 +1,8 @@
 # Hooks
 
-The baseline enables these hooks:
+Only `check-added-large-files`, `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` are enabled by default. Enable other hooks with `hooks.<name>.enable = true;`.
+
+The shared hook configurations cover:
 
 | Hook                                                                     | Checks                             | Config                     |
 | ------------------------------------------------------------------------ | ---------------------------------- | -------------------------- |
@@ -24,9 +26,11 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 ## Configure the baseline
 
+- **cspell:** Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`.
 - **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
 - **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 then checks it against `.markdownlint-cli2.jsonc`, including content inside `<!-- dprint-ignore -->` blocks.
 - **Prettier:** Uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
+- **shellcheck:** Start the repository's `.envrc` with `# shellcheck shell=bash`, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
 - **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults.
 
 ### Exclude fixtures
@@ -35,7 +39,7 @@ The baseline excludes any path with a `fixtures/` component, since fixtures are 
 
 ## Check Nushell files
 
-Set `hooks.nu-check.enable = true;` to check Nushell files with `dk.nu-check`. `editorconfig-checker` checks indentation against a `[*.nu]` section in `.editorconfig`, and no hook runs `nufmt`.
+Set `hooks.nu-check.enable = true;` to check Nushell files with `dk.nu-check`. When enabled, `editorconfig-checker` checks indentation against a `[*.nu]` section in `.editorconfig`. No hook runs `nufmt`.
 
 ## Set up the dev shell and the check
 
@@ -56,7 +60,10 @@ Definitions under `hooks` merge recursively with the baseline and override its d
 preCommit = dk.preCommit {
   src = ./.;
   hooks = {
-    prettier.files = "\\.(js|mjs|json|jsonc|ya?ml)$";
+    prettier = {
+      enable = true;
+      files = "\\.(js|mjs|json|jsonc|ya?ml)$";
+    };
     trim-trailing-whitespace.excludes = [
       "\\.patch$"
     ];
@@ -66,7 +73,7 @@ preCommit = dk.preCommit {
 
 ## Run a lockfile-pinned tool
 
-`dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`, and `dk.uvTool "<command>"` returns one that runs `uv run --locked <command>`. Set either as a builtin hook's `package` under `devHooks`. A builtin that the baseline leaves off, such as mypy, also needs `enable = true`:
+`dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`, and `dk.uvTool "<command>"` returns one that runs `uv run --locked <command>`. Enable the builtin hook and set its `package` under `devHooks`:
 
 ```nix
 devHooks = {
@@ -74,7 +81,10 @@ devHooks = {
     enable = true;
     package = dk.uvTool "mypy";
   };
-  prettier.package = dk.nodeTool "prettier";
+  prettier = {
+    enable = true;
+    package = dk.nodeTool "prettier";
+  };
 };
 ```
 

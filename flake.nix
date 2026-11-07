@@ -86,7 +86,24 @@
 
         preCommit = dk.preCommit {
           src = ./.;
-          hooks.nu-check.enable = true;
+          hooks = {
+            actionlint.enable = true;
+            check-yaml.enable = true;
+            cspell.enable = true;
+            deadnix.enable = true;
+            doctoc.enable = true;
+            dprint.enable = true;
+            editorconfig-checker.enable = true;
+            markdownlint-cli2.enable = true;
+            nixfmt.enable = true;
+            nu-check.enable = true;
+            prettier.enable = true;
+            shellcheck.enable = true;
+            shfmt.enable = true;
+            sort-file-contents.enable = true;
+            statix.enable = true;
+            taplo.enable = true;
+          };
         };
       in
       {
@@ -111,9 +128,43 @@
           pre-commit = preCommit.check;
 
           shellcheck = pkgs.testers.testBuildFailure' {
-            drv = (dk.preCommit { src = ./nix/tests/fixtures/shellcheck; }).check;
+            drv =
+              (dk.preCommit {
+                src = ./nix/tests/fixtures/shellcheck;
+                hooks.shellcheck.enable = true;
+              }).check;
             expectedBuilderLogEntries = [ "SC2086" ];
           };
+
+          hook-defaults =
+            let
+              defaults = dk.preCommit { src = ./.; };
+              selected = dk.preCommit {
+                src = ./.;
+                hooks = {
+                  prettier.enable = true;
+                  taplo.enable = true;
+                };
+              };
+
+              enabledNames = hooks: lib.attrNames (lib.filterAttrs (_: hook: hook.enable) hooks);
+              hygiene = [
+                "check-added-large-files"
+                "check-merge-conflicts"
+                "end-of-file-fixer"
+                "trim-trailing-whitespace"
+              ];
+            in
+            assert enabledNames defaults.check.config.hooks == hygiene;
+            assert
+              enabledNames selected.check.config.hooks == lib.sort builtins.lessThan (
+                hygiene
+                ++ [
+                  "prettier"
+                  "taplo"
+                ]
+              );
+            pkgs.emptyFile;
 
           hook-split =
             let

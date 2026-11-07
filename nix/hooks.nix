@@ -44,26 +44,20 @@ let
 
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
         actionlint = {
-          enable = true;
           package = pkgs.callPackage ../packages/actionlint { };
         };
 
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
-        check-yaml.enable = true;
 
         cspell = {
-          enable = true;
           args = [
             "--no-progress"
             "--no-must-find-files"
           ];
         };
 
-        deadnix.enable = true;
-
         doctoc = {
-          enable = true;
           package = pkgs.doctoc;
           entry = lib.getExe config.hooks.doctoc.package;
           args = [
@@ -75,7 +69,6 @@ let
         };
 
         dprint = {
-          enable = true;
           package = pkgs.dprint;
           entry = "${lib.getExe config.hooks.dprint.package} fmt";
           args = [
@@ -85,18 +78,14 @@ let
           files = "\\.md$";
         };
 
-        editorconfig-checker.enable = true;
         end-of-file-fixer.enable = true;
 
         markdownlint-cli2 = {
-          enable = true;
           package = pkgs.markdownlint-cli2;
           entry = lib.getExe config.hooks.markdownlint-cli2.package;
           args = [ "--fix" ];
           files = "\\.md$";
         };
-
-        nixfmt.enable = true;
 
         nu-check = {
           package = nu-check;
@@ -105,7 +94,6 @@ let
 
         # Markdown stays out of Prettier, which drops the blank line before nested items.
         prettier = {
-          enable = true;
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
           settings = {
             configPath = lib.optionalString (builtins.pathExists (
@@ -117,7 +105,6 @@ let
         };
 
         shellcheck = {
-          enable = true;
           exclude_types = [
             "zsh"
           ];
@@ -125,7 +112,6 @@ let
 
         # Formatting flags disable shfmt's EditorConfig settings.
         shfmt = {
-          enable = true;
           settings = {
             language-dialect = null;
             simplify = false;
@@ -133,15 +119,11 @@ let
         };
 
         sort-file-contents = {
-          enable = true;
           files = "^\\.cspell/words\\.txt$";
           settings.ignore-case = true;
         };
 
-        statix.enable = true;
-
         taplo = {
-          enable = true;
           args = [ "--config=${taploConfig}" ];
         };
 

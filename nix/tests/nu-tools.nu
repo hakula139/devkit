@@ -16,7 +16,7 @@ def main [] {
   let cases = [
     {
       name: "passing tests exit 0"
-      tool: nu-test
+      tool: "nu-test"
       args: ["nu-tools/stubs.test.nu"]
       exit_code: 0
       stdout: [
@@ -28,7 +28,7 @@ def main [] {
     }
     {
       name: "a test that leaves a locked directory in its scratch still reports"
-      tool: nu-test
+      tool: "nu-test"
       args: ["nu-tools/locked.test.nu"]
       exit_code: 0
       stdout: [
@@ -39,14 +39,14 @@ def main [] {
     }
     {
       name: "each load failure counts"
-      tool: nu-test
+      tool: "nu-test"
       args: ["nu-tools/broken.test.nu" "nu-tools/noisy.test.nu"]
       exit_code: 1
       stdout: ["0 passed, 2 failed"]
     }
     {
       name: "a file that prints while it loads fails and says why"
-      tool: nu-test
+      tool: "nu-test"
       args: ["nu-tools/noisy.test.nu"]
       exit_code: 1
       stdout: ["0 passed, 1 failed"]
@@ -61,7 +61,7 @@ def main [] {
     }
     {
       name: "a file that exits while it loads fails and says why"
-      tool: nu-test
+      tool: "nu-test"
       args: ["nu-tools/exits.test.nu"]
       exit_code: 1
       stdout: ["0 passed, 1 failed"]
@@ -72,14 +72,14 @@ def main [] {
     }
     {
       name: "a failing test fails the run"
-      tool: nu-test
+      tool: "nu-test"
       args: ["nu-tools/fails.test.nu"]
       exit_code: 1
       stdout: ["PASS nu-tools/fails.test.nu: test passes" "1 passed, 1 failed"]
     }
     {
       name: "a test name with a semicolon is rejected without running it"
-      tool: nu-test
+      tool: "nu-test"
       args: ["nu-tools/semi.test.nu"]
       exit_code: 1
       stdout: ["0 passed, 1 failed"]
@@ -90,7 +90,7 @@ def main [] {
     }
     {
       name: "a run without tests fails and says why"
-      tool: nu-test
+      tool: "nu-test"
       args: []
       exit_code: 1
       stdout: ["0 passed, 0 failed"]
@@ -98,7 +98,7 @@ def main [] {
     }
     {
       name: "a file that is not UTF-8 fails the check"
-      tool: nu-check
+      tool: "nu-check"
       args: ["nu-tools/invalid-utf8.nu"]
       exit_code: 1
       stdout: []
@@ -106,7 +106,7 @@ def main [] {
     }
     {
       name: "an error names its line and column"
-      tool: nu-check
+      tool: "nu-check"
       args: ["nu-tools/stubs.test.nu" "nu-tools/positions.nu" "nu-tools/shebang.stub.nu"]
       exit_code: 1
       stdout: []
@@ -117,7 +117,7 @@ def main [] {
     }
     {
       name: "an error at a file's end stays in it, and each in a loaded module is reported once"
-      tool: nu-check
+      tool: "nu-check"
       args: ["nu-tools/broken.test.nu" "nu-tools/uses-broken.nu"]
       exit_code: 1
       stdout: []
@@ -133,7 +133,10 @@ def main [] {
   cd $FIXTURES
   $env.TMPDIR = (mktemp --directory)
   for case in $cases {
-    let result = (^$case.tool ...$case.args | complete)
+    let result = (
+      ^$case.tool ...$case.args
+      | complete
+    )
 
     # A case without `stderr` leaves it unchecked, since Nushell's diagnostics name absolute paths.
     let expected = ($case | reject name tool args)

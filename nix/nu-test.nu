@@ -19,10 +19,18 @@ def nu-run [file: string, body: string, tmp: string, stubs: string]: nothing -> 
 # names this interpreter by its store path, since the build sandbox has no `/usr/bin/env`.
 def install-stubs [source: string, dir: string]: nothing -> nothing {
   mkdir $dir
-  for stub in (ls $source | where name ends-with ".stub.nu" | get name) {
+  for stub in (
+    ls $source
+    | where name ends-with ".stub.nu"
+    | get name
+  ) {
     let target = ($dir | path join ($stub | path basename | str replace ".stub.nu" ""))
-    let script = (open --raw $stub | str replace --regex '^#!.*\n?' "")
-    $"#!($nu.current-exe) --no-config-file\n($script)" | save $target
+    let script = (
+      open --raw $stub
+      | str replace --regex '^#!.*\n?' ""
+    )
+    $"#!($nu.current-exe) --no-config-file\n($script)"
+    | save $target
     ^chmod +x $target
   }
 }
@@ -43,7 +51,10 @@ def plan-file [file: string]: nothing -> record {
     [(load-failure $file $found)]
   } else {
     install-stubs ($path | path dirname) $stubs
-    let names = try { $found.stdout | from json }
+    let names = try {
+      $found.stdout
+      | from json
+    }
     if ($names | describe | str starts-with "list") {
       $names
       | each {|name|
@@ -79,7 +90,10 @@ def main [
 ] {
   # Nested `par-each` builds a private thread pool per inner call, so plan every test first and
   # run the flat job list on one default-size pool.
-  let plans = ($files | par-each --keep-order {|file| plan-file $file })
+  let plans = (
+    $files
+    | par-each --keep-order {|file| plan-file $file }
+  )
   let results = (
     $plans
     | get jobs
@@ -101,7 +115,11 @@ def main [
     }
   }
 
-  let failed = ($results | where run.exit_code != 0 | length)
+  let failed = (
+    $results
+    | where run.exit_code != 0
+    | length
+  )
   let passed = ($results | length) - $failed
   print $"($passed) passed, ($failed) failed"
   if ($results | is-empty) {

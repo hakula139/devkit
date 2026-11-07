@@ -10,12 +10,19 @@ const MAX_ERRORS = 100
 
 # The 1-based `line:column` of the byte `offset` in `text`, counting bytes as Nushell does.
 def position [text: string, offset: int]: nothing -> string {
-  let lines = ($text | str substring ..<$offset | split row "\n")
+  let lines = (
+    $text
+    | str substring ..<$offset
+    | split row "\n"
+  )
   $"($lines | length):(($lines | last | str length) + 1)"
 }
 
 def diagnostics [target: string, text: string]: nothing -> list<string> {
-  let result = (^$nu.current-exe --ide-check $MAX_ERRORS $target | complete)
+  let result = (
+    ^$nu.current-exe --ide-check $MAX_ERRORS $target
+    | complete
+  )
   if $result.exit_code != 0 {
     error make {msg: $"nu --ide-check failed for ($target): ($result.stderr)"}
   }
@@ -39,7 +46,8 @@ def diagnostics [target: string, text: string]: nothing -> list<string> {
 def check [file: string]: nothing -> list<string> {
   # `--ide-check` passes invalid UTF-8 in a comment.
   let text = try {
-    open --raw $file | into string
+    open --raw $file
+    | into string
   } catch {|err|
     return [$"($file): ($err.msg)"]
   }
@@ -50,8 +58,14 @@ def check [file: string]: nothing -> list<string> {
 def main [
   ...files: string # Nushell files to check
 ] {
-  let errors = ($files | each {|file| check $file } | flatten)
-  for error in $errors { print -e $error }
+  let errors = (
+    $files
+    | each {|file| check $file }
+    | flatten
+  )
+  for error in $errors {
+    print -e $error
+  }
   if ($errors | is-not-empty) {
     exit 1
   }

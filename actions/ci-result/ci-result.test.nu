@@ -91,13 +91,22 @@ def "test reruns retain the latest result of each upstream job" [] {
       {id: 1, name: "CI / build", status: "completed", conclusion: $case.earlier, run_attempt: 1}
       {id: 2, name: "CI / gate", status: "completed", conclusion: "failure", run_attempt: 1}
     ]
-    let current = [
-      {id: 3, name: "CI / gate", status: "in_progress", conclusion: null, run_attempt: 2}
-    ] | append (if $case.rerun == null { [] } else {
-      [{id: 4, name: "CI / build", status: "completed", conclusion: $case.rerun, run_attempt: 2}]
-    })
-    let all = ([{jobs: $current} {jobs: $prior}] | to json)
-    let attempt = ([{jobs: $current}] | to json)
+    let current = (
+      [{id: 3, name: "CI / gate", status: "in_progress", conclusion: null, run_attempt: 2}]
+      | append (if $case.rerun == null {
+        []
+      } else {
+        [{id: 4, name: "CI / build", status: "completed", conclusion: $case.rerun, run_attempt: 2}]
+      })
+    )
+    let all = (
+      [{jobs: $current} {jobs: $prior}]
+      | to json
+    )
+    let attempt = (
+      [{jobs: $current}]
+      | to json
+    )
 
     let result = with-env {
       PATH: ($env.PATH | prepend $env.NU_TEST_STUBS)
@@ -108,10 +117,17 @@ def "test reruns retain the latest result of each upstream job" [] {
       GITHUB_RUN_ATTEMPT: "2"
       GITHUB_ACTION_PATH: ($SCRIPT_FILE | path dirname)
       GATE_ID: "3"
-    } { ^bash $SCRIPT_FILE | complete }
+    } {
+      ^bash $SCRIPT_FILE
+      | complete
+    }
     assert equal $result.exit_code $case.exit_code $"($case.name): ($result.stderr)"
 
-    let expected = if $case.exit_code == 0 { [] } else { ["::error::CI / build: failure"] }
+    let expected = if $case.exit_code == 0 {
+      []
+    } else {
+      ["::error::CI / build: failure"]
+    }
     assert equal ($result.stdout | lines) $expected $"($case.name): ($result.stderr)"
   }
 }

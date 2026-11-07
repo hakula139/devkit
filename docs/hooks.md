@@ -22,15 +22,16 @@ The baseline enables these hooks:
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings. devkit's own config files are working examples, and the workflow snippets in these docs follow its `.prettierrc.json`.
 
-`doctoc` fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, and leaves a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
+## Configure the baseline
 
-`dprint` formats Markdown before `markdownlint-cli2` lints it. The style rules in `.markdownlint-cli2.jsonc` match dprint's output, so the same style applies where dprint doesn't format, such as in a `<!-- dprint-ignore -->` block.
+- **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, and leaves a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
+- **dprint and markdownlint-cli2:** dprint formats Markdown before markdownlint-cli2 lints it. The style rules in `.markdownlint-cli2.jsonc` match dprint's output, so the same style applies where dprint doesn't format, such as in a `<!-- dprint-ignore -->` block.
+- **Prettier:** Uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. EditorConfig and configuration lookup are disabled, keeping personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
+- **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults. Automatic configuration lookup is disabled, keeping personal configuration out of repository checks.
+
+### Exclude fixtures
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
-
-Prettier uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. EditorConfig and configuration lookup are disabled, keeping personal configuration out of repository checks. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
-
-Taplo uses the source root's `.taplo.toml` when present and otherwise runs with its defaults. Automatic configuration lookup is disabled, keeping personal configuration out of repository checks.
 
 ## Check Nushell files
 
@@ -38,11 +39,18 @@ The baseline's `nu-check` hook runs `dk.nu-check`, the `--ide-check` wrapper, on
 
 ## Set up the dev shell and the check
 
-`preCommit` returns `check` and `shell`. `hooks` applies to both, while `devHooks` applies only to the shell. Naming a hook in `devHooks` disables it in `check`, even when `hooks` enables its nixpkgs counterpart, so a lockfile-pinned tool never runs at its older sandboxed version and CI never runs a `devHooks` entry.
+`preCommit` returns `check` and `shell`:
+
+- `hooks` applies to both outputs.
+- `devHooks` applies only to the shell. Naming a hook in `devHooks` disables it in `check`, even when `hooks` enables its nixpkgs counterpart, so a lockfile-pinned tool never runs at its older sandboxed version and CI never runs a `devHooks` entry.
 
 List `preCommit.shell` in the `inputsFrom` of the repository's `pkgs.mkShell`. This places the hook packages and `prek` after the shell's own `packages` and `nativeBuildInputs`, so a consumer toolchain wins on `PATH`. Its `shellHook` starts with `unset PYTHONPATH`, since the hook packages' Python setup hook sets that variable and `nix develop` inherits any outer value, either of which would shadow a uv venv.
 
-The shell installs the hooks when entered from a Git checkout. The generated configuration is registered as an indirect Nix GC root before installing prek's configured stages. The configuration path must be absent or a symlink into the Nix store. Installation is serialized across linked worktrees.
+The shell installs the hooks when entered from a Git checkout:
+
+- The generated configuration is registered as an indirect Nix GC root before installing prek's configured stages.
+- The configuration path must be absent or a symlink into the Nix store.
+- Installation is serialized across linked worktrees.
 
 ## Override a hook
 

@@ -38,13 +38,17 @@ in
       nu-check
       ;
   };
+
   nodeTool = lockedTool [
     pkgs.nodejs_26
     pkgs.pnpm_12
   ] "pnpm exec";
+
   uvTool = lockedTool [
     pkgs.uv
   ] "uv run --locked";
+
   nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
+
   mkNuApplication = import ./mk-nu-application.nix { inherit pkgs nushell; };
 }

@@ -97,9 +97,11 @@ let
         prettier = {
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
           settings = {
-            configPath = lib.optionalString (builtins.pathExists (
-              src + "/.prettierrc.json"
-            )) "${src}/.prettierrc.json";
+            configPath =
+              let
+                configPath = "${src}/.prettierrc.json";
+              in
+              lib.optionalString (builtins.pathExists configPath) configPath;
             no-config = config.hooks.prettier.settings.configPath == "";
             no-editorconfig = true;
           };

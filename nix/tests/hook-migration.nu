@@ -30,6 +30,15 @@ def check-migration [source: path, shell_hook: path, custom: bool] {
     ^git init --quiet
     ^git config user.name "Fixture"
     ^git config user.email "fixture@example.com"
+    (
+      ^git commit
+        --quiet
+        --allow-empty
+        --message fixture
+    )
+    let head = (^git rev-parse HEAD)
+    $"refs/heads/main ($head) refs/heads/main 0000000000000000000000000000000000000000\n"
+    | save "push-refs.txt"
 
     if $custom {
       for name in ["pre-commit" "pre-push"] {
@@ -82,13 +91,14 @@ def check-migration [source: path, shell_hook: path, custom: bool] {
       assert (".pre-commit-config.yaml" | path exists) $installed.stderr
 
       for name in ["pre-commit" "pre-push"] {
+        let options = if $name == "pre-push" { ["--to-stdin=push-refs.txt"] } else { [] }
         let args = if $name == "pre-push" {
           ["--" "fixture" "https://example.com/project.git"]
         } else {
           []
         }
         let run = (
-          ^git hook run $name ...$args
+          ^git hook run ...$options $name ...$args
           | complete
         )
         assert equal $run.exit_code 0 $"($name), installation ($iteration): ($run.stderr)"

@@ -28,6 +28,11 @@ let
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
+  taploConfig = lib.findFirst builtins.pathExists (pkgs.writeText "taplo.toml" "") [
+    (src + "/.taplo.toml")
+    (src + "/taplo.toml")
+  ];
+
   baseline =
     { config, ... }:
     {
@@ -36,7 +41,16 @@ let
       ];
 
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
-        actionlint.enable = true;
+        actionlint = {
+          enable = true;
+          # actionlint 1.7.12 predates valid syntax (rhysd/actionlint#657 and #669).
+          args = [
+            "-ignore"
+            ''unexpected key "queue" for "concurrency" section\. expected one of "cancel-in-progress", "group"''
+            "-ignore"
+            ''(missing input "app-id" which is required by action|input "client-id" is not defined in action) "actions/create-github-app-token@v3"''
+          ];
+        };
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
         check-yaml.enable = true;
@@ -95,7 +109,7 @@ let
         # Markdown stays out of Prettier, which drops the blank line before nested items.
         prettier = {
           enable = true;
-          files = "\\.(js|json|jsonc|ya?ml)$";
+          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
         };
 
         shellcheck = {
@@ -121,7 +135,13 @@ let
         };
 
         statix.enable = true;
-        taplo.enable = true;
+        taplo = {
+          enable = true;
+          args = [
+            "--no-auto-config"
+            "--config=${taploConfig}"
+          ];
+        };
 
         trim-trailing-whitespace = {
           enable = true;
@@ -154,6 +174,21 @@ let
   cmp = lib.getExe' pkgs.diffutils "cmp";
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
+  hookTypes = lib.unique (
+    map (
+      stage:
+      if
+        builtins.elem stage [
+          "commit"
+          "merge-commit"
+          "push"
+        ]
+      then
+        "pre-${stage}"
+      else
+        stage
+    ) (lib.remove "manual" dev.config.installStages)
+  );
 in
 {
   inherit check;
@@ -176,8 +211,19 @@ in
         )
         (
           ${flock} 9
-          ${dev.config.installationScript}
           ${git} config --local --unset-all core.hooksPath || true
+          # pre-commit recognizes its generated hooks and restores custom legacy hooks itself.
+          ${lib.optionalString (hookTypes != [ ]) ''
+            ${lib.getExe pkgs.pre-commit} uninstall ${
+              lib.escapeShellArgs (
+                lib.concatMap (hookType: [
+                  "--hook-type"
+                  hookType
+                ]) hookTypes
+              )
+            }
+          ''}
+          ${dev.config.installationScript}
         ) 9>"$common/git-hooks.lock"
       fi
     '';

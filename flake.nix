@@ -183,55 +183,6 @@
             ];
           };
 
-          hook-migration =
-            let
-              src = pkgs.writeTextDir "flake.nix" "{}";
-              fixture = dk.preCommit {
-                inherit src;
-                hooks =
-                  lib.genAttrs (builtins.attrNames preCommit.check.config.hooks) (_: {
-                    enable = lib.mkForce false;
-                  })
-                  // {
-                    migration-fixture = {
-                      enable = true;
-                      entry = toString (
-                        pkgs.writeShellScript "managed-hook-fixture" ''
-                          printf '%s\n' current >> new.log
-                        ''
-                      );
-                      always_run = true;
-                      pass_filenames = false;
-                      stages = [
-                        "pre-commit"
-                        "pre-push"
-                      ];
-                    };
-                  };
-              };
-              shellHook = pkgs.writeText "hook-migration.sh" fixture.shell.shellHook;
-              nixStore = pkgs.writers.makeScriptWriter {
-                interpreter = "${lib.getExe dk.nushell} --no-config-file";
-              } "/bin/nix-store" ./nix/tests/nix-store.stub.nu;
-            in
-            pkgs.runCommand "devkit-hook-migration"
-              {
-                nativeBuildInputs = [
-                  pkgs.bash
-                  pkgs.git
-                  pkgs.pre-commit
-                  pkgs.prek
-                  dk.nushell
-                  nixStore
-                ];
-              }
-              ''
-                export HOME="$TMPDIR/home"
-                mkdir "$HOME"
-                nu --no-config-file ${./nix/tests/hook-migration.nu} ${src} ${shellHook}
-                touch "$out"
-              '';
-
           nu-tools =
             pkgs.runCommand "devkit-nu-tools"
               {

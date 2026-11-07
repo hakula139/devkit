@@ -103,18 +103,11 @@ def "test reruns retain the latest result of each upstream job" [] {
       [{jobs: $current} {jobs: $prior}]
       | to json
     )
-    let attempt = (
-      [{jobs: $current}]
-      | to json
-    )
-
     let result = with-env {
       PATH: ($env.PATH | prepend $env.NU_TEST_STUBS)
       CI_RESULT_ALL: $all
-      CI_RESULT_ATTEMPT: $attempt
       GITHUB_REPOSITORY: "example/project"
       GITHUB_RUN_ID: "100"
-      GITHUB_RUN_ATTEMPT: "2"
       GITHUB_ACTION_PATH: ($SCRIPT_FILE | path dirname)
       GATE_ID: "3"
     } {

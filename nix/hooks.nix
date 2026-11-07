@@ -17,8 +17,9 @@
 
 let
   inherit (pkgs) lib;
+  jsonFormat = pkgs.formats.json { };
 
-  dprintConfig = (pkgs.formats.json { }).generate "dprint.json" {
+  dprintConfig = jsonFormat.generate "dprint.json" {
     markdown = {
       emphasisKind = "underscores";
       strongKind = "asterisks";
@@ -33,12 +34,10 @@ let
     (src + "/taplo.toml")
   ];
 
-  prettierConfig =
-    lib.findFirst builtins.pathExists ((pkgs.formats.json { }).generate "prettier.json" { })
-      [
-        (src + "/.prettierrc.json")
-        (src + "/.prettierrc")
-      ];
+  prettierConfig = lib.findFirst builtins.pathExists (jsonFormat.generate "prettier.json" { }) [
+    (src + "/.prettierrc.json")
+    (src + "/.prettierrc")
+  ];
 
   baseline =
     { config, ... }:
@@ -50,19 +49,7 @@ let
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
         actionlint = {
           enable = true;
-          package = pkgs.actionlint.overrideAttrs (old: {
-            patches = (old.patches or [ ]) ++ [
-              (pkgs.fetchpatch {
-                url = "https://github.com/rhysd/actionlint/commit/644076a59742c2d1540ebd4686eab3c308f0e562.patch";
-                hash = "sha256-Lpd7CTkLbzgvAZV2H8G4GTUoPNDCK7PiW3A40+cquUk=";
-              })
-            ];
-          });
-          # actionlint's v3 metadata predates the client-id input (rhysd/actionlint#669).
-          args = [
-            "-ignore"
-            ''(missing input "app-id" which is required by action|input "client-id" is not defined in action) "actions/create-github-app-token@v3"''
-          ];
+          package = pkgs.callPackage ../packages/actionlint { };
         };
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
@@ -191,27 +178,7 @@ let
   cmp = lib.getExe' pkgs.diffutils "cmp";
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
-  hookTypes = lib.unique (
-    map
-      (
-        stage:
-        if
-          builtins.elem stage [
-            "commit"
-            "merge-commit"
-            "push"
-          ]
-        then
-          "pre-${stage}"
-        else
-          stage
-      )
-      (
-        lib.remove "manual" (
-          if dev.config.installStages == [ ] then [ "pre-commit" ] else dev.config.installStages
-        )
-      )
-  );
+  hookTypes = lib.remove "manual" dev.config.installStages;
 in
 {
   inherit check;
@@ -235,27 +202,15 @@ in
         (
           ${flock} 9
           ${git} config --local --unset-all core.hooksPath || true
-          # pre-commit recognizes its generated hooks and restores custom legacy hooks itself.
-          ${lib.optionalString (hookTypes != [ ]) ''
-            ${lib.getExe pkgs.pre-commit} uninstall ${
-              lib.escapeShellArgs (
-                lib.concatMap (hookType: [
-                  "--hook-type"
-                  hookType
-                ]) hookTypes
-              )
-            }
-          ''}
           ${dev.config.installationScript}
-          ${lib.optionalString (hookTypes != [ ]) ''
-            if [ "$(readlink "$top/${dev.config.configPath}")" = "${dev.config.configFile}" ]; then
-              ${lib.concatMapStringsSep "\n" (hookType: ''
-                ${lib.getExe dev.config.package} install \
-                  --config ${lib.escapeShellArg dev.config.configPath} \
-                  --hook-type ${lib.escapeShellArg hookType}
-              '') hookTypes}
-            fi
-          ''}
+          ${git} config --local --unset-all core.hooksPath || true
+          if [ "$(readlink "$top/${dev.config.configPath}")" = "${dev.config.configFile}" ]; then
+            for hookType in ${lib.escapeShellArgs hookTypes}; do
+              ${lib.getExe dev.config.package} install \
+                --config ${lib.escapeShellArg dev.config.configPath} \
+                --hook-type "$hookType"
+            done
+          fi
         ) 9>"$common/git-hooks.lock"
       fi
     '';

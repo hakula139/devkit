@@ -163,6 +163,7 @@ let
 
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
+
   hookTypes = lib.unique (
     map (
       stage:

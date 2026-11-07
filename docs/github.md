@@ -1,6 +1,8 @@
 # GitHub conventions
 
-Every Hakula repository starts from these GitHub defaults and uses no milestones, since a release ships when it is ready and the range since the last tag shows what it holds. A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets need GitHub Pro there.
+Every Hakula repository starts from these GitHub defaults and uses no milestones, since a release ships when it is ready and the range since the last tag shows what it holds.
+
+A repository may deviate where a default does not fit it, such as requiring `codecov/patch` beside `CI Result` or keeping milestones, and explains why in its own docs. The defaults target public repositories, while a private one keeps what its plan allows, since rulesets need GitHub Pro there.
 
 Run the commands from a checkout of the repository with admin credentials, since `gh` fills `{owner}` and `{repo}` from the checkout.
 
@@ -118,7 +120,9 @@ gh api repos/{owner}/{repo}/actions/permissions/workflow \
 
 ## Turn on the security features
 
-Dependabot alerts stay on while Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, bypassing its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`. Private vulnerability reporting provides the channel named in the default `SECURITY.md`, and secret scanning with push protection keeps credentials out of the history.
+- **Dependency alerts and updates:** Dependabot alerts stay on while Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, bypassing its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`.
+- **Private vulnerability reporting:** Provides the channel named in the default `SECURITY.md`.
+- **Secret scanning with push protection:** Keeps credentials out of the history.
 
 ```bash
 gh api repos/{owner}/{repo}/vulnerability-alerts --method PUT

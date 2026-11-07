@@ -117,7 +117,11 @@ When the repository's git-cliff template supports highlights, supply a Markdown 
 
 ### Recover a release
 
-Let in-flight publishing finish before attempting recovery, and inspect each destination to identify what already published. Follow the repository's immutability constraints. Registry versions and distributed tags may require a new version even when a GitHub Release can be edited. Get explicit approval before deleting a release or moving a published tag. Prefer rerunning failed jobs at the same commit when the publishing workflow supports it.
+Let in-flight publishing finish before attempting recovery, and inspect each destination to identify what already published:
+
+- Follow the repository's immutability constraints. Registry versions and distributed tags may require a new version even when a GitHub Release can be edited.
+- Get explicit approval before deleting a release or moving a published tag.
+- Prefer rerunning failed jobs at the same commit when the publishing workflow supports it.
 
 ### Write your own release workflow
 

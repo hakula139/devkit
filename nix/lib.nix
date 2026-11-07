@@ -9,8 +9,6 @@
 }:
 
 let
-  actionlint = pkgs.callPackage ../packages/actionlint { };
-
   lockedTool =
     runtimeInputs: runner: command:
     pkgs.writeShellApplication {
@@ -25,6 +23,7 @@ let
       interpreter = "${pkgs.lib.getExe nushell} --no-config-file";
     } "/bin/${name}";
 
+  actionlint = pkgs.callPackage ../packages/actionlint { };
   nu-check = writeNuBin "nu-check" ./nu-check.nu;
   nu-test = writeNuBin "nu-test" ./nu-test.nu;
 in

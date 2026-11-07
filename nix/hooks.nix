@@ -5,6 +5,7 @@
 {
   pkgs,
   git-hooks-nix,
+  actionlint,
   nu-check,
 }:
 
@@ -18,7 +19,12 @@
 let
   inherit (pkgs) lib;
 
-  dprintConfig = (pkgs.formats.json { }).generate "dprint.json" {
+  # ------------------------------------------------------------------------------------------------
+  # Formatter configuration
+  # ------------------------------------------------------------------------------------------------
+  json = pkgs.formats.json { };
+
+  dprintConfig = json.generate "dprint.json" {
     markdown = {
       emphasisKind = "underscores";
       strongKind = "asterisks";
@@ -28,6 +34,15 @@ let
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
+  taploConfig =
+    let
+      configPath = "${src}/.taplo.toml";
+    in
+    if builtins.pathExists configPath then configPath else pkgs.writeText "taplo.toml" "";
+
+  # ------------------------------------------------------------------------------------------------
+  # Hook defaults
+  # ------------------------------------------------------------------------------------------------
   baseline =
     { config, ... }:
     {
@@ -36,23 +51,21 @@ let
       ];
 
       hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
-        actionlint.enable = true;
+        actionlint = {
+          package = actionlint;
+        };
+
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
-        check-yaml.enable = true;
 
         cspell = {
-          enable = true;
           args = [
             "--no-progress"
             "--no-must-find-files"
           ];
         };
 
-        deadnix.enable = true;
-
         doctoc = {
-          enable = true;
           package = pkgs.doctoc;
           entry = lib.getExe config.hooks.doctoc.package;
           args = [
@@ -64,7 +77,6 @@ let
         };
 
         dprint = {
-          enable = true;
           package = pkgs.dprint;
           entry = "${lib.getExe config.hooks.dprint.package} fmt";
           args = [
@@ -74,18 +86,14 @@ let
           files = "\\.md$";
         };
 
-        editorconfig-checker.enable = true;
         end-of-file-fixer.enable = true;
 
         markdownlint-cli2 = {
-          enable = true;
           package = pkgs.markdownlint-cli2;
           entry = lib.getExe config.hooks.markdownlint-cli2.package;
           args = [ "--fix" ];
           files = "\\.md$";
         };
-
-        nixfmt.enable = true;
 
         nu-check = {
           package = nu-check;
@@ -94,12 +102,19 @@ let
 
         # Markdown stays out of Prettier, which drops the blank line before nested items.
         prettier = {
-          enable = true;
-          files = "\\.(js|json|jsonc|ya?ml)$";
+          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
+          settings = {
+            configPath =
+              let
+                configPath = "${src}/.prettierrc.json";
+              in
+              lib.optionalString (builtins.pathExists configPath) configPath;
+            no-config = config.hooks.prettier.settings.configPath == "";
+            no-editorconfig = true;
+          };
         };
 
         shellcheck = {
-          enable = true;
           exclude_types = [
             "zsh"
           ];
@@ -107,21 +122,23 @@ let
 
         # Formatting flags disable shfmt's EditorConfig settings.
         shfmt = {
-          enable = true;
           settings = {
+            binary-next-line = true;
+            case-indent = true;
+            indent = 2;
             language-dialect = null;
             simplify = false;
           };
         };
 
         sort-file-contents = {
-          enable = true;
           files = "^\\.cspell/words\\.txt$";
           settings.ignore-case = true;
         };
 
-        statix.enable = true;
-        taplo.enable = true;
+        taplo = {
+          args = [ "--config=${taploConfig}" ];
+        };
 
         trim-trailing-whitespace = {
           enable = true;
@@ -130,6 +147,9 @@ let
       };
     };
 
+  # ------------------------------------------------------------------------------------------------
+  # Hook evaluation
+  # ------------------------------------------------------------------------------------------------
   # Mirrors git-hooks.nix's own overlay, so the hooks build from the consumer's package set.
   gitHooksRun = pkgs.callPackage "${git-hooks-nix}/nix/run.nix" {
     tools = import "${git-hooks-nix}/nix/call-tools.nix" pkgs;
@@ -151,9 +171,27 @@ let
   dev = run [ { hooks = devHooks; } ];
   check = run [ { hooks = lib.mapAttrs (_: _: { enable = lib.mkForce false; }) devHooks; } ];
 
-  cmp = lib.getExe' pkgs.diffutils "cmp";
+  # ------------------------------------------------------------------------------------------------
+  # Hook installation
+  # ------------------------------------------------------------------------------------------------
   flock = lib.getExe pkgs.flock;
   git = lib.getExe dev.config.gitPackage;
+
+  hookTypes = lib.unique (
+    map (
+      stage:
+      if
+        lib.elem stage [
+          "commit"
+          "merge-commit"
+          "push"
+        ]
+      then
+        "pre-${stage}"
+      else
+        stage
+    ) (lib.remove "manual" dev.config.installStages)
+  );
 in
 {
   inherit check;
@@ -163,21 +201,40 @@ in
       dev.config.package
     ];
 
-    # Use shared hooks to avoid the relative path bug in linked worktrees (git-hooks.nix#688).
-    # Serialize installation, and leave sibling repositories that borrow this shell untouched.
     shellHook = ''
       unset PYTHONPATH
-      if top=$(${git} rev-parse --show-toplevel 2>/dev/null) &&
-        ${cmp} -s ${src + "/flake.nix"} "$top/flake.nix"; then
+
+      if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
+        # Linked worktrees share hooks, so their common Git directory owns the install lock.
         common=$(
           ${git} rev-parse \
             --path-format=absolute \
             --git-common-dir
         )
+
         (
+          set -e
           ${flock} 9
-          ${dev.config.installationScript}
-          ${git} config --local --unset-all core.hooksPath || true
+
+          # Keep hook tools alive through the config's GC root.
+          # Nix refuses to replace an existing regular file.
+          ${lib.getExe' pkgs.nix "nix-store"} \
+            --add-root "$top/${dev.config.configPath}" \
+            --indirect \
+            --realise ${dev.config.configFile}
+
+          # Refresh shims even with unchanged config, preserving core.hooksPath.
+          # Empty stage arguments would make prek install pre-commit by default.
+          ${lib.optionalString (hookTypes != [ ]) ''
+            ${lib.getExe dev.config.package} install \
+              --config ${lib.escapeShellArg dev.config.configPath} \
+              ${lib.escapeShellArgs (
+                lib.concatMap (hookType: [
+                  "--hook-type"
+                  hookType
+                ]) hookTypes
+              )}
+          ''}
         ) 9>"$common/git-hooks.lock"
       fi
     '';

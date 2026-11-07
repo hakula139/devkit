@@ -1,54 +1,69 @@
 # Hooks
 
-The baseline enables these hooks:
+Only `check-added-large-files`, `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` are enabled by default. Enable other hooks with `hooks.<name>.enable = true;`.
 
-| Hook                                                                         | Checks                                             | Config                     |
-| ---------------------------------------------------------------------------- | -------------------------------------------------- | -------------------------- |
-| `actionlint`                                                                 | Workflows                                          | `.github/actionlint.yaml`  |
-| `check-added-large-files`                                                    | Every file                                         |                            |
-| `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` | Every text file                                    |                            |
-| `check-yaml`                                                                 | YAML syntax                                        |                            |
-| `cspell`                                                                     | Spelling in every file                             | `cspell.json`              |
-| `deadnix`, `nixfmt`, and `statix`                                            | Nix                                                |                            |
-| `doctoc`                                                                     | Markdown tables of contents                        |                            |
-| `dprint`                                                                     | Markdown formatting                                |                            |
-| `editorconfig-checker`                                                       | The properties `.editorconfig` sets, in every file | `.editorconfig`            |
-| `markdownlint-cli2`                                                          | Markdown                                           | `.markdownlint-cli2.jsonc` |
-| `prettier`                                                                   | JavaScript, JSON, and YAML                         | `.prettierrc.json`         |
-| `shellcheck`                                                                 | Every shell file except zsh                        |                            |
-| `shfmt`                                                                      | Every shell file, zsh included                     | `.editorconfig`            |
-| `sort-file-contents`                                                         | The order of `.cspell/words.txt`                   |                            |
-| `taplo`                                                                      | TOML                                               |                            |
+The shared hook configurations cover:
 
-git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings. devkit's own config files are working examples, and the workflow snippets in these docs follow its `.prettierrc.json`.
+| Hook                                                                     | Checks                             | Config                     |
+| ------------------------------------------------------------------------ | ---------------------------------- | -------------------------- |
+| `actionlint`                                                             | Workflows                          | `.github/actionlint.yaml`  |
+| `check-added-large-files`                                                | Every file                         |                            |
+| `check-merge-conflicts`, `end-of-file-fixer`, `trim-trailing-whitespace` | Every text file                    |                            |
+| `check-yaml`                                                             | YAML syntax                        |                            |
+| `cspell`                                                                 | Spelling in every file             | `cspell.json`              |
+| `deadnix`, `nixfmt`, `statix`                                            | Nix                                |                            |
+| `doctoc`                                                                 | Markdown tables of contents        |                            |
+| `dprint`                                                                 | Markdown formatting                |                            |
+| `editorconfig-checker`                                                   | EditorConfig properties            | `.editorconfig`            |
+| `markdownlint-cli2`                                                      | Markdown                           | `.markdownlint-cli2.jsonc` |
+| `prettier`                                                               | JavaScript, TypeScript, JSON, YAML | `.prettierrc.json`         |
+| `shellcheck`                                                             | Every shell file except zsh        |                            |
+| `shfmt`                                                                  | Every shell file, zsh included     |                            |
+| `sort-file-contents`                                                     | The order of `.cspell/words.txt`   |                            |
+| `taplo`                                                                  | TOML                               | `.taplo.toml`              |
 
-`doctoc` fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, and leaves a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
+git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings, and devkit's own config files are working examples.
 
-`dprint` formats Markdown before `markdownlint-cli2` lints it. The style rules in `.markdownlint-cli2.jsonc` match dprint's output, so the same style applies where dprint doesn't format, such as in a `<!-- dprint-ignore -->` block.
+## Configure the baseline
+
+- **cspell:** Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`.
+- **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
+- **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 then checks it against `.markdownlint-cli2.jsonc`, including content inside `<!-- dprint-ignore -->` blocks.
+- **Prettier:** Uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
+- **shellcheck:** Start the repository's `.envrc` with `# shellcheck shell=bash`, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
+- **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults.
+
+### Exclude fixtures
 
 The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
 
 ## Check Nushell files
 
-The baseline's `nu-check` hook runs `dk.nu-check`, the `--ide-check` wrapper, on Nushell files, and stays off until `hooks.nu-check.enable = true;`. Because `nufmt` reindents to four spaces, no hook runs it, and only `editorconfig-checker` checks Nushell indentation against a `[*.nu]` section in `.editorconfig` such as devkit's.
+Set `hooks.nu-check.enable = true;` to check Nushell files with `dk.nu-check`. When enabled, `editorconfig-checker` checks indentation against a `[*.nu]` section in `.editorconfig`. No hook runs `nufmt`.
 
 ## Set up the dev shell and the check
 
-`preCommit` returns `check` and `shell`. `hooks` applies to both, while `devHooks` applies only to the shell. Naming a hook in `devHooks` disables it in `check`, even when `hooks` enables its nixpkgs counterpart, so a lockfile-pinned tool never runs at its older sandboxed version and CI never runs a `devHooks` entry.
+`preCommit` returns `check` and `shell`:
 
-List `preCommit.shell` in the `inputsFrom` of the repository's `pkgs.mkShell`. This places the hook packages and `prek` after the shell's own `packages` and `nativeBuildInputs`, so a consumer toolchain wins on `PATH`. Its `shellHook` starts with `unset PYTHONPATH`, since the hook packages' Python setup hook sets that variable and `nix develop` inherits any outer value, either of which would shadow a uv venv.
+- `hooks` applies to both outputs.
+- `devHooks` applies only to the shell, and any hook listed here is disabled in `check` even if `hooks` enables it.
 
-`src` must be the flake's root, with that flake at the checkout root. The shell installs the hooks on entry only when `src/flake.nix` matches the checkout's `flake.nix`, so a shell borrowed from a sibling repository leaves that checkout alone. The installer clears any local `core.hooksPath`, so a repository that needs one must set it in its own `shellHook`, which runs after the installer.
+Add `preCommit.shell` to the `inputsFrom` of the repository's `pkgs.mkShell`. The shell's own `packages` and `nativeBuildInputs` take precedence over hook packages on `PATH`.
+
+Entering the dev shell from a Git checkout installs the hooks. The configuration path must be absent or a symlink into the Nix store.
 
 ## Override a hook
 
-`hooks` merges recursively with the baseline, whose leaves use `lib.mkOverride 900`, so a consumer definition wins:
+Definitions under `hooks` merge recursively with the baseline and override its defaults:
 
 ```nix
 preCommit = dk.preCommit {
   src = ./.;
   hooks = {
-    prettier.files = "\\.(js|mjs|json|jsonc|ya?ml)$";
+    prettier = {
+      enable = true;
+      files = "\\.(js|mjs|json|jsonc|ya?ml)$";
+    };
     trim-trailing-whitespace.excludes = [
       "\\.patch$"
     ];
@@ -58,7 +73,10 @@ preCommit = dk.preCommit {
 
 ## Run a lockfile-pinned tool
 
-`dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`, and `dk.uvTool "<command>"` returns one that runs `uv run --locked <command>`. Set either as a builtin hook's `package` under `devHooks`, since the check's sandbox has neither `node_modules` nor a venv. The hook builds its entry from that package, so it keeps the flags its settings produce. A builtin that the baseline leaves off, such as mypy, also needs `enable = true`:
+- `dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`.
+- `dk.uvTool "<command>"` returns a package that runs `uv run --locked <command>`.
+
+Enable the builtin hook and set its `package` under `devHooks`:
 
 ```nix
 devHooks = {
@@ -66,7 +84,10 @@ devHooks = {
     enable = true;
     package = dk.uvTool "mypy";
   };
-  prettier.package = dk.nodeTool "prettier";
+  prettier = {
+    enable = true;
+    package = dk.nodeTool "prettier";
+  };
 };
 ```
 

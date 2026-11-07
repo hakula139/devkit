@@ -8,7 +8,7 @@ set -euo pipefail
 
 # `needs` misses a matrix leg cancelled before it starts, so read each job from the API.
 failed=$(
-  gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" \
+  gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs?filter=all&per_page=100" \
     --paginate \
     --slurp \
     | jq \

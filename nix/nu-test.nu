@@ -19,16 +19,28 @@ def nu-run [file: string, body: string, tmp: string, stubs: string]: nothing -> 
 # names this interpreter by its store path, since the build sandbox has no `/usr/bin/env`.
 def install-stubs [source: string, dir: string]: nothing -> nothing {
   mkdir $dir
-  for stub in (ls $source | where name ends-with ".stub.nu" | get name) {
+  for stub in (
+    ls $source
+    | where name ends-with ".stub.nu"
+    | get name
+  ) {
     let target = ($dir | path join ($stub | path basename | str replace ".stub.nu" ""))
-    let script = (open --raw $stub | str replace --regex '^#!.*\n?' "")
-    $"#!($nu.current-exe) --no-config-file\n($script)" | save $target
+    let script = (
+      open --raw $stub
+      | str replace --regex '^#!.*\n?' ""
+    )
+    $"#!($nu.current-exe) --no-config-file\n($script)"
+    | save $target
     ^chmod +x $target
   }
 }
 
 def load-failure [file: string, run: record]: nothing -> record {
-  {file: $file, name: "(load)", run: ($run | upsert exit_code 1)}
+  {
+    file: $file
+    name: "(load)"
+    run: ($run | upsert exit_code 1)
+  }
 }
 
 # Create the scratch directory for `file`, install its stubs once it loads, then return the
@@ -43,15 +55,32 @@ def plan-file [file: string]: nothing -> record {
     [(load-failure $file $found)]
   } else {
     install-stubs ($path | path dirname) $stubs
-    let names = try { $found.stdout | from json }
+    let names = try {
+      $found.stdout
+      | from json
+    }
     if ($names | describe | str starts-with "list") {
       $names
       | each {|name|
         if ($name =~ '^test [A-Za-z0-9 ,.:-]+$') {
-          {file: $file, name: $name, path: $path, scratch: $scratch, stubs: $stubs}
+          {
+            file: $file
+            name: $name
+            path: $path
+            scratch: $scratch
+            stubs: $stubs
+          }
         } else {
           let message = "A test name may hold only letters, digits, spaces, and `,.:-`."
-          {file: $file, name: $name, run: {exit_code: 1, stdout: "", stderr: $message}}
+          {
+            file: $file
+            name: $name
+            run: {
+              exit_code: 1
+              stdout: ""
+              stderr: $message
+            }
+          }
         }
       }
     } else {
@@ -70,7 +99,11 @@ def run-job [job: record]: nothing -> record {
   }
 
   let tmp = (mktemp --directory --tmpdir-path $job.scratch)
-  {file: $job.file, name: $job.name, run: (nu-run $job.path $job.name $tmp $job.stubs)}
+  {
+    file: $job.file
+    name: $job.name
+    run: (nu-run $job.path $job.name $tmp $job.stubs)
+  }
 }
 
 # Run every test in the given files, exiting nonzero if any fails or none run.
@@ -79,7 +112,10 @@ def main [
 ] {
   # Nested `par-each` builds a private thread pool per inner call, so plan every test first and
   # run the flat job list on one default-size pool.
-  let plans = ($files | par-each --keep-order {|file| plan-file $file })
+  let plans = (
+    $files
+    | par-each --keep-order {|file| plan-file $file }
+  )
   let results = (
     $plans
     | get jobs
@@ -101,7 +137,11 @@ def main [
     }
   }
 
-  let failed = ($results | where run.exit_code != 0 | length)
+  let failed = (
+    $results
+    | where run.exit_code != 0
+    | length
+  )
   let passed = ($results | length) - $failed
   print $"($passed) passed, ($failed) failed"
   if ($results | is-empty) {

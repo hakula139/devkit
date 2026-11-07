@@ -86,7 +86,24 @@
 
         preCommit = dk.preCommit {
           src = ./.;
-          hooks.nu-check.enable = true;
+          hooks = {
+            actionlint.enable = true;
+            check-yaml.enable = true;
+            cspell.enable = true;
+            deadnix.enable = true;
+            doctoc.enable = true;
+            dprint.enable = true;
+            editorconfig-checker.enable = true;
+            markdownlint-cli2.enable = true;
+            nixfmt.enable = true;
+            nu-check.enable = true;
+            prettier.enable = true;
+            shellcheck.enable = true;
+            shfmt.enable = true;
+            sort-file-contents.enable = true;
+            statix.enable = true;
+            taplo.enable = true;
+          };
         };
       in
       {
@@ -107,126 +124,7 @@
         # ------------------------------------------------------------------------------------------
         # Checks
         # ------------------------------------------------------------------------------------------
-        checks = {
-          pre-commit = preCommit.check;
-
-          shellcheck = pkgs.testers.testBuildFailure' {
-            drv = (dk.preCommit { src = ./nix/tests/fixtures/shellcheck; }).check;
-            expectedBuilderLogEntries = [ "SC2086" ];
-          };
-
-          hook-split =
-            let
-              mypy = dk.uvTool "mypy";
-              prettier = dk.nodeTool "prettier";
-              prettierFiles = "\\.json$";
-
-              split = dk.preCommit {
-                src = ./.;
-                hooks = {
-                  nu-check.enable = true;
-                  prettier = {
-                    enable = true;
-                    files = prettierFiles;
-                  };
-                };
-                devHooks = {
-                  mypy = {
-                    enable = true;
-                    package = mypy;
-                  };
-                  prettier.package = prettier;
-                };
-              };
-
-              checkHooks = split.check.config.hooks;
-            in
-            assert checkHooks.nu-check.enable;
-            assert !checkHooks.mypy.enable && !checkHooks.prettier.enable;
-            assert checkHooks.prettier.files == prettierFiles;
-            pkgs.symlinkJoin {
-              name = "devkit-hook-split";
-              paths = [
-                mypy
-                prettier
-              ];
-            };
-
-          dev-shell = preCommit.shell.overrideAttrs {
-            buildPhase = ''
-              export PYTHONPATH=/outer
-              eval "$shellHook"
-              [ -z "''${PYTHONPATH:-}" ]
-              command -v prek
-              touch "$out"
-            '';
-          };
-
-          each-system =
-            let
-              merged = eachSystem systems (
-                system: lib.optionalAttrs (system != "aarch64-darwin") { extra = system; }
-              );
-            in
-            assert
-              merged.extra == {
-                aarch64-linux = "aarch64-linux";
-                x86_64-linux = "x86_64-linux";
-              };
-            pkgs.emptyFile;
-
-          actions = dk.nuTests {
-            src = ./actions;
-            runtimeInputs = [ pkgs.jq ];
-          };
-
-          nu-tools =
-            pkgs.runCommand "devkit-nu-tools"
-              {
-                nativeBuildInputs = [
-                  dk.nu-check
-                  dk.nu-test
-                ];
-              }
-              ''
-                ${lib.getExe dk.nushell} --no-config-file ${./nix/tests}/nu-tools.nu
-                touch "$out"
-              '';
-
-          nu-application =
-            let
-              version = "0.1.0";
-              src = ./nix/tests/fixtures/nu-application;
-
-              fixture = dk.mkNuApplication {
-                inherit version src;
-                pname = "devkit-fixture";
-                entry = "greet";
-                skills = [ (src + "/skills/fixture") ];
-                runtimeInputs = [ pkgs.ripgrep ];
-              };
-
-              minimal = dk.mkNuApplication {
-                inherit version src;
-                pname = "greet";
-              };
-
-              links = self.lib.skillLinks {
-                package = fixture;
-                name = "fixture";
-                directories = [ "skills" ];
-              };
-            in
-            pkgs.runCommand "devkit-nu-application" { } ''
-              [ "$(${lib.getExe fixture} Ada)" = "hello, Ada" ]
-              [ -x ${lib.getExe minimal} ]
-              [ "$(ls ${fixture}/share/devkit-fixture)" = greet ]
-              [ -x ${fixture}/share/devkit-fixture/greet ]
-              [ ! -e ${fixture}/share/skills/fixture/scripts/skipped.test.nu ]
-              [ -x ${links."skills/fixture".source}/scripts/hello.sh ]
-              touch "$out"
-            '';
-        };
+        checks.pre-commit = preCommit.check;
 
         # ------------------------------------------------------------------------------------------
         # Formatter

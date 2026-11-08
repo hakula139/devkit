@@ -6,7 +6,7 @@ devkit publishes a moving major tag. Consumers reference `@v1` for actions and w
 
 Use the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md) for the shared release procedure.
 
-A repository whose two-system Nix package uses changelog-based notes can release from its own `tag.yml` by calling devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release.
+A repository whose two-system Nix package uses changelog-based notes can release from its own `tag.yml` by calling devkit's `release.yml`. That workflow checks the tag against the package version, waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release.
 
 Tags containing a `-`, such as `v1.3.0-rc.1`, publish as prereleases. Before its first release, the caller needs:
 
@@ -30,27 +30,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  version:
-    name: Check Tag Version
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up Nix
-        uses: hakula139/devkit/.github/actions/setup-nix@v1
-
-      - name: Check the package version
-        run: |
-          version=$(nix eval --raw .#default.version)
-          if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
-            exit 1
-          fi
-
   release:
-    needs: version
     permissions:
       actions: read
       contents: write
@@ -89,16 +69,31 @@ To restore a deleted pin:
 
 ### Write your own release workflow
 
-A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run alongside its `version` job and its `build` job, which uploads the archives as artifacts:
+A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run alongside its `build` job, which uploads the archives as artifacts:
 
 ```yaml
 tagged-ci:
-  name: Check Tagged Commit CI
+  name: Check Release
   runs-on: ubuntu-latest
   timeout-minutes: 120
   permissions:
     actions: read
+    contents: read
   steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Set up Nix
+      uses: hakula139/devkit/.github/actions/setup-nix@v1
+
+    - name: Check the package version
+      run: |
+        version=$(nix eval --raw .#default.version)
+        if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
+          echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
+          exit 1
+        fi
+
     - name: Wait for CI on the tagged commit
       uses: hakula139/devkit/.github/actions/tagged-ci@v1
 
@@ -110,7 +105,7 @@ nix-cache:
 
 publish:
   name: Publish GitHub Release
-  needs: [version, nix-cache, build]
+  needs: [nix-cache, build]
   runs-on: ubuntu-latest
   timeout-minutes: 10
   permissions:

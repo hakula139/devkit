@@ -12,12 +12,27 @@ permissions:
 
 jobs:
   tagged-ci:
-    name: Check Tagged Commit CI
+    name: Check Release
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
       actions: read
+      contents: read
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Nix
+        uses: $/.github/actions/setup-nix
+
+      - name: Check the package version
+        run: |
+          version=$(nix eval --raw .#default.version)
+          if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
+            exit 1
+          fi
+
       - name: Wait for CI on the tagged commit
         uses: $/.github/actions/tagged-ci
 

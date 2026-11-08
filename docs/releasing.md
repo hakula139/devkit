@@ -86,7 +86,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
    A stable section covers its prereleases. For a prerelease such as `v1.3.0-rc.2`, add `--tag-pattern '^v[0-9]'` so the section starts at the previous tag of any kind.
 
-   Use `--prepend`, since regenerating the entire file drops curated sections and compare links. Only the release PR adds a release section. Fold any Unreleased section into it and delete Unreleased. Preserve the repository's changelog format and add the compare reference when its format requires one. A stable release compares with the previous stable tag, and a prerelease with the previous tag. For the first release, link to its release page when there is no previous tag.
+   Use `--prepend`, since regenerating the entire file drops curated sections and compare links. Only the release PR adds a release section. Fold any Unreleased section into it and delete Unreleased. Preserve the repository's changelog format and add the compare reference when its format requires one. A stable release compares with the previous stable tag, and a prerelease with the previous tag. For the first release, link to its release page when there is no previous tag. Keep reference definitions with their version section so extracted notes contain only that section's metadata.
 
    For generated GitHub notes or annotated-tag notes, prepare that source as the repository specifies without introducing a changelog solely to follow this procedure.
 

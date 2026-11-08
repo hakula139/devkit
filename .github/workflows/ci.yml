@@ -30,4 +30,4 @@ jobs:
       actions: read
     steps:
       - name: Check results
-        uses: $/actions/ci-result
+        uses: $/.github/actions/ci-result

@@ -18,6 +18,7 @@ body = """
     | trim \
   }}
 {%- endmacro format_message -%}
+
 {% \
   set pr_link = \
     "([#$1](https://github.com/" \
@@ -32,11 +33,13 @@ body = """
 {% else -%}
     ## Unreleased
 {% endif %}
+
 {% if message %}
     ### Highlights
 
     {{ message | trim }}
 {% endif %}
+
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
 
@@ -45,11 +48,13 @@ body = """
             - {{ self::format_message(message=commit.message, pr_link=pr_link) }}
         {% endif -%}
     {% endfor -%}
+
     {% for commit in commits | filter(attribute="scope") | sort(attribute="scope") -%}
         - _({{ commit.scope }})_ \
           {{ self::format_message(message=commit.message, pr_link=pr_link) }}
     {% endfor %}
 {%- endfor -%}
+
 {% if version %}
 
 [{{ version | trim_start_matches(pat="v") }}]: \

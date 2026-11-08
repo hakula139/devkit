@@ -22,25 +22,19 @@ def "main settings" [
       --method PATCH
       --input $repository_settings
   )
-
   (
     ^gh api $"repos/($repo)/actions/permissions/workflow"
       --method PUT
       --input $workflow_permissions
   )
-
   ^gh api $"repos/($repo)/vulnerability-alerts" --method PUT
-
   ^gh api $"repos/($repo)/automated-security-fixes" --method DELETE
-
   ^gh api $"repos/($repo)/private-vulnerability-reporting" --method PUT
-
   (
     ^gh api $"repos/($repo)"
       --method PATCH
       --input $security_settings
   )
-
   ^gh api $"repos/($repo)/immutable-releases" --method PUT
 }
 

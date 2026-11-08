@@ -9,7 +9,7 @@ Extend the preset from `.github/renovate.json`:
 }
 ```
 
-- `github>hakula139/devkit` picks up preset changes on the next Renovate run without waiting for a devkit release.
+- `github>hakula139/devkit` picks up preset changes on the next Renovate run.
 - `github>hakula139/devkit#v1` picks up preset changes only on a devkit release.
 - `github>hakula139/devkit#v1.2.3` picks up preset changes only when you bump the reference.
 

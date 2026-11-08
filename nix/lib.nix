@@ -23,9 +23,9 @@ let
       interpreter = "${pkgs.lib.getExe nushell} --no-config-file";
     } "/bin/${name}";
 
-  actionlint = pkgs.callPackage ../packages/actionlint { };
-  nu-check = writeNuBin "nu-check" ./nu-check.nu;
-  nu-test = writeNuBin "nu-test" ./nu-test.nu;
+  actionlint = pkgs.callPackage ./packages/actionlint.nix { };
+  nu-check = writeNuBin "nu-check" ../src/nu-check.nu;
+  nu-test = writeNuBin "nu-test" ../src/nu-test.nu;
 in
 {
   inherit nu-check nu-test nushell;

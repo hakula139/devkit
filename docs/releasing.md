@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Nix
-        uses: hakula139/devkit/actions/setup-nix@v1
+        uses: hakula139/devkit/.github/actions/setup-nix@v1
 
       - name: Check the package version
         run: |
@@ -145,7 +145,7 @@ tagged-ci:
     actions: read
   steps:
     - name: Wait for CI on the tagged commit
-      uses: hakula139/devkit/actions/tagged-ci@v1
+      uses: hakula139/devkit/.github/actions/tagged-ci@v1
 
 nix-cache:
   needs: tagged-ci
@@ -171,7 +171,7 @@ publish:
         merge-multiple: true
 
     - name: Publish release
-      uses: hakula139/devkit/actions/publish-release@v1
+      uses: hakula139/devkit/.github/actions/publish-release@v1
       with:
         assets: |
           dist/my-tool-x86_64-linux.tar.gz

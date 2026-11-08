@@ -91,7 +91,12 @@ let
         markdownlint-cli2 = {
           package = pkgs.markdownlint-cli2;
           entry = lib.getExe config.hooks.markdownlint-cli2.package;
-          args = [ "--fix" ];
+          args = [
+            "--config"
+            "${../.markdownlint-cli2.jsonc}"
+            "--fix"
+            "--no-globs"
+          ];
           files = "\\.md$";
         };
 
@@ -108,7 +113,7 @@ let
               let
                 configPath = "${src}/.prettierrc.json";
               in
-              lib.optionalString (builtins.pathExists configPath) configPath;
+              if builtins.pathExists configPath then configPath else "${../.prettierrc.json}";
             no-config = config.hooks.prettier.settings.configPath == "";
             no-editorconfig = true;
           };

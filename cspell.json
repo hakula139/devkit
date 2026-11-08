@@ -4,7 +4,6 @@
   "enableGlobDot": true,
   "useGitignore": true,
   "gitignoreRoot": ".",
-  "allowCompoundWords": true,
   "dictionaryDefinitions": [
     {
       "name": "project-words",

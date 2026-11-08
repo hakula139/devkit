@@ -187,7 +187,7 @@ A repository whose package builds on fewer systems drops the `nix-cache` job and
 `publish-release` writes the release notes once. To update them after editing `CHANGELOG.md`, run the following from a checkout of the target repository with an authenticated `gh`, Nushell, and [`parse-changelog`](https://github.com/taiki-e/parse-changelog#installation) on `PATH`:
 
 ```bash
-nu <devkit-source>/scripts/github.nu release-notes OWNER/REPO v1.2.3
+<devkit-source>/scripts/github.nu release-notes OWNER/REPO v1.2.3
 ```
 
 ## Release devkit

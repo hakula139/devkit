@@ -16,7 +16,7 @@ The ruleset blocks deleting and force-pushing the default branch, and requires a
 From a devkit checkout, apply [the main ruleset](../.github/rulesets/main.json) to a repository:
 
 ```bash
-nu scripts/github.nu ruleset OWNER/REPO
+./scripts/github.nu ruleset OWNER/REPO
 ```
 
 The helper replaces the named `main` ruleset. For project-specific required checks, pass `--config` with a repository-maintained JSON file.
@@ -26,7 +26,7 @@ The helper replaces the named `main` ruleset. For project-specific required chec
 Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable, so [republishing notes](releasing.md#republish-release-notes) still works. The major tag, such as `v1`, has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
 
 ```bash
-nu scripts/github.nu immutable-releases OWNER/REPO
+./scripts/github.nu immutable-releases OWNER/REPO
 ```
 
 ## Apply the repository settings
@@ -39,7 +39,7 @@ nu scripts/github.nu immutable-releases OWNER/REPO
 - **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
 
 ```bash
-nu scripts/github.nu settings OWNER/REPO
+./scripts/github.nu settings OWNER/REPO
 ```
 
 ## Turn on the security features
@@ -49,7 +49,7 @@ nu scripts/github.nu settings OWNER/REPO
 - **Secret scanning with push protection:** Keeps credentials out of the history.
 
 ```bash
-nu scripts/github.nu security OWNER/REPO
+./scripts/github.nu security OWNER/REPO
 ```
 
 ## Set up the labels
@@ -59,7 +59,7 @@ Create or update the [shared labels](../.github/labels.json) while preserving th
 Use lowercase `area: <component>` labels for repository-defined components, and apply multiple area labels to an issue when needed. Pass component names without the prefix, or omit them to apply only the shared labels:
 
 ```bash
-nu scripts/github.nu labels OWNER/REPO cli parser
+./scripts/github.nu labels OWNER/REPO cli parser
 ```
 
 ## Inherit the community files

@@ -15,7 +15,9 @@ Follow [Cut a release](#cut-a-release) for the shared release procedure. A repos
 
 Keep those contracts in the repository and link here for the shared procedure.
 
-A repository whose two-system Nix package uses changelog-based notes can release from its own `tag.yml` by calling devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release, marking it as a prerelease when the tag contains a `-`, such as `v1.3.0-rc.1`. Before its first release, the caller needs:
+A repository whose two-system Nix package uses changelog-based notes can release from its own `tag.yml` by calling devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release.
+
+Tags containing a `-`, such as `v1.3.0-rc.1`, publish as prereleases. Before its first release, the caller needs:
 
 - CI running from `.github/workflows/ci.yml` on pushes to the default branch, since `tagged-ci` counts only push and dispatched runs of that workflow on the tagged commit.
 - `packages.default` exposing a `version` attribute and building on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
@@ -70,39 +72,32 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 ### Cut a release
 
-1. Read the repository's release contract and choose the version according to its compatibility policy. Create a release branch from the current default branch, update the version files, lockfiles, fixtures, and installation references that contract requires, and run its verification before opening the release PR.
+1. Read the repository's release contract and choose the version according to its compatibility policy.
 
-2. Prepare the notes from the repository's declared source. For a maintained `CHANGELOG.md`, draft one section with git-cliff using the repository's `cliff.toml` when present, or the `cliff.toml` from the same local devkit source as this guide (replacing `<devkit-source>` below with that directory):
+   - Create a release branch from the current default branch.
+   - Update the version files, lockfiles, fixtures, and installation references that contract requires.
 
-   ```bash
-   nix run nixpkgs#git-cliff -- \
-     --offline \
-     --github-repo "$(
-       gh repo view \
-         --json nameWithOwner \
-         --jq .nameWithOwner
-     )" \
-     --config <devkit-source>/cliff.toml \
-     --unreleased \
-     --tag v1.2.3 \
-     --prepend CHANGELOG.md
-   ```
+2. Prepare the notes from the repository's declared source:
 
-   Pass the repository explicitly because a new release branch may not have an upstream.
+   - **Maintained `CHANGELOG.md`:** Run the draft script from the target repository's root, replacing `<devkit-source>` with the local devkit directory:
 
-   The draft keeps `feat`, `fix`, `perf`, and any `!` title, so use one of those types on any PR that changes what consumers see.
+     ```bash
+     <devkit-source>/scripts/changelog.nu v1.2.3
+     ```
 
-   A stable section covers its prereleases. For a prerelease such as `v1.3.0-rc.2`, add `--tag-pattern '^v[0-9]'` so the section starts at the previous tag of any kind.
+     The script uses the repository's `cliff.toml` when present and otherwise uses devkit's shared configuration. Prerelease tags automatically select the range since the previous tag.
 
-   Use `--prepend`, since regenerating the entire file drops curated sections and compare links. Only the release PR adds a release section. Fold any Unreleased section into it and delete Unreleased. Preserve the repository's changelog format and add the compare reference when its format requires one. A stable release compares with the previous stable tag, and a prerelease with the previous tag. For the first release, link to its release page when there is no previous tag. Keep reference definitions with their version section so extracted notes contain only that section's metadata.
+   - **Generated GitHub notes or annotated-tag notes:** Prepare that source as the repository specifies without introducing a changelog solely to follow this procedure.
 
-   For generated GitHub notes or annotated-tag notes, prepare that source as the repository specifies without introducing a changelog solely to follow this procedure.
+3. [Curate the notes](#curate-release-notes), run the repository's release checks, and open a PR titled `chore(release): vX.Y.Z`.
 
-3. [Curate the notes](#curate-release-notes), run the release checks, and open a PR titled `chore(release): vX.Y.Z`. If another change lands before the release PR merges, update the branch and regenerate the draft range while preserving your curation so the section includes every released change.
+   If another change lands before the release PR merges, update the branch and regenerate the draft range while preserving your curation so the section includes every released change.
 
 4. Merge the release PR after its checks pass and review is approved.
 
-5. Get approval to publish the tag separately from approval to merge the PR. Tag the release PR's squash commit by SHA, since a later PR may already sit on the default branch, and use the tag type the repository requires, including its approved notes for an annotated tag:
+5. Get approval to publish the tag separately from approval to merge the PR.
+
+   Tag the release PR's squash commit by SHA, since a later PR may already sit on the default branch. Use the tag type the repository requires, including its approved notes for an annotated tag:
 
    ```bash
    git fetch origin
@@ -114,23 +109,39 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
    git push origin v1.2.3
    ```
 
-6. Watch the release workflow with `gh run watch` and verify the published notes, prerelease status, and each expected artifact or registry package using the repository's checks. Report the release PR and published release URLs, including any incomplete targets.
+6. Watch the release workflow with `gh run watch`.
 
-Releases that use `tagged-ci` require a passing push or dispatched run of `ci.yml` on the tagged commit. Rerun failed CI jobs or dispatch `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once CI passes. Other workflows must satisfy their own validation gates before publication.
-
-To restore a deleted pin, check out the tag on each system it pins (`x86_64-linux` and `aarch64-darwin`) and run `nix build .#default.out --no-link --print-out-paths`, then `cachix push hakula <path>` and `cachix pin hakula <repository>-<tag>-<system> <path>`.
+   - Verify the published notes, prerelease status, and each expected artifact or registry package using the repository's checks.
+   - Report the release PR and published release URLs, including any incomplete targets.
 
 ### Curate release notes
 
-Read the PR descriptions wherever titles leave the effect unclear:
+devkit's draft keeps `feat`, `fix`, `perf`, and any `!` title, so use one of those types on any PR that changes what consumers see. Read the PR descriptions wherever titles leave the effect unclear.
 
-- Start a stable release from the curated prerelease sections it rolls up, preserving their entries and adding subsequent changes, since regenerating solely from titles can lose wording and entries excluded by the commit filter.
-- Describe only changes the PRs made, covering what users can now do, what no longer breaks, what works differently, and migration steps.
-- Merge entries for one user-visible change, preserving every PR link. Fold fixes to a feature introduced in the same release into that feature's entry. Keep the main change's scope, and split a PR across entries when it has unrelated effects.
-- Group entries by their effect, keeping breaking changes under Breaking changes, and drop entries with no user-visible effect, such as CI-only or test-only fixes.
-- Order each group by user impact and preserve scope labels. Lead with highlights when warranted, curating them by the same rules.
+1. Preserve the release history.
 
-When the repository's git-cliff template supports highlights, supply a Markdown file through `--with-tag-message="$(<highlights.md)"`. The `=` form keeps leading bullet markers from being parsed as flags.
+   - Add a release section only in the release PR. Fold any Unreleased section into it and delete Unreleased.
+   - Prepend the draft, since regenerating the entire file drops curated sections and compare links.
+   - Start a stable release from the curated prerelease sections it rolls up, preserving their entries and adding subsequent changes. Drafting solely from titles can lose wording and entries excluded by the commit filter.
+
+2. Curate entries for users.
+
+   - Describe only changes the PRs made, covering what users can now do, what no longer breaks, what works differently, and migration steps.
+   - Merge entries for one user-visible change, preserving every PR link. Fold fixes to a feature introduced in the same release into that feature's entry.
+   - Keep the main change's scope, and split a PR across entries when it has unrelated effects.
+   - Group entries by their effect, keeping breaking changes under Breaking changes, and drop entries with no user-visible effect, such as CI-only or test-only fixes.
+   - Order each group by user impact and preserve scope labels. Lead with highlights when warranted, curating them by the same rules.
+
+3. Preserve the repository's changelog format and add the compare reference when its format requires one.
+
+   - Compare a stable release with the previous stable tag and a prerelease with the previous tag. For the first release, link to its release page when there is no previous tag.
+   - Keep reference definitions with their version section so extracted notes contain only that section's metadata.
+
+When the repository's git-cliff template supports highlights, pass a Markdown file to the script:
+
+```bash
+<devkit-source>/scripts/changelog.nu v1.2.3 --highlights highlights.md
+```
 
 ### Recover a release
 
@@ -139,6 +150,14 @@ Let in-flight publishing finish before attempting recovery, and inspect each des
 - Follow the repository's immutability constraints, as registry versions and distributed tags may require a new version even when a GitHub Release can be edited.
 - Get explicit approval before deleting a release or moving a published tag.
 - Prefer rerunning failed jobs at the same commit when the publishing workflow supports it.
+
+Releases that use `tagged-ci` require a passing push or dispatched run of `ci.yml` on the tagged commit. Rerun failed CI jobs or dispatch `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once CI passes. Other workflows must satisfy their own validation gates before publication.
+
+To restore a deleted pin:
+
+1. Check out the tag on each system it pins (`x86_64-linux` and `aarch64-darwin`).
+2. Build with `nix build .#default.out --no-link --print-out-paths`.
+3. Push the output with `cachix push hakula <path>` and pin it with `cachix pin hakula <repository>-<tag>-<system> <path>`.
 
 ### Write your own release workflow
 
@@ -200,9 +219,12 @@ A repository whose package builds on fewer systems drops the `nix-cache` job and
 
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, using the shared git-cliff command with `<devkit-source>` set to `.` and skipping the version bump because devkit publishes no package.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, drafting with `./scripts/changelog.nu v1.2.3` and skipping the version bump because devkit publishes no package.
 
-Any change that breaks an existing caller of an action, reusable workflow, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. Moving the shared `cliff.toml` or changing its `header` also requires one, since `--prepend` replaces an existing header only when it matches exactly. New or stricter baseline hooks ship in a minor release.
+Choose the release version according to the affected contract:
+
+- **Major:** A change breaks an existing caller of an action, reusable workflow, script, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute. Moving the shared `cliff.toml` or changing its `header` also requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
+- **Minor:** New or stricter baseline hooks.
 
 ### Roll back
 

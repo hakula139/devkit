@@ -10,8 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Tera's `sort` rejects a null key, so unscoped entries render first in their own loop.
 body = """
-{% set pr_link = "([#$1](https://github.com/" ~ remote.github.owner ~ "/" ~ \
-remote.github.repo ~ "/pull/$1))" %}
+{% set pr_link = "([#$1](https://github.com/" \
+    ~ remote.github.owner \
+    ~ "/" \
+    ~ remote.github.repo \
+    ~ "/pull/$1))" %}
 
 {% if version -%}
     ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
@@ -28,13 +31,17 @@ remote.github.repo ~ "/pull/$1))" %}
 
     {% for commit in commits -%}
         {% if not commit.scope -%}
-            - {{ commit.message | \
-replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) | upper_first | trim }}
+            - {{ commit.message \
+                | replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) \
+                | upper_first \
+                | trim }}
         {% endif -%}
     {% endfor -%}
     {% for commit in commits | filter(attribute="scope") | sort(attribute="scope") -%}
-        - _({{ commit.scope }})_ {{ commit.message | \
-replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) | upper_first | trim }}
+        - _({{ commit.scope }})_ {{ commit.message \
+            | replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) \
+            | upper_first \
+            | trim }}
     {% endfor %}
 {%- endfor -%}
 {% if version %}

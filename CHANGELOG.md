@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0](https://github.com/hakula139/devkit/releases/tag/v1.0.0) - 2026-11-08
+## [1.0.0] - 2026-11-08
 
 ### Breaking changes
 
@@ -31,7 +31,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Adoption guides now live under `docs/`, with a short README index linking flake, hooks, Nushell, CI, release, Renovate, and GitHub guidance. ([#23](https://github.com/hakula139/devkit/pull/23))
 
-## [1.0.0-rc.3](https://github.com/hakula139/devkit/compare/v1.0.0-rc.2...v1.0.0-rc.3) - 2026-11-06
+[1.0.0]: https://github.com/hakula139/devkit/releases/tag/v1.0.0
+
+## [1.0.0-rc.3] - 2026-11-06
 
 ### Breaking changes
 
@@ -56,7 +58,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The baseline's `actionlint` rejects `queue` in a `concurrency` section. A repository that uses it adds `'unexpected key "queue" for "concurrency" section'` to its `.github/actionlint.yaml` ignores.
 - A releasing repository can delete its `nix-cache.yml` caller, since `docs/releasing.md` now restores a deleted pin locally. An existing caller keeps working.
 
-## [1.0.0-rc.2](https://github.com/hakula139/devkit/compare/v1.0.0-rc.1...v1.0.0-rc.2) - 2026-11-06
+[1.0.0-rc.3]: https://github.com/hakula139/devkit/compare/v1.0.0-rc.2...v1.0.0-rc.3
+
+## [1.0.0-rc.2] - 2026-11-06
 
 ### Changed
 
@@ -69,7 +73,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The Renovate preset's custom manager matches only a flake reference that pins the major tag, such as `github:hakula139/devkit/v1`, and now moves `v1` to `v2` correctly. It leaves a full-version ref such as `v1.0.0-rc.1` unchanged. In rc.1, the same manager broke a major update by rewriting the owner in `hakula139` to `hakula239`.
 - The `nu-test` runner rejects a test name that holds characters outside letters, digits, spaces, and `,.:-`, so a `;` in a name can no longer inject a command and an apostrophe no longer breaks the run. Rename any test whose name falls outside that set.
 
-## [1.0.0-rc.1](https://github.com/hakula139/devkit/releases/tag/v1.0.0-rc.1) - 2026-11-06
+[1.0.0-rc.2]: https://github.com/hakula139/devkit/compare/v1.0.0-rc.1...v1.0.0-rc.2
+
+## [1.0.0-rc.1] - 2026-11-06
 
 ### Added
 
@@ -81,3 +87,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The `setup-nix`, `ci-result`, `tagged-ci`, and `publish-release` composite actions.
 - The `nix.yml`, `release.yml`, and `nix-cache.yml` reusable workflows.
 - The Renovate preset in `default.json`.
+
+[1.0.0-rc.1]: https://github.com/hakula139/devkit/releases/tag/v1.0.0-rc.1

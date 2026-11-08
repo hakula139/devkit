@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Tera's `sort` rejects a null key, so unscoped entries render first in their own loop.
 body = """
+{% macro format_message(message, pr_link) -%}
+  {{ \
+    message \
+    | replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) \
+    | upper_first \
+    | trim \
+  }}
+{%- endmacro format_message -%}
 {% \
   set pr_link = \
     "([#$1](https://github.com/" \
@@ -34,22 +42,12 @@ body = """
 
     {% for commit in commits -%}
         {% if not commit.scope -%}
-            - {{ \
-                commit.message \
-                | replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) \
-                | upper_first \
-                | trim \
-              }}
+            - {{ self::format_message(message=commit.message, pr_link=pr_link) }}
         {% endif -%}
     {% endfor -%}
     {% for commit in commits | filter(attribute="scope") | sort(attribute="scope") -%}
         - _({{ commit.scope }})_ \
-          {{ \
-            commit.message \
-            | replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) \
-            | upper_first \
-            | trim \
-          }}
+          {{ self::format_message(message=commit.message, pr_link=pr_link) }}
     {% endfor %}
 {%- endfor -%}
 {% if version %}

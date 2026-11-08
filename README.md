@@ -8,28 +8,28 @@ Shared development tooling for Hakula's repositories.
 
 ## Documentation
 
-| Document                       | Description                             |
-| ------------------------------ | --------------------------------------- |
-| [Nix flake][flake]             | Flake inputs, shared helpers, dev shell |
-| [Hooks][hooks]                 | Pre-commit setup and configuration      |
-| [Nushell tooling][nushell]     | Application and skill packaging         |
-| [Nushell test runner][nu-test] | Tests and script checks                 |
-| [CI workflow and gate][ci]     | Nix checks and required status gate     |
-| [Releasing][releasing]         | Release setup and publishing            |
-| [Renovate preset][renovate]    | Dependency updates and automerge        |
-| [GitHub conventions][github]   | Repository settings, rulesets, labels   |
-| [Development][development]     | Contributor instructions                |
+| Document               | Description                             |
+| ---------------------- | --------------------------------------- |
+| [Nix flake]            | Flake inputs, shared helpers, dev shell |
+| [Hooks]                | Pre-commit setup and configuration      |
+| [Nushell tooling]      | Application and skill packaging         |
+| [Nushell test runner]  | Tests and script checks                 |
+| [CI workflow and gate] | Nix checks and required status gate     |
+| [Releasing]            | Release setup and publishing            |
+| [Renovate preset]      | Dependency updates and automerge        |
+| [GitHub conventions]   | Repository settings, rulesets, labels   |
+| [Development]          | Contributor instructions                |
 
 ## License
 
 Copyright (c) 2026 [Hakula](https://hakula.xyz). Licensed under the [MIT License](LICENSE).
 
-[flake]: docs/flake.md
-[hooks]: docs/hooks.md
-[nushell]: docs/nushell.md
-[nu-test]: docs/nu-test.md
-[ci]: docs/ci.md
-[releasing]: docs/releasing.md
-[renovate]: docs/renovate.md
-[github]: docs/github.md
-[development]: AGENTS.md
+[Nix flake]: docs/flake.md
+[Hooks]: docs/hooks.md
+[Nushell tooling]: docs/nushell.md
+[Nushell test runner]: docs/nu-test.md
+[CI workflow and gate]: docs/ci.md
+[Releasing]: docs/releasing.md
+[Renovate preset]: docs/renovate.md
+[GitHub conventions]: docs/github.md
+[Development]: AGENTS.md

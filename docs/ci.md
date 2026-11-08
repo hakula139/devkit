@@ -45,8 +45,6 @@ Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still 
 checks.package = self.packages.${system}.default;
 ```
 
-The [branch ruleset][branch-ruleset] requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
+The [branch ruleset](github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
 
 Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to it only from the default branch. Create a `CACHIX_AUTH_TOKEN` secret to enable pushing.
-
-[branch-ruleset]: github.md#apply-the-branch-ruleset

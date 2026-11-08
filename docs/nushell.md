@@ -1,6 +1,6 @@
 # Nushell tooling
 
-After [setting up the flake][flake], add the package and tests to the per-system output attribute set:
+After [setting up the flake](flake.md), add the package and tests to the per-system output attribute set:
 
 ```nix
 packages.default = dk.mkNuApplication {
@@ -17,7 +17,7 @@ checks.tests = dk.nuTests {
 };
 ```
 
-[Nushell test runner][nu-test] covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` packages the application as follows:
+[Nushell test runner](nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` packages the application as follows:
 
 - Reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`.
 - Packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`.
@@ -44,6 +44,3 @@ config = lib.mkIf cfg.enable {
 ```
 
 A skill link's `name` must equal its skill directory's basename.
-
-[flake]: flake.md
-[nu-test]: nu-test.md

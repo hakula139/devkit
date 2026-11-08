@@ -53,8 +53,6 @@ outputs =
   );
 ```
 
-`devkit.lib` holds the pure helpers, and `dk = devkit.lib.mkLib pkgs` binds `pkgs` once for the rest. See [Hooks][hooks] for hook setup and configuration.
+`devkit.lib` holds the pure helpers, and `dk = devkit.lib.mkLib pkgs` binds `pkgs` once for the rest. See [Hooks](hooks.md) for hook setup and configuration.
 
 Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
-
-[hooks]: hooks.md

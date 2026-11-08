@@ -76,11 +76,19 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
    ```bash
    nix run nixpkgs#git-cliff -- \
+     --offline \
+     --github-repo "$(
+       gh repo view \
+         --json nameWithOwner \
+         --jq .nameWithOwner
+     )" \
      --config <devkit-source>/cliff.toml \
      --unreleased \
      --tag v1.2.3 \
      --prepend CHANGELOG.md
    ```
+
+   Pass the repository explicitly because a new release branch may not have an upstream.
 
    The draft keeps `feat`, `fix`, `perf`, and any `!` title, so use one of those types on any PR that changes what consumers see.
 
@@ -192,7 +200,7 @@ A repository whose package builds on fewer systems drops the `nix-cache` job and
 
 ## Release devkit
 
-Cut a devkit release as [Cut a release](#cut-a-release) describes, using its local `cliff.toml` and skipping the version bump because devkit publishes no package.
+Cut a devkit release as [Cut a release](#cut-a-release) describes, using the shared git-cliff command with `<devkit-source>` set to `.` and skipping the version bump because devkit publishes no package.
 
 Any change that breaks an existing caller of an action, reusable workflow, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. Moving the shared `cliff.toml` or changing its `header` also requires one, since `--prepend` replaces an existing header only when it matches exactly. New or stricter baseline hooks ship in a minor release.
 

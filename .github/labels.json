@@ -1,0 +1,92 @@
+[
+  {
+    "name": "accessibility",
+    "color": "f143ab",
+    "description": "Accessibility barriers"
+  },
+  {
+    "name": "bug",
+    "color": "b60205",
+    "description": "Unexpected behavior"
+  },
+  {
+    "name": "chore",
+    "color": "f9d0c4",
+    "description": "Maintenance without behavior changes"
+  },
+  {
+    "name": "ci",
+    "color": "ffc4a3",
+    "description": "CI, build, and release automation"
+  },
+  {
+    "name": "dependencies",
+    "color": "c9a26b",
+    "description": "Dependency updates"
+  },
+  {
+    "name": "design",
+    "color": "0e8a16",
+    "description": "Needs a design decision"
+  },
+  {
+    "name": "documentation",
+    "color": "fef2c0",
+    "description": "Documentation changes"
+  },
+  {
+    "name": "duplicate",
+    "color": "cfd3d7",
+    "description": "Tracked by another issue or pull request"
+  },
+  {
+    "name": "enhancement",
+    "color": "d93f0b",
+    "description": "New capability"
+  },
+  {
+    "name": "epic",
+    "color": "5319e7",
+    "description": "Parent issue grouping related work"
+  },
+  {
+    "name": "good first issue",
+    "color": "5fc9b8",
+    "description": "Small, self-contained issue for newcomers"
+  },
+  {
+    "name": "help wanted",
+    "color": "008672",
+    "description": "Outside contributions welcome"
+  },
+  {
+    "name": "invalid",
+    "color": "bdc3ca",
+    "description": "Not actionable or reproducible"
+  },
+  {
+    "name": "performance",
+    "color": "f29513",
+    "description": "Faster or leaner without functional changes"
+  },
+  {
+    "name": "question",
+    "color": "afb8c1",
+    "description": "Needs more information"
+  },
+  {
+    "name": "refactor",
+    "color": "fbca04",
+    "description": "Behavior-preserving restructuring"
+  },
+  {
+    "name": "test",
+    "color": "c5def5",
+    "description": "Test coverage changes"
+  },
+  {
+    "name": "wontfix",
+    "color": "e1e4e8",
+    "description": "Out of scope or will not be implemented"
+  }
+]

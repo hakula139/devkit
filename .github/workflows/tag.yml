@@ -31,33 +31,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-tags: true
 
       - name: Publish release
         uses: $/actions/publish-release
 
-  major-tag:
-    name: Move the Major Tag
-    if: ${{ !contains(github.ref_name, '-') }}
-    needs: publish
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Create GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.RELEASE_APP_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          permission-contents: write
-          permission-workflows: write
-
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          token: ${{ steps.app-token.outputs.token }}
-
       - name: Move the major tag
+        if: ${{ !contains(github.ref_name, '-') }}
         run: |
           major="${GITHUB_REF_NAME%%.*}"
           latest=$(

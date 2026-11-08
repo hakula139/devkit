@@ -1,6 +1,6 @@
 # Nushell tooling
 
-A Nushell repository adds its package and tests to the same attribute set:
+After [setting up the flake][flake], add the package and tests to the per-system output attribute set:
 
 ```nix
 packages.default = dk.mkNuApplication {
@@ -45,4 +45,5 @@ config = lib.mkIf cfg.enable {
 
 A skill link's `name` must equal its skill directory's basename.
 
+[flake]: flake.md
 [nu-test]: nu-test.md

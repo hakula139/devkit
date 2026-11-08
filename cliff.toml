@@ -10,12 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 # Tera's `sort` rejects a null key, so unscoped entries render first in their own loop.
 body = """
-{% set pr_link = \
-  "([#$1](https://github.com/" \
-  ~ remote.github.owner \
-  ~ "/" \
-  ~ remote.github.repo \
-  ~ "/pull/$1))" \
+{% \
+  set pr_link = \
+    "([#$1](https://github.com/" \
+    ~ remote.github.owner \
+    ~ "/" \
+    ~ remote.github.repo \
+    ~ "/pull/$1))" \
 %}
 
 {% if version -%}

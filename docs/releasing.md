@@ -194,8 +194,6 @@ A repository whose package builds on fewer systems drops the `nix-cache` job and
 
 Cut a devkit release as [Cut a release](#cut-a-release) describes, using its local `cliff.toml` and skipping the version bump because devkit publishes no package.
 
-Moving the major tag requires the `hakula-release-bot` GitHub App, installed on the repository with Contents and Workflows write permissions. Its client ID and private key live in the `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets.
-
 Any change that breaks an existing caller of an action, reusable workflow, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute, requires a new major tag. Moving the shared `cliff.toml` or changing its `header` also requires one, since `--prepend` replaces an existing header only when it matches exactly. New or stricter baseline hooks ship in a minor release.
 
 ### Roll back

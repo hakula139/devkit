@@ -31,14 +31,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-        with:
-          fetch-tags: true
 
       - name: Publish release
         uses: $/actions/publish-release
 
+  major-tag:
+    name: Move the Major Tag
+    if: ${{ !contains(github.ref_name, '-') }}
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-tags: true
+
       - name: Move the major tag
-        if: ${{ !contains(github.ref_name, '-') }}
         run: |
           major="${GITHUB_REF_NAME%%.*}"
           latest=$(

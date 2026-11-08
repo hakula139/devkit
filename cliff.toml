@@ -34,8 +34,7 @@ body = """
 
     {% for commit in commits -%}
         {% if not commit.scope -%}
-            - \
-              {{ \
+            - {{ \
                 commit.message \
                 | replace_regex(from="[(]#([0-9]+)[)]", to=pr_link) \
                 | upper_first \

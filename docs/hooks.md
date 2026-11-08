@@ -22,13 +22,13 @@ The shared hook configurations cover:
 | `sort-file-contents`                                                     | The order of `.cspell/words.txt`   |                           |
 | `taplo`                                                                  | TOML                               | `.taplo.toml`             |
 
-git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings, and devkit's own config files are working examples.
+git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings.
 
 ## Configure the baseline
 
 - **cspell:** Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`.
 - **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. In marked files, use inline links in headings so doctoc generates anchors matching GitHub.
-- **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 checks it with devkit's rules, including `<!-- dprint-ignore -->` blocks. Project `.markdownlint-cli2.jsonc` rules override the defaults. Configured `globs` are ignored, since the hook supplies the file list.
+- **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 checks it with devkit's rules, including `<!-- dprint-ignore -->` blocks. Project `.markdownlint-cli2.jsonc` rules override the defaults. Core `.markdownlint.jsonc` files replace the shared rules. Configured `globs` are ignored, since the hook supplies the file list.
 - **Prettier:** Uses devkit's shared configuration unless the source root contains `.prettierrc.json`. Set `hooks.prettier.settings.configPath` for another configuration file.
 - **shellcheck:** Start the repository's `.envrc` with `# shellcheck shell=bash`, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
 - **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults.

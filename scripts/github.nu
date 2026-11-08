@@ -15,7 +15,7 @@ def "main ruleset" [
   --config: path # Complete ruleset JSON, defaulting to the shared main ruleset
 ] {
   let source = if $config == null {
-    $env.FILE_PWD | path join ".." ".github" "rulesets" "main.json"
+    $env.FILE_PWD | path join "../.github/rulesets/main.json"
   } else {
     $config
   }
@@ -45,25 +45,19 @@ def "main ruleset" [
 def "main settings" [
   repo: string # Target repository as OWNER/REPO
 ] {
+  let settings = ($env.FILE_PWD | path join "../.github/repository-settings.json")
+  let permissions = ($env.FILE_PWD | path join "../.github/workflow-permissions.json")
+
   (
     ^gh api $"repos/($repo)"
       --method PATCH
-      -F allow_squash_merge=true
-      -F allow_merge_commit=false
-      -F allow_rebase_merge=false
-      -f squash_merge_commit_title=PR_TITLE
-      -f squash_merge_commit_message=PR_BODY
-      -F delete_branch_on_merge=true
-      -F allow_auto_merge=true
-      -F has_wiki=false
-      -F has_issues=true
+      --input $settings
   )
 
   (
     ^gh api $"repos/($repo)/actions/permissions/workflow"
       --method PUT
-      -f default_workflow_permissions=read
-      -F can_approve_pull_request_reviews=false
+      --input $permissions
   )
 }
 
@@ -78,6 +72,8 @@ def "main immutable-releases" [
 def "main security" [
   repo: string # Target repository as OWNER/REPO
 ] {
+  let settings = ($env.FILE_PWD | path join "../.github/security-settings.json")
+
   ^gh api $"repos/($repo)/vulnerability-alerts" --method PUT
 
   ^gh api $"repos/($repo)/automated-security-fixes" --method DELETE
@@ -87,8 +83,7 @@ def "main security" [
   (
     ^gh api $"repos/($repo)"
       --method PATCH
-      -f 'security_and_analysis[secret_scanning][status]=enabled'
-      -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
+      --input $settings
   )
 }
 
@@ -97,7 +92,7 @@ def "main labels" [
   repo: string # Target repository as OWNER/REPO
   ...areas: string # Optional component names without the area: prefix
 ] {
-  let shared = (open ($env.FILE_PWD | path join ".." ".github" "labels.json"))
+  let shared = (open ($env.FILE_PWD | path join "../.github/labels.json"))
   let components = (
     $areas
     | each {|area|

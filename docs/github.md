@@ -38,6 +38,8 @@ Once a release is published, its tag cannot move or be deleted and its assets ar
 - **Wiki: off.** Docs live in the repository, and you can enable Projects and Discussions as needed.
 - **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
 
+Apply the [repository settings](../.github/repository-settings.json) and [workflow permissions](../.github/workflow-permissions.json):
+
 ```bash
 ./scripts/github.nu settings OWNER/REPO
 ```
@@ -47,6 +49,8 @@ Once a release is published, its tag cannot move or be deleted and its assets ar
 - **Dependency alerts and updates:** Dependabot alerts stay on while Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, bypassing its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`.
 - **Private vulnerability reporting:** Provides the channel named in the default `SECURITY.md`.
 - **Secret scanning with push protection:** Keeps credentials out of the history.
+
+The [security settings](../.github/security-settings.json) define the secret scanning configuration.
 
 ```bash
 ./scripts/github.nu security OWNER/REPO

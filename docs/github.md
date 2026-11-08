@@ -4,6 +4,37 @@ These conventions provide defaults for public repositories, and you can extend t
 
 Use authenticated `gh` and Nushell to run each command from a devkit checkout, with the target repository as `OWNER/REPO`.
 
+## Apply repository settings
+
+Apply repository and workflow settings, security features, and immutable releases:
+
+```bash
+./scripts/github.nu settings OWNER/REPO
+```
+
+### Repository and workflow settings
+
+- **Merge methods: squash only.** The changelog is drafted from each squashed commit's conventional title.
+- **Squash commit title and body: `PR_TITLE` and `PR_BODY`.** The pull request description carries the rationale into the commit body.
+- **`delete_branch_on_merge`: on.**
+- **`allow_auto_merge`: on.** Renovate's platform automerge merges the moment checks pass.
+- **Wiki: off.** Docs live in the repository, and you can enable Projects and Discussions as needed.
+- **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
+
+The [repository settings](../.github/repository-settings.json) and [workflow permissions](../.github/workflow-permissions.json) define these defaults.
+
+### Security
+
+- **Dependency alerts and updates:** Dependabot alerts stay on while Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, bypassing its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`.
+- **Private vulnerability reporting:** Provides the channel named in the default `SECURITY.md`.
+- **Secret scanning with push protection:** Keeps credentials out of the history.
+
+The [security settings](../.github/security-settings.json) define the secret scanning configuration.
+
+### Immutable releases
+
+Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable, so [republishing notes](releasing.md#republish-release-notes) still works. The major tag, such as `v1`, has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
+
 ## Apply the branch ruleset
 
 The ruleset blocks deleting and force-pushing the default branch, and requires a pull request for every change:
@@ -20,41 +51,6 @@ From a devkit checkout, apply [the main ruleset](../.github/rulesets/main.json) 
 ```
 
 The helper replaces the named `main` ruleset. For project-specific required checks, pass `--config` with a repository-maintained JSON file.
-
-## Make releases immutable
-
-Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable, so [republishing notes](releasing.md#republish-release-notes) still works. The major tag, such as `v1`, has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
-
-```bash
-./scripts/github.nu immutable-releases OWNER/REPO
-```
-
-## Apply the repository settings
-
-- **Merge methods: squash only.** The changelog is drafted from each squashed commit's conventional title.
-- **Squash commit title and body: `PR_TITLE` and `PR_BODY`.** The pull request description carries the rationale into the commit body.
-- **`delete_branch_on_merge`: on.**
-- **`allow_auto_merge`: on.** Renovate's platform automerge merges the moment checks pass.
-- **Wiki: off.** Docs live in the repository, and you can enable Projects and Discussions as needed.
-- **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
-
-Apply the [repository settings](../.github/repository-settings.json) and [workflow permissions](../.github/workflow-permissions.json):
-
-```bash
-./scripts/github.nu settings OWNER/REPO
-```
-
-## Turn on the security features
-
-- **Dependency alerts and updates:** Dependabot alerts stay on while Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, bypassing its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`.
-- **Private vulnerability reporting:** Provides the channel named in the default `SECURITY.md`.
-- **Secret scanning with push protection:** Keeps credentials out of the history.
-
-The [security settings](../.github/security-settings.json) define the secret scanning configuration.
-
-```bash
-./scripts/github.nu security OWNER/REPO
-```
 
 ## Set up the labels
 

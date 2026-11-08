@@ -9,6 +9,41 @@ def main [] {
   help main
 }
 
+# Apply repository and workflow settings, security defaults, and immutable releases.
+def "main settings" [
+  repo: string # Target repository as OWNER/REPO
+] {
+  let repository_settings = ($env.FILE_PWD | path join "../.github/repository-settings.json")
+  let workflow_permissions = ($env.FILE_PWD | path join "../.github/workflow-permissions.json")
+  let security_settings = ($env.FILE_PWD | path join "../.github/security-settings.json")
+
+  (
+    ^gh api $"repos/($repo)"
+      --method PATCH
+      --input $repository_settings
+  )
+
+  (
+    ^gh api $"repos/($repo)/actions/permissions/workflow"
+      --method PUT
+      --input $workflow_permissions
+  )
+
+  ^gh api $"repos/($repo)/vulnerability-alerts" --method PUT
+
+  ^gh api $"repos/($repo)/automated-security-fixes" --method DELETE
+
+  ^gh api $"repos/($repo)/private-vulnerability-reporting" --method PUT
+
+  (
+    ^gh api $"repos/($repo)"
+      --method PATCH
+      --input $security_settings
+  )
+
+  ^gh api $"repos/($repo)/immutable-releases" --method PUT
+}
+
 # Create or replace the main branch ruleset.
 def "main ruleset" [
   repo: string # Target repository as OWNER/REPO
@@ -38,52 +73,6 @@ def "main ruleset" [
     ^gh api $endpoint
       --method $method
       --input $source
-  )
-}
-
-# Apply repository settings and workflow token permissions.
-def "main settings" [
-  repo: string # Target repository as OWNER/REPO
-] {
-  let settings = ($env.FILE_PWD | path join "../.github/repository-settings.json")
-  let permissions = ($env.FILE_PWD | path join "../.github/workflow-permissions.json")
-
-  (
-    ^gh api $"repos/($repo)"
-      --method PATCH
-      --input $settings
-  )
-
-  (
-    ^gh api $"repos/($repo)/actions/permissions/workflow"
-      --method PUT
-      --input $permissions
-  )
-}
-
-# Make published releases immutable.
-def "main immutable-releases" [
-  repo: string # Target repository as OWNER/REPO
-] {
-  ^gh api $"repos/($repo)/immutable-releases" --method PUT
-}
-
-# Apply the repository security defaults.
-def "main security" [
-  repo: string # Target repository as OWNER/REPO
-] {
-  let settings = ($env.FILE_PWD | path join "../.github/security-settings.json")
-
-  ^gh api $"repos/($repo)/vulnerability-alerts" --method PUT
-
-  ^gh api $"repos/($repo)/automated-security-fixes" --method DELETE
-
-  ^gh api $"repos/($repo)/private-vulnerability-reporting" --method PUT
-
-  (
-    ^gh api $"repos/($repo)"
-      --method PATCH
-      --input $settings
   )
 }
 

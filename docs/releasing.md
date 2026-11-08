@@ -116,7 +116,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 ### Curate release notes
 
-devkit's draft keeps `feat`, `fix`, `perf`, and any `!` title, so use one of those types on any PR that changes what consumers see. Read the PR descriptions wherever titles leave the effect unclear.
+devkit's draft keeps `feat`, `fix`, `perf`, and breaking conventional commits, so use one of those types on any PR that changes what consumers see. Read the PR descriptions wherever titles leave the effect unclear.
 
 1. Preserve the release history.
 

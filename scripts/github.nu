@@ -4,6 +4,8 @@
 # GitHub Administration
 # ==================================================================================================
 
+const SCRIPT_DIR = path self "."
+
 # Show the repository administration commands.
 def main [] {
   help main
@@ -13,9 +15,9 @@ def main [] {
 def "main settings" [
   repo: string # Target repository as OWNER/REPO
 ] {
-  let repository_settings = ($env.FILE_PWD | path join "../.github/settings/repository.json")
-  let workflow_permissions = ($env.FILE_PWD | path join "../.github/settings/workflow-permissions.json")
-  let security_settings = ($env.FILE_PWD | path join "../.github/settings/security.json")
+  let repository_settings = ($SCRIPT_DIR | path join "../.github/settings/repository.json")
+  let workflow_permissions = ($SCRIPT_DIR | path join "../.github/settings/workflow-permissions.json")
+  let security_settings = ($SCRIPT_DIR | path join "../.github/settings/security.json")
 
   (
     ^gh api $"repos/($repo)"
@@ -43,8 +45,9 @@ def "main ruleset" [
   repo: string # Target repository as OWNER/REPO
   --config: path # Complete ruleset JSON, defaulting to the shared main ruleset
 ] {
+  let main_ruleset = ($SCRIPT_DIR | path join "../.github/settings/rulesets/main.json")
   let source = if $config == null {
-    $env.FILE_PWD | path join "../.github/settings/rulesets/main.json"
+    $main_ruleset
   } else {
     $config
   }
@@ -75,7 +78,8 @@ def "main labels" [
   repo: string # Target repository as OWNER/REPO
   ...areas: string # Optional component names without the area: prefix
 ] {
-  let shared = (open ($env.FILE_PWD | path join "../.github/settings/labels.json"))
+  let labels_config = ($SCRIPT_DIR | path join "../.github/settings/labels.json")
+  let shared = (open $labels_config)
   let components = (
     $areas
     | each {|area|

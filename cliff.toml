@@ -50,8 +50,7 @@ body = """
     {% endfor -%}
 
     {% for commit in commits | filter(attribute="scope") | sort(attribute="scope") -%}
-        - _({{ commit.scope }})_ \
-          {{ self::format_message(message=commit.message, pr_link=pr_link) }}
+        - _({{ commit.scope }})_ {{ self::format_message(message=commit.message, pr_link=pr_link) }}
     {% endfor %}
 {%- endfor -%}
 

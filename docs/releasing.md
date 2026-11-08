@@ -4,7 +4,7 @@ devkit publishes a moving major tag. Consumers reference `@v1` for actions and w
 
 ## Release your repository
 
-Use the [release skill] for the shared release procedure.
+Use the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md) for the shared release procedure.
 
 A repository whose two-system Nix package uses changelog-based notes can release from its own `tag.yml` by calling devkit's `release.yml`. That workflow waits for CI to pass on the tagged commit, pins the package in the cache, and publishes the tag's `CHANGELOG.md` section as a GitHub Release.
 
@@ -147,7 +147,7 @@ Run the following from a checkout of the target repository with an authenticated
 
 ## Release devkit
 
-Follow the [release skill], drafting with `./scripts/changelog.nu v1.2.3` and skipping the version bump because devkit publishes no package.
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `./scripts/changelog.nu v1.2.3` and skipping the version bump because devkit publishes no package.
 
 Choose the release version according to the affected contract:
 
@@ -162,5 +162,3 @@ Force-move the major tag back to the previous release:
 git tag -f v1 v1.2.2
 git push origin refs/tags/v1 --force
 ```
-
-[release skill]: https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md

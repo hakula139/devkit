@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-11-08
+
+### Added
+
+- _(release)_ Generated changelog drafts support optional Highlights and linked `(#123)` pull request references, and group commits with `BREAKING CHANGE` footers under Breaking changes. ([#28](https://github.com/hakula139/devkit/pull/28))
+
+### Fixed
+
+- _(release)_ The shared release workflow validates the tag against the package version before waiting for CI, pinning caches, or publishing. Consumers can call it with one job. ([#31](https://github.com/hakula139/devkit/pull/31))
+
+[1.1.0]: https://github.com/hakula139/devkit/compare/v1.0.0...v1.1.0
+
 ## [1.0.0] - 2026-11-08
 
 ### Breaking changes

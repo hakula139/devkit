@@ -15,7 +15,7 @@ A test is a command named `test <behavior>` in a `.test.nu` file, using assertio
 
 ## Run the check
 
-`nuTests` takes `src` and an optional `runtimeInputs` list, as shown in the [README](../README.md#adopt-the-nushell-tooling):
+`nuTests` takes `src` and an optional `runtimeInputs` list, as shown in [Nushell tooling](nushell.md):
 
 - The check copies every directory containing a test file and runs those files from the `src` root with `dk.nushell` and `runtimeInputs` on `PATH`.
 - Run `chmod u+w` on any file copied by a test before writing to it.
@@ -23,7 +23,7 @@ A test is a command named `test <behavior>` in a `.test.nu` file, using assertio
 
 ## Run one file directly
 
-Add `dk.nushell` and `dk.nu-test` to the dev shell's `packages` (which the [README](../README.md#adopt-the-flake) shows how to define) so `nu` matches the check's Nushell and `nu-test` is on `PATH`. Because the check runs from the `src` root, reproduce a failure by running `nu-test <file>...` from that root with relative paths.
+Add `dk.nushell` and `dk.nu-test` to the dev shell's `packages` (which [Nix flake](flake.md) shows how to define) so `nu` matches the check's Nushell and `nu-test` is on `PATH`. Because the check runs from the `src` root, reproduce a failure by running `nu-test <file>...` from that root with relative paths.
 
 ## Check a script without running it
 

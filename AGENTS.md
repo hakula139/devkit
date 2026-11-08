@@ -4,13 +4,13 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 ## Read before you edit
 
-| When the change touches                                                                   | Read                                                   |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| The pre-commit baseline or the dev shell                                                  | [Hooks](docs/hooks.md)                                 |
-| `nu-test`, `nu-check`, or `nuTests`                                                       | [Nushell test runner](docs/nu-test.md)                 |
-| An action, a reusable workflow, the git-cliff config, a release, or a versioning decision | [Releasing](docs/releasing.md)                         |
-| The Renovate preset                                                                       | [Renovate preset](README.md#adopt-the-renovate-preset) |
-| A repository setting, the branch ruleset, or a label                                      | [GitHub conventions](docs/github.md)                   |
+| When the change touches                                                                   | Read                                   |
+| ----------------------------------------------------------------------------------------- | -------------------------------------- |
+| The pre-commit baseline or the dev shell                                                  | [Hooks](docs/hooks.md)                 |
+| `nu-test`, `nu-check`, or `nuTests`                                                       | [Nushell test runner](docs/nu-test.md) |
+| An action, a reusable workflow, the git-cliff config, a release, or a versioning decision | [Releasing](docs/releasing.md)         |
+| The Renovate preset                                                                       | [Renovate preset](docs/renovate.md)    |
+| A repository setting, the branch ruleset, or a label                                      | [GitHub conventions](docs/github.md)   |
 
 ## Layout
 
@@ -19,7 +19,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── .cspell/       # Project spelling dictionary
 ├── .github/       # Tool configs, the branch ruleset, and the CI and release workflows
 ├── actions/       # setup-nix, ci-result, tagged-ci, and publish-release composite actions
-├── docs/          # Hooks, the Nushell test runner, releasing, and the GitHub conventions
+├── docs/          # Adoption guides and shared tooling reference
 ├── nix/           # Hook baseline, library, and Nushell tooling
 ├── packages/      # Customized packages used by shared tooling
 ├── scripts/       # Repository administration helpers
@@ -27,14 +27,14 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── cliff.toml     # The shared git-cliff config that drafts each release section
 ├── default.json   # The Renovate preset consumers extend
 ├── flake.nix      # The exported `lib`, checks, and dev shell
-└── README.md      # What each piece is and how a repository adopts it
+└── README.md      # Project overview and documentation index
 ```
 
 ## Rules for every change
 
 - Run the pre-commit hooks on every commit. In each new checkout or worktree, run `nix develop -c true` once to install them. Never bypass the hooks with `--no-verify` or `PRE_COMMIT_ALLOW_NO_CONFIG`, and fix the cause whenever a hook, test, or CI job fails.
 - Wrap code and comments at 100 columns, counting the indent, end section banners at column 100, and keep a single-line string literal whole at any length.
-- Update whatever the change makes stale, including the README's adoption snippets and the docs page that owns the changed contract.
+- Update whatever the change makes stale, including adoption snippets and the docs page that owns the changed contract.
 - Workflows use `$/` self-repository references for both actions and job-level reusable workflow calls. `$/` resolves against the repository of the file it appears in at the running commit, so a caller at any ref runs that ref's actions and workflows. Do not replace it with `./` or a hard-coded tag.
 - Link only public material in issues, pull requests, and their comments, and never reference local working notes, private paths, or private repositories.
 

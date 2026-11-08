@@ -21,7 +21,7 @@ Apply repository and workflow settings, security features, and immutable release
 - **Wiki: off.** Docs live in the repository, and you can enable Projects and Discussions as needed.
 - **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
 
-The [repository settings](../.github/repository-settings.json) and [workflow permissions](../.github/workflow-permissions.json) define these defaults.
+The [repository settings](../.github/settings/repository.json) and [workflow permissions](../.github/settings/workflow-permissions.json) define these defaults.
 
 ### Security
 
@@ -29,7 +29,7 @@ The [repository settings](../.github/repository-settings.json) and [workflow per
 - **Private vulnerability reporting:** Provides the channel named in the default `SECURITY.md`.
 - **Secret scanning with push protection:** Keeps credentials out of the history.
 
-The [security settings](../.github/security-settings.json) define the secret scanning configuration.
+The [security settings](../.github/settings/security.json) define the secret scanning configuration.
 
 ### Immutable releases
 
@@ -44,7 +44,7 @@ The ruleset blocks deleting and force-pushing the default branch, and requires a
 - No approval is required.
 - The admin role can bypass the ruleset in an emergency.
 
-From a devkit checkout, apply [the main ruleset](../.github/rulesets/main.json) to a repository:
+From a devkit checkout, apply [the main ruleset](../.github/settings/rulesets/main.json) to a repository:
 
 ```bash
 ./scripts/github.nu ruleset OWNER/REPO
@@ -54,7 +54,7 @@ The helper replaces the named `main` ruleset. For project-specific required chec
 
 ## Set up the labels
 
-Create or update the [shared labels](../.github/labels.json) while preserving the repository's custom labels.
+Create or update the [shared labels](../.github/settings/labels.json) while preserving the repository's custom labels.
 
 Use lowercase `area: <component>` labels for repository-defined components, and apply multiple area labels to an issue when needed. Pass component names without the prefix, or omit them to apply only the shared labels:
 

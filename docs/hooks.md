@@ -27,7 +27,7 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 ## Configure the baseline
 
 - **cspell:** Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`.
-- **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. Keep reference-style links out of headings, since doctoc builds their anchors from the raw source and `markdownlint-cli2` passes the broken entry.
+- **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. In marked files, use inline links in headings so doctoc generates anchors matching GitHub.
 - **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 then checks it against `.markdownlint-cli2.jsonc`, including content inside `<!-- dprint-ignore -->` blocks.
 - **Prettier:** Uses the source root's `.prettierrc.json` when present and otherwise runs with its defaults. Set `hooks.prettier.settings.configPath` explicitly for another configuration file.
 - **shellcheck:** Start the repository's `.envrc` with `# shellcheck shell=bash`, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.

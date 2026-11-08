@@ -113,7 +113,7 @@ let
               let
                 configPath = "${src}/.prettierrc.json";
               in
-              if builtins.pathExists configPath then configPath else "${../.prettierrc.json}";
+              if builtins.pathExists configPath then ".prettierrc.json" else "${../.prettierrc.json}";
             no-config = config.hooks.prettier.settings.configPath == "";
             no-editorconfig = true;
           };

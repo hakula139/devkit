@@ -13,9 +13,9 @@ def main [] {
 def "main settings" [
   repo: string # Target repository as OWNER/REPO
 ] {
-  let repository_settings = ($env.FILE_PWD | path join "../.github/repository-settings.json")
-  let workflow_permissions = ($env.FILE_PWD | path join "../.github/workflow-permissions.json")
-  let security_settings = ($env.FILE_PWD | path join "../.github/security-settings.json")
+  let repository_settings = ($env.FILE_PWD | path join "../.github/settings/repository.json")
+  let workflow_permissions = ($env.FILE_PWD | path join "../.github/settings/workflow-permissions.json")
+  let security_settings = ($env.FILE_PWD | path join "../.github/settings/security.json")
 
   (
     ^gh api $"repos/($repo)"
@@ -44,7 +44,7 @@ def "main ruleset" [
   --config: path # Complete ruleset JSON, defaulting to the shared main ruleset
 ] {
   let source = if $config == null {
-    $env.FILE_PWD | path join "../.github/rulesets/main.json"
+    $env.FILE_PWD | path join "../.github/settings/rulesets/main.json"
   } else {
     $config
   }
@@ -75,7 +75,7 @@ def "main labels" [
   repo: string # Target repository as OWNER/REPO
   ...areas: string # Optional component names without the area: prefix
 ] {
-  let shared = (open ($env.FILE_PWD | path join "../.github/labels.json"))
+  let shared = (open ($env.FILE_PWD | path join "../.github/settings/labels.json"))
   let components = (
     $areas
     | each {|area|

@@ -83,6 +83,14 @@ let
   # ------------------------------------------------------------------------------------------------
   # Hook defaults
   # ------------------------------------------------------------------------------------------------
+  ruffTypes = {
+    types = [ "file" ];
+    types_or = [
+      "python"
+      "pyi"
+    ];
+  };
+
   baseline =
     { config, ... }:
     {
@@ -151,6 +159,9 @@ let
             no-editorconfig = true;
           };
         };
+
+        ruff = ruffTypes;
+        ruff-format = ruffTypes;
 
         shellcheck = {
           exclude_types = [

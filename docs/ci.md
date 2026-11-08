@@ -39,7 +39,7 @@ jobs:
 
 Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
 
-`nix.yml` runs only `nix flake check`, which builds only the `checks` outputs, not `packages`, so expose the package as a check to have CI build it:
+`nix.yml` runs only `nix flake check`, which builds only the `checks` outputs, so expose the package as a check to have CI build it:
 
 ```nix
 checks.package = self.packages.${system}.default;

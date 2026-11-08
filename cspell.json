@@ -1,6 +1,7 @@
 {
   "version": "0.2",
   "language": "en",
+  "enableGlobDot": true,
   "useGitignore": true,
   "gitignoreRoot": ".",
   "allowCompoundWords": true,

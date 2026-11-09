@@ -24,11 +24,22 @@ let
     } "/bin/${name}";
 
   actionlint = pkgs.callPackage ./packages/actionlint.nix { };
+
+  nodeToolchain = {
+    nodejs = pkgs.nodejs_26;
+    pnpm = pkgs.pnpm_12;
+  };
+
   nu-check = writeNuBin "nu-check" ../src/nu-check.nu;
   nu-test = writeNuBin "nu-test" ../src/nu-test.nu;
 in
 {
-  inherit nu-check nu-test nushell;
+  inherit
+    nodeToolchain
+    nu-check
+    nu-test
+    nushell
+    ;
 
   preCommit = import ./hooks.nix {
     inherit
@@ -39,10 +50,7 @@ in
       ;
   };
 
-  nodeTool = lockedTool [
-    pkgs.nodejs_26
-    pkgs.pnpm_12
-  ] "pnpm exec";
+  nodeTool = lockedTool (builtins.attrValues nodeToolchain) "pnpm exec";
 
   uvTool = lockedTool [
     pkgs.uv

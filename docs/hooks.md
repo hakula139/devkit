@@ -17,7 +17,7 @@ The shared hook configurations cover:
 | `editorconfig-checker`                                                   | EditorConfig properties            | `.editorconfig`                             |
 | `markdownlint-cli2`                                                      | Markdown                           | Shared defaults, `.markdownlint-cli2.jsonc` |
 | `prettier`                                                               | JavaScript, TypeScript, JSON, YAML | Shared defaults, `.prettierrc.json`         |
-| `ruff`, `ruff-format`                                                    | Python, type stubs, notebooks      | `ruff.toml`                                 |
+| `ruff`, `ruff-format`                                                    | Python, type stubs, notebooks      | Ruff configuration                          |
 | `shellcheck`                                                             | Every shell file except zsh        |                                             |
 | `shfmt`                                                                  | Every shell file, zsh included     |                                             |
 | `sort-file-contents`                                                     | The order of `.cspell/words.txt`   |                                             |

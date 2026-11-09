@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - _(hooks)_ The dev shell keeps the consumer's `PYTHONPATH`. ([#37](https://github.com/hakula139/devkit/pull/37))
-- _(hooks)_ Ruff hooks also check type stubs and notebooks, apply the project's `exclude` and `extend-exclude` to explicitly passed paths. ([#34](https://github.com/hakula139/devkit/pull/34))
+- _(hooks)_ Ruff hooks also check type stubs and notebooks and apply the project's `exclude` and `extend-exclude` to explicitly passed paths. ([#34](https://github.com/hakula139/devkit/pull/34))
 - _(hooks)_ An enabled lychee hook passes the hermetic `nix flake check` on Linux. ([#41](https://github.com/hakula139/devkit/pull/41))
 - _(github)_ `ruleset` updates the ruleset named in its configuration, so a custom `--config` no longer overwrites `main` or adds a duplicate on each run. ([#40](https://github.com/hakula139/devkit/pull/40))
 

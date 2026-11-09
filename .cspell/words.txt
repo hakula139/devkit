@@ -2,6 +2,7 @@ argjson
 automerges
 basenames
 cachix
+clippy
 deadnix
 devkit
 direnv
@@ -23,11 +24,13 @@ nixpkgs
 notitle
 nufmt
 nuon
+passthru
 pkgs
 pname
 postprocessors
 prek
 pypi
+pyproject
 pythonpath
 realise
 rhysd

@@ -6,13 +6,14 @@
   pkgs,
   git-hooks-nix,
   actionlint,
+  nodeTool,
   nu-check,
+  uvTool,
 }:
 
 {
   src,
   hooks ? { },
-  devHooks ? { },
   excludes ? [ ],
 }:
 
@@ -110,6 +111,17 @@ let
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
 
+        clippy = {
+          entry = lib.concatStringsSep " " [
+            (lib.getExe' config.hooks.clippy.package "cargo-clippy")
+            "clippy"
+            "--locked"
+            "--all-targets"
+            "--config"
+            (lib.escapeShellArg ''build.warnings="deny"'')
+          ];
+        };
+
         cspell = {
           entry = lib.concatStringsSep " " [
             (lib.getExe config.hooks.cspell.package)
@@ -142,6 +154,18 @@ let
 
         end-of-file-fixer.enable = true;
 
+        eslint = {
+          package = nodeTool "eslint";
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.eslint.package)
+            "--fix"
+            "--no-warn-ignored"
+            "--max-warnings=0"
+          ];
+          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts)$";
+          require_serial = true;
+        };
+
         markdownlint-cli2 = {
           package = pkgs.markdownlint-cli2;
           entry = configEntry config.hooks.markdownlint-cli2 [
@@ -150,6 +174,19 @@ let
           ];
           files = "\\.md$";
           settings.configPath = "${../.markdownlint-cli2.jsonc}";
+        };
+
+        # mypy checks the `files` that its configuration names.
+        mypy = {
+          package = uvTool "mypy";
+          entry = lib.getExe config.hooks.mypy.package;
+          files = "";
+          pass_filenames = false;
+          types = [ "file" ];
+          types_or = [
+            "python"
+            "pyi"
+          ];
         };
 
         nu-check = {
@@ -216,6 +253,16 @@ let
             "--markdown-linebreak-ext=md"
           ];
         };
+
+        tsc = {
+          package = nodeTool "tsc";
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.tsc.package)
+            "--noEmit"
+          ];
+          files = "\\.(ts|tsx|mts|cts)$";
+          pass_filenames = false;
+        };
       };
     };
 
@@ -228,33 +275,47 @@ let
     isFlakes = true;
   };
 
-  run =
-    modules:
-    gitHooksRun {
-      inherit src;
-      package = pkgs.prek;
-      imports = [
-        configPathOptions
-        baseline
-        { inherit hooks excludes; }
-      ]
-      ++ modules;
-    };
+  hooksRun = gitHooksRun {
+    inherit src;
+    package = pkgs.prek;
+    imports = [
+      configPathOptions
+      baseline
+      { inherit hooks excludes; }
+    ];
+  };
 
-  dev = run [ { hooks = devHooks; } ];
+  # ------------------------------------------------------------------------------------------------
+  # Hook runner
+  # ------------------------------------------------------------------------------------------------
+  prepares = lib.unique (
+    lib.concatMap (hook: lib.optional (hook.enable && hook.package ? prepare) hook.package.prepare) (
+      lib.attrValues hooksRun.config.hooks
+    )
+  );
 
-  check = run [
-    { hooks = lib.mapAttrs (_: _: { enable = lib.mkForce false; }) devHooks; }
-    # lychee loads CA certificates even with `--offline`, which the check sandbox lacks. The dev
-    # shell omits them, since cacert's setup hook would replace the host's NIX_SSL_CERT_FILE.
-    { hooks.lychee.extraPackages = [ pkgs.cacert ]; }
-  ];
+  runHooks = pkgs.writeShellApplication {
+    name = "run-hooks";
+    runtimeInputs = [
+      hooksRun.config.package
+      hooksRun.config.gitPackage
+    ];
+    text = ''
+      cd "$(git rev-parse --show-toplevel)"
+      ${lib.concatMapStrings (prepare: "${lib.getExe prepare}\n") prepares}
+      exec prek run \
+        --config ${lib.escapeShellArg hooksRun.config.configPath} \
+        --all-files \
+        --show-diff-on-failure \
+        "$@"
+    '';
+  };
 
   # ------------------------------------------------------------------------------------------------
   # Hook installation
   # ------------------------------------------------------------------------------------------------
   flock = lib.getExe pkgs.flock;
-  git = lib.getExe dev.config.gitPackage;
+  git = lib.getExe hooksRun.config.gitPackage;
 
   hookTypes = lib.unique (
     map (
@@ -269,59 +330,56 @@ let
         "pre-${stage}"
       else
         stage
-    ) (lib.remove "manual" dev.config.installStages)
+    ) (lib.remove "manual" hooksRun.config.installStages)
   );
 in
-{
-  inherit check;
+pkgs.mkShell {
+  # Listed directly, the hook packages' setup hooks would set the consumer's PYTHONPATH.
+  # A colliding executable keeps the first package's, matching the PATH order of a plain list.
+  packages = [
+    (pkgs.buildEnv {
+      name = "pre-commit-hook-tools";
+      paths = hooksRun.enabledPackages;
+      pathsToLink = [ "/bin" ];
+      ignoreCollisions = true;
+    })
+    runHooks
+    hooksRun.config.package
+  ];
 
-  shell = pkgs.mkShell {
-    # Listed directly, the hook packages' setup hooks would set the consumer's PYTHONPATH.
-    # A colliding executable keeps the first package's, matching the PATH order of a plain list.
-    packages = [
-      (pkgs.buildEnv {
-        name = "pre-commit-hook-tools";
-        paths = dev.enabledPackages;
-        pathsToLink = [ "/bin" ];
-        ignoreCollisions = true;
-      })
-      dev.config.package
-    ];
+  shellHook = ''
+    if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
+      # Linked worktrees share hooks, so their common Git directory owns the install lock.
+      common=$(
+        ${git} rev-parse \
+          --path-format=absolute \
+          --git-common-dir
+      )
 
-    shellHook = ''
-      if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
-        # Linked worktrees share hooks, so their common Git directory owns the install lock.
-        common=$(
-          ${git} rev-parse \
-            --path-format=absolute \
-            --git-common-dir
-        )
+      (
+        set -e
+        ${flock} 9
 
-        (
-          set -e
-          ${flock} 9
+        # Keep hook tools alive through the config's GC root.
+        # Nix refuses to replace an existing regular file.
+        ${lib.getExe' pkgs.nix "nix-store"} \
+          --add-root "$top/${hooksRun.config.configPath}" \
+          --indirect \
+          --realise ${hooksRun.config.configFile}
 
-          # Keep hook tools alive through the config's GC root.
-          # Nix refuses to replace an existing regular file.
-          ${lib.getExe' pkgs.nix "nix-store"} \
-            --add-root "$top/${dev.config.configPath}" \
-            --indirect \
-            --realise ${dev.config.configFile}
-
-          # Refresh shims even with unchanged config, preserving core.hooksPath.
-          # Empty stage arguments would make prek install pre-commit by default.
-          ${lib.optionalString (hookTypes != [ ]) ''
-            ${lib.getExe dev.config.package} install \
-              --config ${lib.escapeShellArg dev.config.configPath} \
-              ${lib.escapeShellArgs (
-                lib.concatMap (hookType: [
-                  "--hook-type"
-                  hookType
-                ]) hookTypes
-              )}
-          ''}
-        ) 9>"$common/git-hooks.lock"
-      fi
-    '';
-  };
+        # Refresh shims even with unchanged config, preserving core.hooksPath.
+        # Empty stage arguments would make prek install pre-commit by default.
+        ${lib.optionalString (hookTypes != [ ]) ''
+          ${lib.getExe hooksRun.config.package} install \
+            --config ${lib.escapeShellArg hooksRun.config.configPath} \
+            ${lib.escapeShellArgs (
+              lib.concatMap (hookType: [
+                "--hook-type"
+                hookType
+              ]) hookTypes
+            )}
+        ''}
+      ) 9>"$common/git-hooks.lock"
+    fi
+  '';
 }

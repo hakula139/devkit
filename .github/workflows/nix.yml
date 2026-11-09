@@ -38,3 +38,11 @@ jobs:
             --keep-going \
             --print-build-logs \
             ${{ matrix.os == 'Linux' && '--all-systems' || '' }}
+
+      - name: Run hooks
+        if: ${{ !cancelled() && matrix.os == 'Linux' }}
+        run: nix develop -c run-hooks
+
+      - name: Build dev shell
+        if: ${{ !cancelled() && matrix.os == 'macOS' }}
+        run: nix develop -c true

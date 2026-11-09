@@ -44,11 +44,9 @@ outputs =
           pkgs.ripgrep
         ];
         inputsFrom = [
-          preCommit.shell
+          preCommit
         ];
       };
-
-      checks.pre-commit = preCommit.check;
     }
   );
 ```

@@ -22,18 +22,6 @@ let
   # ------------------------------------------------------------------------------------------------
   # Formatter configuration
   # ------------------------------------------------------------------------------------------------
-  json = pkgs.formats.json { };
-
-  dprintConfig = json.generate "dprint.json" {
-    markdown = {
-      emphasisKind = "underscores";
-      strongKind = "asterisks";
-    };
-
-    # Language plugins would also rewrite fenced examples inside Markdown.
-    plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
-  };
-
   # A project config stays checkout-relative, since Prettier resolves `overrides` globs from the
   # config file's directory.
   projectConfig = file: shared: if builtins.pathExists "${src}/${file}" then file else "${shared}";
@@ -49,6 +37,18 @@ let
       ]
     );
 
+  json = pkgs.formats.json { };
+
+  dprintConfig = json.generate "dprint.json" {
+    markdown = {
+      emphasisKind = "underscores";
+      strongKind = "asterisks";
+    };
+
+    # Language plugins would also rewrite fenced examples inside Markdown.
+    plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
+  };
+
   # ------------------------------------------------------------------------------------------------
   # Hook options
   # ------------------------------------------------------------------------------------------------
@@ -59,6 +59,8 @@ let
         lib.genAttrs
           [
             "markdownlint-cli2"
+            "ruff"
+            "ruff-format"
             "taplo"
           ]
           (
@@ -166,8 +168,7 @@ let
 
         # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
         ruff = ruffHook // {
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.ruff.package)
+          entry = configEntry config.hooks.ruff [
             "check"
             "--fix"
             "--force-exclude"
@@ -175,8 +176,7 @@ let
         };
 
         ruff-format = ruffHook // {
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.ruff-format.package)
+          entry = configEntry config.hooks.ruff-format [
             "format"
             "--force-exclude"
           ];

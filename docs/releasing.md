@@ -53,13 +53,30 @@ The command uses the repository's `cliff.toml` when present and otherwise uses d
 
 ### Recover a release
 
-Releases that use `tagged-ci` require a passing push or dispatched run of `ci.yml` on the tagged commit. Rerun failed CI jobs or dispatch `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once CI passes. Other workflows must satisfy their own validation gates before publication.
+Releases that use `tagged-ci` require a passing push or dispatched run of `ci.yml` on the tagged commit. Rerun the failed CI jobs or dispatch a run on the tag:
+
+```bash
+gh workflow run ci.yml --ref v1.2.3
+```
+
+Rerun the failed release jobs once CI passes. Other workflows must satisfy their own validation gates before publication.
 
 To restore a deleted pin:
 
 1. Check out the tag on each system it pins (`x86_64-linux` and `aarch64-darwin`).
-2. Build with `nix build .#default.out --no-link --print-out-paths`.
-3. Push the output with `cachix push hakula <path>` and pin it with `cachix pin hakula <repository>-<tag>-<system> <path>`.
+
+2. Build the package:
+
+   ```bash
+   nix build .#default.out --no-link --print-out-paths
+   ```
+
+3. Push the output and pin it:
+
+   ```bash
+   cachix push hakula <path>
+   cachix pin hakula <repository>-<tag>-<system> <path>
+   ```
 
 ### Write your own release workflow
 
@@ -100,7 +117,11 @@ publish:
 
 ## Release devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `nix run .#changelog -- v1.2.3` and skipping the version bump because devkit's packages carry no version.
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), skipping the version bump because devkit's packages carry no version, and draft the changelog with:
+
+```bash
+nix run .#changelog -- v1.2.3
+```
 
 ### Choose the version
 

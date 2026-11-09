@@ -15,6 +15,7 @@ fetchpatch
 fileset
 hakula
 intraword
+lockfiles
 maxlevel
 mktemp
 mypy
@@ -22,7 +23,6 @@ nixfmt
 nixos
 nixpkgs
 notitle
-nufmt
 nuon
 passthru
 pkgs

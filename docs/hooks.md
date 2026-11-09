@@ -6,7 +6,11 @@
 
 Entering the dev shell from a Git checkout installs the hooks. The configuration path must be absent or a symlink into the Nix store.
 
-`run-hooks` runs every enabled hook of the `pre-commit`, `pre-merge-commit`, and `pre-push` stages on every tracked file, one stage at a time, or only the hooks whose IDs it receives as arguments. It first installs the lockfile of each enabled hook whose package comes from `dk.nodeTool` or `dk.uvTool`. `nix flake check` runs no hooks, so verify a change with `nix develop -c run-hooks` as well, as [`nix.yml`](ci.md) does in CI.
+`run-hooks` runs the enabled `pre-commit`, `pre-merge-commit`, and `pre-push` hooks on every tracked file, or only the hooks whose IDs it receives, after installing the lockfiles of [lockfile-pinned tools](#run-a-lockfile-pinned-tool). `nix flake check` runs no hooks, so verify a change with `run-hooks` as well, as [`nix.yml`](ci.md) does in CI:
+
+```bash
+nix develop -c run-hooks
+```
 
 ## Enable hooks
 
@@ -14,57 +18,72 @@ Only `check-added-large-files`, `check-merge-conflicts`, `end-of-file-fixer`, an
 
 The shared hook configurations cover:
 
-| Group                   | Hook                       | Checks                                                      | Config                                      |
-| ----------------------- | -------------------------- | ----------------------------------------------------------- | ------------------------------------------- |
-| General                 | `check-added-large-files`  | File sizes                                                  |                                             |
-|                         | `check-merge-conflicts`    | Conflict markers in every text file                         |                                             |
-|                         | `cspell`                   | Spelling in every file                                      | `cspell.json`                               |
-|                         | `editorconfig-checker`     | EditorConfig properties                                     | `.editorconfig`                             |
-|                         | `end-of-file-fixer`        | Final newlines in every text file                           |                                             |
-|                         | `lychee`                   | Links                                                       | `lychee.toml`                               |
-|                         | `sort-file-contents`       | The order of `.cspell/words.txt`                            |                                             |
-|                         | `trim-trailing-whitespace` | Trailing whitespace in every text file                      |                                             |
-| GitHub Actions          | `actionlint`               | Workflows                                                   | `.github/actionlint.yaml`                   |
-| JavaScript / TypeScript | `eslint`                   | Lint                                                        | `eslint.config.js`                          |
-|                         | `tsc`                      | Types                                                       | `tsconfig.json`                             |
-| Markdown                | `doctoc`                   | Tables of contents                                          |                                             |
-|                         | `dprint`                   | Formatting                                                  |                                             |
-|                         | `markdownlint-cli2`        | Lint                                                        | Shared defaults, `.markdownlint-cli2.jsonc` |
-| Nix                     | `deadnix`                  | Unused code                                                 |                                             |
-|                         | `nixfmt`                   | Formatting                                                  |                                             |
-|                         | `statix`                   | Lint                                                        |                                             |
-| Nushell                 | `nu-check`                 | Syntax                                                      |                                             |
-| Python                  | `mypy`                     | Types                                                       | `[tool.mypy]` in `pyproject.toml`           |
-|                         | `ruff`                     | Lint, type stubs and notebooks included                     | Ruff configuration                          |
-|                         | `ruff-format`              | Formatting, type stubs and notebooks included               | Ruff configuration                          |
-| Rust                    | `clippy`                   | Lint                                                        | `Cargo.toml` `[lints]`, `clippy.toml`       |
-|                         | `rustfmt`                  | Formatting                                                  | `rustfmt.toml`                              |
-| Shell                   | `shellcheck`               | Lint, every shell file except zsh                           |                                             |
-|                         | `shfmt`                    | Formatting, every shell file, zsh included                  |                                             |
-| TOML                    | `taplo`                    | Formatting                                                  | Shared defaults, `.taplo.toml`              |
-| Web formats             | `prettier`                 | JavaScript, TypeScript, JSON, YAML, except `pnpm-lock.yaml` | Shared defaults, `.prettierrc.json`         |
-| YAML                    | `check-yaml`               | Syntax                                                      |                                             |
+| Group                   | Hook                       | Checks                                           | Config                                      |
+| ----------------------- | -------------------------- | ------------------------------------------------ | ------------------------------------------- |
+| General                 | `check-added-large-files`  | File sizes                                       |                                             |
+|                         | `check-merge-conflicts`    | Conflict markers                                 |                                             |
+|                         | `cspell`                   | Spelling                                         | `cspell.json`                               |
+|                         | `editorconfig-checker`     | EditorConfig properties                          | `.editorconfig`                             |
+|                         | `end-of-file-fixer`        | Final newlines                                   |                                             |
+|                         | `lychee`                   | Links                                            | `lychee.toml`                               |
+|                         | `sort-file-contents`       | The order of `.cspell/words.txt`                 |                                             |
+|                         | `trim-trailing-whitespace` | Trailing whitespace                              |                                             |
+| GitHub Actions          | `actionlint`               | Workflows                                        | `.github/actionlint.yaml`                   |
+| JavaScript / TypeScript | `eslint`                   | Lint                                             | `eslint.config.js`                          |
+|                         | `tsc`                      | Types                                            | `tsconfig.json`                             |
+| Markdown                | `doctoc`                   | Tables of contents                               |                                             |
+|                         | `dprint`                   | Formatting                                       |                                             |
+|                         | `markdownlint-cli2`        | Lint                                             | Shared defaults, `.markdownlint-cli2.jsonc` |
+| Nix                     | `deadnix`                  | Unused code                                      |                                             |
+|                         | `nixfmt`                   | Formatting                                       |                                             |
+|                         | `statix`                   | Lint                                             |                                             |
+| Nushell                 | `nu-check`                 | Syntax                                           |                                             |
+| Python                  | `mypy`                     | Types                                            | `[tool.mypy]` in `pyproject.toml`           |
+|                         | `ruff`                     | Lint                                             | Ruff configuration                          |
+|                         | `ruff-format`              | Formatting                                       | Ruff configuration                          |
+| Rust                    | `clippy`                   | Lint                                             | `Cargo.toml` `[lints]`, `clippy.toml`       |
+|                         | `rustfmt`                  | Formatting                                       | `rustfmt.toml`                              |
+| Shell                   | `shellcheck`               | Lint                                             |                                             |
+|                         | `shfmt`                    | Formatting                                       |                                             |
+| TOML                    | `taplo`                    | Formatting                                       | Shared defaults, `.taplo.toml`              |
+| Web formats             | `prettier`                 | Formatting of JavaScript, TypeScript, JSON, YAML | Shared defaults, `.prettierrc.json`         |
+| YAML                    | `check-yaml`               | Syntax                                           |                                             |
 
-git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
+devkit's [baseline](../nix/hooks.nix) sets each hook's defaults, and git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines its settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
 
 ## Configure a hook
 
 ### Override the baseline
 
-A hook's `entry` is its executable plus the subcommand and flags that its `settings` derive, and the baseline's other flags are in `args`. A definition under `hooks` replaces the baseline's value of that attribute, except that a repository's `args` and `excludes` append to the baseline's lists, and `lib.mkForce` replaces them.
+A definition under `hooks` replaces the baseline's value, while `args` and `excludes` append to the baseline's lists unless wrapped in `lib.mkForce`:
+
+```nix
+preCommit = dk.preCommit {
+  src = ./.;
+  hooks = {
+    prettier = {
+      enable = true;
+      files = "\\.(json|ya?ml)$";
+    };
+    trim-trailing-whitespace.excludes = [
+      "\\.patch$"
+    ];
+    cspell.args = lib.mkForce [
+      "--no-progress"
+    ];
+  };
+};
+```
 
 ### Use a project configuration file
 
-- **Prettier and Taplo:** Use devkit's [shared style](../.prettierrc.json) and [shared formatting](../.taplo.toml) unless the source root contains `.prettierrc.json` or `.taplo.toml`, which replaces the shared file entirely, so it must restate the shared options it keeps.
-- **markdownlint-cli2:** Checks Markdown with devkit's [shared rules](../.markdownlint-cli2.jsonc), including `<!-- dprint-ignore -->` blocks that dprint leaves unformatted. Project `.markdownlint-cli2.jsonc` rules override them, core `.markdownlint.jsonc` files replace them, and configured `globs` are ignored.
+Prettier, Taplo, and markdownlint-cli2 use devkit's shared [Prettier style](../.prettierrc.json), [Taplo formatting](../.taplo.toml), and [markdownlint rules](../.markdownlint-cli2.jsonc). A `.prettierrc.json` or `.taplo.toml` at the source root replaces the shared file once the dev shell is re-entered, and a project `.markdownlint-cli2.jsonc` overrides individual shared rules.
 
-Set `hooks.<name>.settings.configPath` to pass markdownlint-cli2, Prettier, Ruff, or Taplo another `--config` file, relative to the checkout or absolute, or `""` to let the tool find its own. markdownlint-cli2 accepts only names ending in a supported name, such as `.markdownlint-cli2.jsonc`. A markdownlint-cli2 configuration with relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which replaces the shared rules.
-
-Re-enter the dev shell after adding or removing a project configuration file.
+Set `hooks.<name>.settings.configPath` to point markdownlint-cli2, Prettier, Ruff, or Taplo at another file, or to `""` to let the tool find its own. A `.markdownlint-cli2.jsonc` that loads relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which drops the shared rules.
 
 ### Add a spelling dictionary
 
-Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`. A dictionary at another path needs `hooks.sort-file-contents.files` to stay sorted.
+Add a `cspell.json` that names a project dictionary. `sort-file-contents` keeps `.cspell/words.txt` sorted, and a dictionary at another path needs `hooks.sort-file-contents.files` set to match it.
 
 ### Generate Markdown tables of contents
 
@@ -72,33 +91,66 @@ doctoc fills a table of contents between `<!-- START doctoc -->` and `<!-- END d
 
 ### Check Nushell files
 
-`nu-check` checks Nushell files with `dk.nu-check`. When it is enabled, `editorconfig-checker` checks indentation against a `[*.nu]` section in `.editorconfig`. No hook runs `nufmt`, and `hooks.nu-check.settings.asModule` has no effect.
+No hook formats Nushell, so `editorconfig-checker` checks its indentation against a `[*.nu]` section in `.editorconfig`.
 
 ### Type-check Python
 
-mypy checks the `files` that `[tool.mypy]` names, ignoring which files changed.
+mypy checks the `files` that `[tool.mypy]` names, whichever files changed.
 
 ### Lint and format Rust
 
-Set `packageOverrides` to the repository's toolchain, as `{ cargo = rustToolchain; clippy = rustToolchain; }` for clippy and `{ cargo = rustToolchain; rustfmt = rustToolchain; }` for rustfmt.
+Point clippy and rustfmt at the repository's toolchain:
 
-clippy runs `cargo clippy --locked --all-targets` with default features. Cargo flags go in `hooks.clippy.settings`, such as `allFeatures = true`, and an `extraArgs` replaces the baseline's `--locked --all-targets`. `args` reach clippy after `--`, and lint levels belong in `Cargo.toml` `[lints]`.
+```nix
+hooks = {
+  clippy.packageOverrides = {
+    cargo = rustToolchain;
+    clippy = rustToolchain;
+  };
+  rustfmt.packageOverrides = {
+    cargo = rustToolchain;
+    rustfmt = rustToolchain;
+  };
+};
+```
+
+Set Cargo flags in `hooks.clippy.settings` and lint levels in `Cargo.toml` `[lints]`.
 
 ### Check shell files
 
-Start the repository's `.envrc` with `# shellcheck shell=bash`, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
+Start the repository's `.envrc` with a shell directive, which shellcheck needs to lint a file without a shebang:
+
+```bash
+# shellcheck shell=bash
+```
 
 ## Run a lockfile-pinned tool
 
-- `dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`, whose lockfile `run-hooks` installs with `pnpm install --frozen-lockfile`.
-- `dk.nodeToolchain` contains `nodejs` and `pnpm`. Add `builtins.attrValues dk.nodeToolchain` to the dev shell's `packages` to use the same versions as `nodeTool`.
-- `dk.uvTool "<command>"` returns a package that runs `uv run --locked <command>`, whose lockfile `run-hooks` installs with `uv sync --locked`.
+`dk.nodeTool "<command>"` and `dk.uvTool "<command>"` return packages that run the command from the repository's pnpm or uv lockfile, which `run-hooks` installs first. `eslint` and `tsc` use `dk.nodeTool` and `mypy` uses `dk.uvTool` by default. Set `package` to `dk.nodeTool "prettier"` for Prettier with plugins, or to `dk.nodeTool "cspell"` for cspell with npm dictionaries.
 
-`eslint` and `tsc` use `dk.nodeTool` and `mypy` uses `dk.uvTool` by default. Set `package` to `dk.nodeTool "prettier"` for Prettier with plugins, or to `dk.nodeTool "cspell"` for cspell with npm dictionaries.
+Add `dk.nodeToolchain` to the dev shell to use the same Node.js and pnpm as `nodeTool`:
+
+```nix
+packages = builtins.attrValues dk.nodeToolchain;
+```
 
 ### Declare pnpm
 
-Declare pnpm in `package.json` as `"devEngines": { "packageManager": { "name": "pnpm", "version": "^12.0.0", "onFail": "error" } }`, matching the toolchain's major, without a `packageManager` field, which would make pnpm download and run that exact version instead. npm refuses to run in a project whose `devEngines` names pnpm, so publish with `pnpm publish`, which runs npm's OIDC trusted publishing, and run npm-only commands from outside the checkout.
+Declare pnpm in `package.json` with `devEngines`, matching the toolchain's major:
+
+```json
+{
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^12.0.0",
+      "onFail": "error"
+    }
+  }
+}
+```
+
+Leave out a `packageManager` field, which would make pnpm download and run that exact version instead. npm refuses to run in a project whose `devEngines` names pnpm, so publish with `pnpm publish`, which runs npm's OIDC trusted publishing, and run npm-only commands from outside the checkout.
 
 ## Exclude files
 

@@ -128,7 +128,21 @@
         # ------------------------------------------------------------------------------------------
         # Checks
         # ------------------------------------------------------------------------------------------
-        checks.pre-commit = preCommit.check;
+        checks = {
+          nu-tooling = pkgs.testers.testBuildFailure' {
+            drv = dk.nuTests {
+              src = ./tests;
+              runtimeInputs = [
+                dk.nu-check
+              ];
+            };
+            expectedBuilderLogEntries = [
+              "FAIL ./nu-tooling.test.nu: test fails on purpose"
+              "2 passed, 1 failed"
+            ];
+          };
+          pre-commit = preCommit.check;
+        };
 
         # ------------------------------------------------------------------------------------------
         # Formatter

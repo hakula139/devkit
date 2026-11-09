@@ -59,7 +59,7 @@ Entering the dev shell from a Git checkout installs the hooks. The configuration
 
 ## Override a hook
 
-Definitions under `hooks` merge recursively with the baseline and override its defaults:
+Definitions under `hooks` replace the baseline's values attribute by attribute:
 
 ```nix
 preCommit = dk.preCommit {
@@ -75,6 +75,8 @@ preCommit = dk.preCommit {
   };
 };
 ```
+
+The baseline passes its own flags in `entry`, so `args` holds only the repository's flags.
 
 ## Run a lockfile-pinned tool
 

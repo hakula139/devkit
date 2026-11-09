@@ -109,7 +109,8 @@ let
         check-merge-conflicts.enable = true;
 
         cspell = {
-          args = [
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.cspell.package)
             "--no-progress"
             "--no-must-find-files"
           ];
@@ -117,8 +118,8 @@ let
 
         doctoc = {
           package = pkgs.doctoc;
-          entry = lib.getExe config.hooks.doctoc.package;
-          args = [
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.doctoc.package)
             "--update-only"
             "--notitle"
             "--maxlevel=3"
@@ -128,8 +129,9 @@ let
 
         dprint = {
           package = pkgs.dprint;
-          entry = "${lib.getExe config.hooks.dprint.package} fmt";
-          args = [
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.dprint.package)
+            "fmt"
             "--config=${dprintConfig}"
             "--allow-no-files"
           ];
@@ -209,7 +211,10 @@ let
 
         trim-trailing-whitespace = {
           enable = true;
-          args = [ "--markdown-linebreak-ext=md" ];
+          entry = lib.concatStringsSep " " [
+            (lib.getExe' config.hooks.trim-trailing-whitespace.package "trailing-whitespace-fixer")
+            "--markdown-linebreak-ext=md"
+          ];
         };
       };
     };

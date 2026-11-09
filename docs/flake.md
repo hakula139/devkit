@@ -4,7 +4,7 @@ devkit needs nixpkgs 26.05 or later.
 
 ```nix
 devkit = {
-  url = "github:hakula139/devkit/v2";
+  url = "github:hakula139/devkit/v3";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```

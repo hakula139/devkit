@@ -42,10 +42,10 @@ let
   # Hook options
   # ------------------------------------------------------------------------------------------------
   configEntry =
-    hook: subcommands:
+    hook: arguments:
     lib.concatStringsSep " " (
       [ (lib.getExe hook.package) ]
-      ++ subcommands
+      ++ arguments
       ++ lib.optionals (hook.settings.configPath != "") [
         "--config"
         (lib.escapeShellArg hook.settings.configPath)
@@ -130,8 +130,7 @@ let
 
         markdownlint-cli2 = {
           package = pkgs.markdownlint-cli2;
-          entry = configEntry config.hooks.markdownlint-cli2 [ ];
-          args = [
+          entry = configEntry config.hooks.markdownlint-cli2 [
             "--fix"
             "--no-globs"
           ];

@@ -69,12 +69,12 @@ To restore a deleted pin:
 
 ### Write your own release workflow
 
-A repository that attaches build artifacts, publishes to other registries, or does not build its package on both systems keeps its own `tag.yml` and composes devkit's pieces:
+A repository that `release.yml` doesn't fit composes its own `tag.yml` from devkit's pieces:
 
-- A `tagged-ci` job running `hakula139/devkit/.github/actions/tagged-ci@v1`, which needs `actions: read` and no checkout.
-- The repository's own check of the tag against its package version, as a step before the wait in `tagged-ci`, so no later job pins or publishes a mismatched tag.
-- A `nix-cache` job that needs `tagged-ci` and calls `hakula139/devkit/.github/workflows/nix-cache.yml@v1` with the `CACHIX_AUTH_TOKEN` secret, when the package builds on both systems.
-- A publish job that needs every earlier job, including the `build` job that uploads the archives as artifacts, and attaches them:
+- A `tagged-ci` job running the `tagged-ci` action, which needs only `actions: read`.
+- The repository's own version check before the wait, so a mismatch fails fast. It adds a checkout and `contents: read`, as in [`release.yml`](../.github/workflows/release.yml).
+- A `nix-cache` job calling `nix-cache.yml` after `tagged-ci`, if the package builds on both systems.
+- A publish job that needs every earlier job, including `nix-cache` when present:
 
 ```yaml
 publish:
@@ -121,9 +121,9 @@ Choose the release version according to the affected contract:
 - **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since `@v1` and `#v1` references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Moving the shared `cliff.toml` or changing its `header` also requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
 - **Minor:** New or stricter baseline hooks or shared hook defaults. Additions and newer tool versions that `lib` selects are minor too.
 
-devkit's own `tag.yml` never runs `release.yml` or `nix-cache.yml`, and it runs `publish-release` without `assets`. When a release changes any of the three, the next consumer release is the change's first end-to-end run, so watch it and [roll back](#roll-back) the major tag if it fails.
-
 ### Roll back
+
+devkit's own release never runs `release.yml`, `nix-cache.yml`, or `publish-release`'s `assets`, so after changing any of them, watch the next consumer release and roll back if it fails.
 
 Force-move the major tag back to the previous release:
 

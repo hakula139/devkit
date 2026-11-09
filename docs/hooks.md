@@ -59,15 +59,12 @@ Entering the dev shell from a Git checkout installs the hooks. The configuration
 
 ## Override a hook
 
-Definitions under `hooks` merge with the baseline attribute by attribute, and each value replaces the baseline's. The baseline passes its own flags in `entry`, so `args` carries only the repository's flags:
+Definitions under `hooks` replace the baseline's values attribute by attribute, and since the baseline passes its own flags in `entry`, `args` carries only the repository's flags:
 
 ```nix
 preCommit = dk.preCommit {
   src = ./.;
   hooks = {
-    cspell.args = [
-      "--locale=en"
-    ];
     prettier = {
       enable = true;
       files = "\\.(js|mjs|json|jsonc|ya?ml)$";

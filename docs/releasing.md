@@ -43,18 +43,18 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 ### Draft a changelog
 
-Run the draft script from the target repository's root with authenticated `gh`, Nushell, and Nix available, replacing `<devkit-source>` with the local devkit directory:
+Run the draft command from the target repository's root with an authenticated `gh`:
 
 ```bash
-<devkit-source>/scripts/changelog.nu v1.2.3
+nix run github:hakula139/devkit/v1#changelog -- v1.2.3
 ```
 
-The script uses the repository's `cliff.toml` when present and otherwise uses devkit's shared configuration. Prerelease tags automatically select the range since the previous tag.
+The command uses the repository's `cliff.toml` when present and otherwise uses the shared configuration of the devkit release it runs from. Prerelease tags automatically select the range since the previous tag.
 
-When the repository's git-cliff template supports highlights, pass a Markdown file to the script:
+When the repository's git-cliff template supports highlights, pass a Markdown file to the command:
 
 ```bash
-<devkit-source>/scripts/changelog.nu v1.2.3 --highlights highlights.md
+nix run github:hakula139/devkit/v1#changelog -- v1.2.3 --highlights highlights.md
 ```
 
 ### Recover a release
@@ -106,15 +106,15 @@ publish:
 
 ### Republish release notes
 
-Run the following from a checkout of the target repository with an authenticated `gh`, Nushell, and [`parse-changelog`](https://github.com/taiki-e/parse-changelog#installation) on `PATH`:
+Run the following from a checkout of the target repository with an authenticated `gh`:
 
 ```bash
-<devkit-source>/scripts/github.nu release-notes OWNER/REPO v1.2.3
+nix run github:hakula139/devkit/v1#github -- release-notes OWNER/REPO v1.2.3
 ```
 
 ## Release devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `./scripts/changelog.nu v1.2.3` and skipping the version bump because devkit publishes no package.
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `nix run .#changelog -- v1.2.3` and skipping the version bump because devkit's packages carry no version.
 
 Choose the release version according to the affected contract:
 

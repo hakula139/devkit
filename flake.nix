@@ -84,6 +84,26 @@
         pkgs = nixpkgs.legacyPackages.${system};
         dk = self.lib.mkLib pkgs;
 
+        parse-changelog = pkgs.callPackage ./nix/packages/parse-changelog.nix { };
+
+        scripts = lib.fileset.toSource {
+          root = ./.;
+          fileset = lib.fileset.unions [
+            ./.github/settings
+            ./cliff.toml
+            ./scripts
+          ];
+        };
+
+        nuScript =
+          name: runtimeInputs:
+          pkgs.writeShellApplication {
+            inherit name runtimeInputs;
+            text = ''
+              exec ${lib.getExe dk.nushell} --no-config-file ${scripts}/scripts/${name}.nu "$@"
+            '';
+          };
+
         preCommit = dk.preCommit {
           src = ./.;
           hooks = {
@@ -111,6 +131,21 @@
         };
       in
       {
+        # ------------------------------------------------------------------------------------------
+        # Packages
+        # ------------------------------------------------------------------------------------------
+        packages = {
+          changelog = nuScript "changelog" [
+            pkgs.gh
+            pkgs.git
+            pkgs.git-cliff
+          ];
+          github = nuScript "github" [
+            pkgs.gh
+            parse-changelog
+          ];
+        };
+
         # ------------------------------------------------------------------------------------------
         # Dev shell
         # ------------------------------------------------------------------------------------------

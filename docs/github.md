@@ -2,14 +2,14 @@
 
 These conventions provide defaults for public repositories, and you can extend the required checks and labels to fit each repository.
 
-Use authenticated `gh` and Nushell to run each command from a devkit checkout, with the target repository as `OWNER/REPO`.
+Run each command with an authenticated `gh`, passing the target repository as `OWNER/REPO`.
 
 ## Apply repository settings
 
 Apply repository and workflow settings, security features, and immutable releases:
 
 ```bash
-./scripts/github.nu settings OWNER/REPO
+nix run github:hakula139/devkit/v1#github -- settings OWNER/REPO
 ```
 
 ### Repository and workflow settings
@@ -44,10 +44,10 @@ The ruleset blocks deleting and force-pushing the default branch, and requires a
 - No approval is required.
 - The admin role can bypass the ruleset in an emergency.
 
-From a devkit checkout, apply [the main ruleset](../.github/settings/rulesets/main.json) to a repository:
+Apply [the main ruleset](../.github/settings/rulesets/main.json) to a repository:
 
 ```bash
-./scripts/github.nu ruleset OWNER/REPO
+nix run github:hakula139/devkit/v1#github -- ruleset OWNER/REPO
 ```
 
 The helper replaces the repository's ruleset with the same `name` as the JSON, or creates one when none exists. For project-specific required checks, pass `--config` with a repository-maintained JSON file.
@@ -59,7 +59,7 @@ Create or update the [shared labels](../.github/settings/labels.json) while pres
 Use lowercase `area: <component>` labels for repository-defined components, and apply multiple area labels to an issue when needed. Pass component names without the prefix, or omit them to apply only the shared labels:
 
 ```bash
-./scripts/github.nu labels OWNER/REPO cli parser
+nix run github:hakula139/devkit/v1#github -- labels OWNER/REPO cli parser
 ```
 
 ## Inherit the community files

@@ -100,7 +100,7 @@ publish:
 
 ## Release devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `nix run .#changelog -- v1.2.3` and skipping the version bump because devkit's packages carry no version.
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `nix run .#changelog -- v2.1.3` and skipping the version bump because devkit's packages carry no version.
 
 Choose the release version according to the affected contract:
 

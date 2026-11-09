@@ -27,20 +27,7 @@ let
   # config file's directory.
   projectConfig = file: shared: if builtins.pathExists "${src}/${file}" then file else "${shared}";
 
-  configEntry =
-    hook: command:
-    lib.escapeShellArgs (
-      [ (lib.getExe hook.package) ]
-      ++ command
-      ++ lib.optionals (hook.settings.configPath != "") [
-        "--config"
-        hook.settings.configPath
-      ]
-    );
-
-  json = pkgs.formats.json { };
-
-  dprintConfig = json.generate "dprint.json" {
+  dprintConfig = pkgs.writers.writeJSON "dprint.json" {
     markdown = {
       emphasisKind = "underscores";
       strongKind = "asterisks";
@@ -82,6 +69,17 @@ let
             }
           );
     };
+
+  configEntry =
+    hook: command:
+    lib.escapeShellArgs (
+      [ (lib.getExe hook.package) ]
+      ++ command
+      ++ lib.optionals (hook.settings.configPath != "") [
+        "--config"
+        hook.settings.configPath
+      ]
+    );
 
   # ------------------------------------------------------------------------------------------------
   # Hook defaults
@@ -380,7 +378,6 @@ let
   # ------------------------------------------------------------------------------------------------
   # Hook installation
   # ------------------------------------------------------------------------------------------------
-  flock = lib.getExe pkgs.flock;
   git = lib.getExe hooksRun.config.gitPackage;
 in
 pkgs.mkShell {
@@ -408,7 +405,7 @@ pkgs.mkShell {
 
       (
         set -e
-        ${flock} 9
+        ${lib.getExe pkgs.flock} 9
 
         # Keep hook tools alive through the config's GC root.
         # Nix refuses to replace an existing regular file.

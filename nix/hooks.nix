@@ -38,9 +38,6 @@ let
   # config file's directory.
   projectConfig = file: shared: if builtins.pathExists "${src}/${file}" then file else "${shared}";
 
-  # ------------------------------------------------------------------------------------------------
-  # Hook options
-  # ------------------------------------------------------------------------------------------------
   configEntry =
     hook: arguments:
     lib.concatStringsSep " " (
@@ -52,6 +49,9 @@ let
       ]
     );
 
+  # ------------------------------------------------------------------------------------------------
+  # Hook options
+  # ------------------------------------------------------------------------------------------------
   configPathOptions =
     { hookModule, ... }:
     {
@@ -148,7 +148,6 @@ let
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
           settings = {
             configPath = projectConfig ".prettierrc.json" ../.prettierrc.json;
-            no-config = config.hooks.prettier.settings.configPath == "";
             no-editorconfig = true;
           };
         };

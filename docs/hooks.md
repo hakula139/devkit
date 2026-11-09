@@ -35,7 +35,7 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 The shared defaults apply only to the hook, so editors and scripts that run Prettier, markdownlint-cli2, or Taplo directly still need a project configuration file.
 
-Set `hooks.<name>.settings.configPath` to pass markdownlint-cli2, Prettier, or Taplo another `--config` file, relative to the checkout or absolute, or `""` to let the tool find its own. A markdownlint-cli2 configuration with relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which replaces the shared rules, and its file name must end in a supported name such as `.markdownlint-cli2.jsonc`. Re-enter the dev shell after adding or removing a project configuration file.
+Set `hooks.<name>.settings.configPath` to pass markdownlint-cli2, Prettier, or Taplo another `--config` file, relative to the checkout or absolute, or `""` to let the tool find its own. markdownlint-cli2 accepts only names ending in a supported name, such as `.markdownlint-cli2.jsonc`. A markdownlint-cli2 configuration with relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which replaces the shared rules. Re-enter the dev shell after adding or removing a project configuration file.
 
 ### Exclude fixtures
 

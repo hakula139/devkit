@@ -23,7 +23,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── scripts/                    # Repository administration helpers
 ├── src/                        # Exported Nushell executable sources
 ├── .markdownlint-cli2.jsonc    # The shared markdownlint-cli2 rules
-├── .prettierrc.json            # The shared Prettier style, whose `overrides` match basenames only
+├── .prettierrc.json            # The shared Prettier style, whose `overrides` must use basenames
 ├── .taplo.toml                 # The shared Taplo formatting
 ├── CHANGELOG.md                # Release notes, one section per tag
 ├── cliff.toml                  # The shared git-cliff config that drafts each release section

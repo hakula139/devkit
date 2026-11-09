@@ -83,6 +83,16 @@ let
   # ------------------------------------------------------------------------------------------------
   # Hook defaults
   # ------------------------------------------------------------------------------------------------
+  ruffHook = {
+    require_serial = true;
+    types = [ "file" ];
+    types_or = [
+      "python"
+      "pyi"
+      "jupyter"
+    ];
+  };
+
   baseline =
     { config, ... }:
     {
@@ -150,6 +160,24 @@ let
             configPath = projectConfig ".prettierrc.json" ../.prettierrc.json;
             no-editorconfig = true;
           };
+        };
+
+        # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
+        ruff = ruffHook // {
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.ruff.package)
+            "check"
+            "--fix"
+            "--force-exclude"
+          ];
+        };
+
+        ruff-format = ruffHook // {
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.ruff-format.package)
+            "format"
+            "--force-exclude"
+          ];
         };
 
         shellcheck = {

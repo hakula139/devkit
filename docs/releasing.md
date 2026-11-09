@@ -34,7 +34,7 @@ jobs:
     permissions:
       actions: read
       contents: write
-    uses: hakula139/devkit/.github/workflows/release.yml@v2
+    uses: hakula139/devkit/.github/workflows/release.yml@v3
     secrets:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
@@ -46,7 +46,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 Run the draft command from the target repository's root with an authenticated `gh`:
 
 ```bash
-nix run github:hakula139/devkit/v2#changelog -- v1.2.3
+nix run github:hakula139/devkit/v3#changelog -- v1.2.3
 ```
 
 The command uses the repository's `cliff.toml` when present and otherwise uses devkit's shared configuration. Prerelease tags automatically select the range since the previous tag. When the repository's git-cliff template supports highlights, pass a Markdown file with `--highlights <file>`.
@@ -106,7 +106,7 @@ publish:
         merge-multiple: true
 
     - name: Publish release
-      uses: hakula139/devkit/.github/actions/publish-release@v2
+      uses: hakula139/devkit/.github/actions/publish-release@v3
       with:
         assets: |
           dist/my-tool-x86_64-linux.tar.gz

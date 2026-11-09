@@ -342,31 +342,30 @@ let
   # Hook runner
   # ------------------------------------------------------------------------------------------------
   # Other stages need Git's hook arguments, such as a commit message file.
-  fileStages = lib.intersectLists hookTypes [
+  fileStages = [
     "pre-commit"
     "pre-merge-commit"
     "pre-push"
   ];
 
-  # Each hook runs once, in the first file stage it is installed for, while the installed hooks
-  # keep every stage.
+  # Each hook runs once, in its first file stage, while installed hooks keep every stage.
   runStage = hook: lib.findFirst (stage: lib.elem stage (map hookType hook.stages)) null fileStages;
-
-  # `rawConfig` is git-hooks.nix's internal option holding the installed configuration.
-  inherit (hooksRun.config) rawConfig;
-  rawHooks = lib.concatMap (repo: repo.hooks) rawConfig.repos;
 
   runHook =
     hook:
     let
       stage = runStage hook;
     in
-    if stage == null then hook else hook // { stages = [ stage ]; };
+    hook // lib.optionalAttrs (stage != null) { stages = [ stage ]; };
+
+  # `rawConfig` is git-hooks.nix's internal option holding the installed configuration.
+  inherit (hooksRun.config) rawConfig;
 
   runConfig = pkgs.writers.writeJSON "run-hooks-config.json" (
     rawConfig // { repos = map (repo: repo // { hooks = map runHook repo.hooks; }) rawConfig.repos; }
   );
 
+  rawHooks = lib.concatMap (repo: repo.hooks) rawConfig.repos;
   runStages = lib.intersectLists (map runStage rawHooks) fileStages;
 
   prepares = lib.unique (lib.catAttrs "prepare" hooksRun.enabledPackages);
@@ -441,9 +440,9 @@ pkgs.mkShell {
           ${lib.getExe hooksRun.config.package} install \
             --config ${lib.escapeShellArg hooksRun.config.configPath} \
             ${lib.escapeShellArgs (
-              lib.concatMap (hookType: [
+              lib.concatMap (type: [
                 "--hook-type"
-                hookType
+                type
               ]) hookTypes
             )}
         ''}

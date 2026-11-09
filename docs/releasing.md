@@ -1,6 +1,6 @@
 # Releasing
 
-devkit publishes a moving major tag. Consumers reference `@v1` for actions and workflows and `github:hakula139/devkit/v1` for the flake, so a fix reaches every repository on its next CI run or lock-maintenance PR.
+devkit publishes a moving major tag. Consumers reference the major tag for actions, workflows, and the flake, so a fix reaches every repository on its next CI run or lock-maintenance PR.
 
 ## Release your repository
 
@@ -34,7 +34,7 @@ jobs:
     permissions:
       actions: read
       contents: write
-    uses: hakula139/devkit/.github/workflows/release.yml@v1
+    uses: hakula139/devkit/.github/workflows/release.yml@v2
     secrets:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
@@ -46,7 +46,7 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 Run the draft command from the target repository's root with an authenticated `gh`:
 
 ```bash
-nix run github:hakula139/devkit/v1#changelog -- v1.2.3
+nix run github:hakula139/devkit/v2#changelog -- v1.2.3
 ```
 
 The command uses the repository's `cliff.toml` when present and otherwise uses devkit's shared configuration. Prerelease tags automatically select the range since the previous tag. When the repository's git-cliff template supports highlights, pass a Markdown file with `--highlights <file>`.
@@ -89,7 +89,7 @@ publish:
         merge-multiple: true
 
     - name: Publish release
-      uses: hakula139/devkit/.github/actions/publish-release@v1
+      uses: hakula139/devkit/.github/actions/publish-release@v2
       with:
         assets: |
           dist/my-tool-x86_64-linux.tar.gz
@@ -104,7 +104,7 @@ Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugin
 
 Choose the release version according to the affected contract:
 
-- **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since `@v1` and `#v1` references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Changing the shared `cliff.toml`'s `header` requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
+- **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since major-tag references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Changing the shared `cliff.toml`'s `header` requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
 - **Minor:** New or stricter baseline hooks or shared hook defaults. Additions and newer tool versions that `lib` selects are minor too.
 
 ### Roll back

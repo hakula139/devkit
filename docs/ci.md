@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   nix:
-    uses: hakula139/devkit/.github/workflows/nix.yml@v1
+    uses: hakula139/devkit/.github/workflows/nix.yml@v2
     secrets:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
@@ -34,7 +34,7 @@ jobs:
       actions: read
     steps:
       - name: Check results
-        uses: hakula139/devkit/.github/actions/ci-result@v1
+        uses: hakula139/devkit/.github/actions/ci-result@v2
 ```
 
 Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.

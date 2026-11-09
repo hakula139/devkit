@@ -69,43 +69,17 @@ To restore a deleted pin:
 
 ### Write your own release workflow
 
-A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run alongside its `build` job, which uploads the archives as artifacts:
+A repository that `release.yml` doesn't fit composes its own `tag.yml` from devkit's pieces:
+
+- A `tagged-ci` job running the `tagged-ci` action, which needs only `actions: read`.
+- The repository's own version check before the wait, so a mismatch fails fast. It adds a checkout and `contents: read`, as in [`release.yml`](../.github/workflows/release.yml).
+- A `nix-cache` job calling `nix-cache.yml` after `tagged-ci`, if the package builds on both systems.
+- A publish job that needs every earlier job, including `nix-cache` when present:
 
 ```yaml
-tagged-ci:
-  name: Check Release
-  runs-on: ubuntu-latest
-  timeout-minutes: 120
-  permissions:
-    actions: read
-    contents: read
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Set up Nix
-      uses: hakula139/devkit/.github/actions/setup-nix@v1
-
-    - name: Check the package version
-      run: |
-        version=$(nix eval --raw .#default.version)
-        if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
-          echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
-          exit 1
-        fi
-
-    - name: Wait for CI on the tagged commit
-      uses: hakula139/devkit/.github/actions/tagged-ci@v1
-
-nix-cache:
-  needs: tagged-ci
-  uses: hakula139/devkit/.github/workflows/nix-cache.yml@v1
-  secrets:
-    CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
 publish:
   name: Publish GitHub Release
-  needs: [nix-cache, build]
+  needs: [tagged-ci, build]
   runs-on: ubuntu-latest
   timeout-minutes: 10
   permissions:
@@ -128,8 +102,6 @@ publish:
           dist/my-tool-aarch64-darwin.tar.gz
 ```
 
-A repository whose package builds on fewer systems drops the `nix-cache` job and replaces it with `tagged-ci` in `publish`'s `needs`.
-
 `assets` takes newline-separated globs relative to the repository root, and the step fails when a named file is missing or a glob matches nothing. Name each file explicitly, since a glob that matches only some archives publishes a partial set.
 
 ### Republish release notes
@@ -150,6 +122,8 @@ Choose the release version according to the affected contract:
 - **Minor:** New or stricter baseline hooks or shared hook defaults. Additions and newer tool versions that `lib` selects are minor too.
 
 ### Roll back
+
+devkit's own release never runs `release.yml`, `nix-cache.yml`, or `publish-release`'s `assets`, so after changing any of them, watch the next consumer release and roll back if it fails.
 
 Force-move the major tag back to the previous release:
 

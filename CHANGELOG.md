@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-11-09
+
+### Breaking changes
+
+- _(hooks)_ Prettier and Taplo fall back to devkit's shared configuration when the source root has no `.prettierrc.json` or `.taplo.toml`, and markdownlint-cli2 always loads the shared rules, which a project's `.markdownlint-cli2.jsonc` files override rule by rule. A project whose markdownlint-cli2 configuration loads relative `customRules` or `markdownItPlugins` sets `hooks.markdownlint-cli2.settings.configPath = ".markdownlint-cli2.jsonc"`. ([#33](https://github.com/hakula139/devkit/pull/33))
+- _(hooks)_ A consumer's `args` adds to a hook's baseline flags without replacing them. Override the hook's `entry` to drop a baseline flag. ([#45](https://github.com/hakula139/devkit/pull/45))
+- The changelog and GitHub scripts run as `nix run github:hakula139/devkit/v2#changelog` and `nix run github:hakula139/devkit/v2#github` with tools pinned by devkit's lock, and `github.nu release-notes` is removed. ([#42](https://github.com/hakula139/devkit/pull/42))
+
+### Added
+
+- _(hooks)_ `ruff` and `ruff-format` accept `settings.configPath` like the other formatter hooks. ([#47](https://github.com/hakula139/devkit/pull/47))
+- _(lib)_ `nodeToolchain.nodejs` and `nodeToolchain.pnpm` expose the Node.js and pnpm that `nodeTool` uses. ([#35](https://github.com/hakula139/devkit/pull/35))
+
+### Fixed
+
+- _(hooks)_ The dev shell keeps the consumer's `PYTHONPATH`. ([#37](https://github.com/hakula139/devkit/pull/37))
+- _(hooks)_ Ruff hooks also check type stubs and notebooks, apply the project's `exclude` and `extend-exclude` to explicitly passed paths, and `ruff-format` runs its own `package`. ([#34](https://github.com/hakula139/devkit/pull/34))
+- _(hooks)_ An enabled lychee hook passes the hermetic `nix flake check` on Linux. ([#41](https://github.com/hakula139/devkit/pull/41))
+- _(github)_ `ruleset` updates the ruleset named in its configuration, so a custom `--config` no longer overwrites `main` or adds a duplicate on each run. ([#40](https://github.com/hakula139/devkit/pull/40))
+
+[2.0.0]: https://github.com/hakula139/devkit/compare/v1.1.0...v2.0.0
+
 ## [1.1.0] - 2026-11-08
 
 ### Added

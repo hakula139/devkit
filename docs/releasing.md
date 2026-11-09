@@ -69,43 +69,17 @@ To restore a deleted pin:
 
 ### Write your own release workflow
 
-A repository whose package builds on fewer systems, or whose release attaches build artifacts, calls devkit's actions from its own workflow. These jobs replace the caller's `release` job and run alongside its `build` job, which uploads the archives as artifacts:
+A repository that attaches build artifacts, publishes to other registries, or does not build its package on both systems keeps its own `tag.yml` and composes devkit's pieces:
+
+- A `tagged-ci` job running `hakula139/devkit/.github/actions/tagged-ci@v1`, which needs `actions: read` and no checkout.
+- The repository's own check of the tag against its package version, as a step before the wait in `tagged-ci`, so no later job pins or publishes a mismatched tag.
+- A `nix-cache` job that needs `tagged-ci` and calls `hakula139/devkit/.github/workflows/nix-cache.yml@v1` with the `CACHIX_AUTH_TOKEN` secret, when the package builds on both systems.
+- A publish job that needs every earlier job, including the `build` job that uploads the archives as artifacts, and attaches them:
 
 ```yaml
-tagged-ci:
-  name: Check Release
-  runs-on: ubuntu-latest
-  timeout-minutes: 120
-  permissions:
-    actions: read
-    contents: read
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Set up Nix
-      uses: hakula139/devkit/.github/actions/setup-nix@v1
-
-    - name: Check the package version
-      run: |
-        version=$(nix eval --raw .#default.version)
-        if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
-          echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
-          exit 1
-        fi
-
-    - name: Wait for CI on the tagged commit
-      uses: hakula139/devkit/.github/actions/tagged-ci@v1
-
-nix-cache:
-  needs: tagged-ci
-  uses: hakula139/devkit/.github/workflows/nix-cache.yml@v1
-  secrets:
-    CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
 publish:
   name: Publish GitHub Release
-  needs: [nix-cache, build]
+  needs: [tagged-ci, build]
   runs-on: ubuntu-latest
   timeout-minutes: 10
   permissions:
@@ -128,8 +102,6 @@ publish:
           dist/my-tool-aarch64-darwin.tar.gz
 ```
 
-A repository whose package builds on fewer systems drops the `nix-cache` job and replaces it with `tagged-ci` in `publish`'s `needs`.
-
 `assets` takes newline-separated globs relative to the repository root, and the step fails when a named file is missing or a glob matches nothing. Name each file explicitly, since a glob that matches only some archives publishes a partial set.
 
 ### Republish release notes
@@ -148,6 +120,8 @@ Choose the release version according to the affected contract:
 
 - **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since `@v1` and `#v1` references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Moving the shared `cliff.toml` or changing its `header` also requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
 - **Minor:** New or stricter baseline hooks or shared hook defaults. Additions and newer tool versions that `lib` selects are minor too.
+
+devkit's own `tag.yml` never runs `release.yml` or `nix-cache.yml`, and it runs `publish-release` without `assets`. When a release changes any of the three, the next consumer release is the change's first end-to-end run, so watch it and [roll back](#roll-back) the major tag if it fails.
 
 ### Roll back
 

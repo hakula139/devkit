@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - _(hooks)_ Prettier and Taplo fall back to devkit's shared configuration when the source root has no `.prettierrc.json` or `.taplo.toml`, and markdownlint-cli2 always loads the shared rules, which a project's `.markdownlint-cli2.jsonc` files override rule by rule. A project whose markdownlint-cli2 configuration loads relative `customRules` or `markdownItPlugins` sets `hooks.markdownlint-cli2.settings.configPath = ".markdownlint-cli2.jsonc"`. ([#33](https://github.com/hakula139/devkit/pull/33))
 - _(hooks)_ Baseline flags moved from `args` into `entry`, so a consumer's `args` adds to them and a consumer's `entry` replaces them. ([#45](https://github.com/hakula139/devkit/pull/45))
-- Run `scripts/changelog.nu` and `scripts/github.nu` as `nix run github:hakula139/devkit/v2#changelog` and `#github`, which pin their tools in devkit's lock. `github.nu release-notes` is removed, so republish release notes with the [release skill](https://github.com/hakula139/plugins/tree/main/plugins/hakula-workflow/skills/release)'s recipe. ([#42](https://github.com/hakula139/devkit/pull/42))
+- Run `scripts/changelog.nu` and `scripts/github.nu` as `nix run github:hakula139/devkit/v2#changelog` and `#github`, which pin their tools in devkit's lock. `github.nu release-notes` is removed. ([#42](https://github.com/hakula139/devkit/pull/42))
 - _(hooks)_ `ruff-format` runs its own `package`, so a project that overrides `ruff.package` sets `ruff-format.package` too. ([#34](https://github.com/hakula139/devkit/pull/34))
 
 ### Added

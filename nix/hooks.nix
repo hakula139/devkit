@@ -197,13 +197,17 @@ in
   inherit check;
 
   shell = pkgs.mkShell {
-    packages = dev.enabledPackages ++ [
+    # Linking only executables keeps the hook packages' setup hooks out of the consumer's shell.
+    packages = [
+      (pkgs.buildEnv {
+        name = "pre-commit-hook-tools";
+        paths = dev.enabledPackages;
+        pathsToLink = [ "/bin" ];
+      })
       dev.config.package
     ];
 
     shellHook = ''
-      unset PYTHONPATH
-
       if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
         # Linked worktrees share hooks, so their common Git directory owns the install lock.
         common=$(

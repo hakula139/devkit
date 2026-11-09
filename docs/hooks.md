@@ -48,7 +48,7 @@ Set `hooks.nu-check.enable = true;` to check Nushell files with `dk.nu-check`. W
 - `hooks` applies to both outputs.
 - `devHooks` applies only to the shell, and any hook listed here is disabled in `check` even if `hooks` enables it.
 
-Add `preCommit.shell` to the `inputsFrom` of the repository's `pkgs.mkShell`. The shell's own `packages` and `nativeBuildInputs` take precedence over hook packages on `PATH`.
+Add `preCommit.shell` to the `inputsFrom` of the repository's `pkgs.mkShell`. The hook packages contribute only their executables, without the setup hooks that would set variables such as `PYTHONPATH`, and the shell's own `packages` and `nativeBuildInputs` take precedence over them on `PATH`.
 
 Entering the dev shell from a Git checkout installs the hooks. The configuration path must be absent or a symlink into the Nix store.
 

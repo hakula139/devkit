@@ -27,16 +27,12 @@ let
   # config file's directory.
   projectConfig = file: shared: if builtins.pathExists "${src}/${file}" then file else "${shared}";
 
-  configEntry =
-    hook: arguments:
-    lib.concatStringsSep " " (
-      [ (lib.getExe hook.package) ]
-      ++ arguments
-      ++ lib.optionals (hook.settings.configPath != "") [
-        "--config"
-        (lib.escapeShellArg hook.settings.configPath)
-      ]
-    );
+  configArgs =
+    hook:
+    lib.optionals (hook.settings.configPath != "") [
+      "--config"
+      hook.settings.configPath
+    ];
 
   json = pkgs.formats.json { };
 
@@ -96,6 +92,20 @@ let
     ];
   };
 
+  # git-hooks.nix defines its hooks with `mkDefault`, so baseline values sit between those and a
+  # consumer's definitions. `args` and `excludes` stay plain to concatenate with a consumer's.
+  baselinePriority =
+    path: value:
+    if
+      lib.elem (lib.last path) [
+        "args"
+        "excludes"
+      ]
+    then
+      value
+    else
+      lib.mkOverride 900 value;
+
   baseline =
     { config, ... }:
     {
@@ -103,37 +113,71 @@ let
         "(^|/)fixtures/"
       ];
 
-      hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) (_: lib.mkOverride 900) {
-        actionlint = {
-          package = actionlint;
-        };
-
+      hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) baselinePriority {
+        # ------------------------------------------------------------------------------------------
+        # General
+        # ------------------------------------------------------------------------------------------
         check-added-large-files.enable = true;
         check-merge-conflicts.enable = true;
 
-        clippy = {
-          entry = lib.concatStringsSep " " [
-            (lib.getExe' config.hooks.clippy.package "cargo-clippy")
-            "clippy"
-            "--locked"
-            "--all-targets"
-            "--config"
-            (lib.escapeShellArg ''build.warnings="deny"'')
-          ];
-        };
-
         cspell = {
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.cspell.package)
+          args = [
             "--no-progress"
             "--no-must-find-files"
           ];
         };
 
+        end-of-file-fixer.enable = true;
+
+        sort-file-contents = {
+          files = "^\\.cspell/words\\.txt$";
+          settings.ignore-case = true;
+        };
+
+        trim-trailing-whitespace = {
+          enable = true;
+          args = [
+            "--markdown-linebreak-ext=md"
+          ];
+        };
+
+        # ------------------------------------------------------------------------------------------
+        # GitHub Actions
+        # ------------------------------------------------------------------------------------------
+        actionlint = {
+          package = actionlint;
+        };
+
+        # ------------------------------------------------------------------------------------------
+        # JavaScript / TypeScript
+        # ------------------------------------------------------------------------------------------
+        eslint = {
+          package = nodeTool "eslint";
+          args = [
+            "--no-warn-ignored"
+            "--max-warnings=0"
+          ];
+          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts)$";
+          require_serial = true;
+        };
+
+        tsc = {
+          package = nodeTool "tsc";
+          entry = lib.getExe config.hooks.tsc.package;
+          args = [
+            "--noEmit"
+          ];
+          files = "\\.(ts|tsx|mts|cts)$";
+          pass_filenames = false;
+        };
+
+        # ------------------------------------------------------------------------------------------
+        # Markdown
+        # ------------------------------------------------------------------------------------------
         doctoc = {
           package = pkgs.doctoc;
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.doctoc.package)
+          entry = lib.getExe config.hooks.doctoc.package;
+          args = [
             "--update-only"
             "--notitle"
             "--maxlevel=3"
@@ -143,42 +187,39 @@ let
 
         dprint = {
           package = pkgs.dprint;
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.dprint.package)
-            "fmt"
+          entry = "${lib.getExe config.hooks.dprint.package} fmt";
+          args = [
             "--config=${dprintConfig}"
             "--allow-no-files"
           ];
           files = "\\.md$";
         };
 
-        end-of-file-fixer.enable = true;
-
-        eslint = {
-          package = nodeTool "eslint";
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.eslint.package)
-            "--fix"
-            "--no-warn-ignored"
-            "--max-warnings=0"
-          ];
-          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts)$";
-          require_serial = true;
-        };
-
         markdownlint-cli2 = {
           package = pkgs.markdownlint-cli2;
-          entry = configEntry config.hooks.markdownlint-cli2 [
+          entry = lib.getExe config.hooks.markdownlint-cli2.package;
+          args = [
             "--fix"
             "--no-globs"
-          ];
+          ]
+          ++ configArgs config.hooks.markdownlint-cli2;
           files = "\\.md$";
           settings.configPath = "${../.markdownlint-cli2.jsonc}";
         };
 
+        # ------------------------------------------------------------------------------------------
+        # Nushell
+        # ------------------------------------------------------------------------------------------
+        nu-check = {
+          package = nu-check;
+          entry = lib.getExe config.hooks.nu-check.package;
+        };
+
+        # ------------------------------------------------------------------------------------------
+        # Python
+        # ------------------------------------------------------------------------------------------
         mypy = {
           package = uvTool "mypy";
-          entry = lib.getExe config.hooks.mypy.package;
           files = "";
           pass_filenames = false;
           types_or = [
@@ -187,36 +228,36 @@ let
           ];
         };
 
-        nu-check = {
-          package = nu-check;
-          entry = lib.getExe config.hooks.nu-check.package;
-        };
-
-        # Markdown stays out of Prettier, which drops the blank line before nested items.
-        prettier = {
-          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
-          settings = {
-            configPath = projectConfig ".prettierrc.json" ../.prettierrc.json;
-            no-editorconfig = true;
-          };
-        };
-
         # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
         ruff = ruffHook // {
-          entry = configEntry config.hooks.ruff [
-            "check"
-            "--fix"
+          args = [
             "--force-exclude"
-          ];
+          ]
+          ++ configArgs config.hooks.ruff;
         };
 
         ruff-format = ruffHook // {
-          entry = configEntry config.hooks.ruff-format [
-            "format"
+          entry = "${lib.getExe config.hooks.ruff-format.package} format";
+          args = [
             "--force-exclude"
-          ];
+          ]
+          ++ configArgs config.hooks.ruff-format;
         };
 
+        # ------------------------------------------------------------------------------------------
+        # Rust
+        # ------------------------------------------------------------------------------------------
+        clippy = {
+          settings = {
+            denyWarnings = true;
+            extraArgs = "--locked --all-targets";
+            offline = false;
+          };
+        };
+
+        # ------------------------------------------------------------------------------------------
+        # Shell
+        # ------------------------------------------------------------------------------------------
         shellcheck = {
           exclude_types = [
             "zsh"
@@ -234,32 +275,27 @@ let
           };
         };
 
-        sort-file-contents = {
-          files = "^\\.cspell/words\\.txt$";
-          settings.ignore-case = true;
-        };
-
+        # ------------------------------------------------------------------------------------------
+        # TOML
+        # ------------------------------------------------------------------------------------------
         taplo = {
-          entry = configEntry config.hooks.taplo [ "fmt" ];
+          args = configArgs config.hooks.taplo;
           settings.configPath = projectConfig ".taplo.toml" ../.taplo.toml;
         };
 
-        trim-trailing-whitespace = {
-          enable = true;
-          entry = lib.concatStringsSep " " [
-            (lib.getExe' config.hooks.trim-trailing-whitespace.package "trailing-whitespace-fixer")
-            "--markdown-linebreak-ext=md"
+        # ------------------------------------------------------------------------------------------
+        # Web formats
+        # ------------------------------------------------------------------------------------------
+        # Markdown stays out of Prettier, which drops the blank line before nested items.
+        prettier = {
+          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
+          excludes = [
+            "(^|/)pnpm-lock\\.yaml$"
           ];
-        };
-
-        tsc = {
-          package = nodeTool "tsc";
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.tsc.package)
-            "--noEmit"
-          ];
-          files = "\\.(ts|tsx|mts|cts)$";
-          pass_filenames = false;
+          settings = {
+            configPath = projectConfig ".prettierrc.json" ../.prettierrc.json;
+            no-editorconfig = true;
+          };
         };
       };
     };
@@ -312,7 +348,8 @@ let
     ];
     text = ''
       cd "$(git rev-parse --show-toplevel)"
-      ${lib.concatMapStrings (prepare: "${lib.getExe prepare}\n") prepares}
+      ${lib.concatMapStringsSep "\n" lib.getExe prepares}
+
       status=0
       for stage in ${lib.escapeShellArgs hookTypes}; do
         prek run \

@@ -27,7 +27,7 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 ## Configure the baseline
 
-- **cspell:** Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`.
+- **cspell:** Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`. A dictionary at another path needs `hooks.sort-file-contents.files` to stay sorted.
 - **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. In marked files, use inline links in headings so doctoc generates anchors matching GitHub.
 - **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 checks it with devkit's [shared rules](../.markdownlint-cli2.jsonc), including `<!-- dprint-ignore -->` blocks. Project `.markdownlint-cli2.jsonc` rules override them, core `.markdownlint.jsonc` files replace them, and configured `globs` are ignored.
 - **Prettier:** Uses devkit's [shared style](../.prettierrc.json) unless the source root contains `.prettierrc.json`.
@@ -44,7 +44,7 @@ The baseline excludes any path with a `fixtures/` component, since fixtures are 
 
 ## Check Nushell files
 
-Set `hooks.nu-check.enable = true;` to check Nushell files with `dk.nu-check`. When enabled, `editorconfig-checker` checks indentation against a `[*.nu]` section in `.editorconfig`. No hook runs `nufmt`.
+Set `hooks.nu-check.enable = true;` to check Nushell files with `dk.nu-check`. When enabled, `editorconfig-checker` checks indentation against a `[*.nu]` section in `.editorconfig`. No hook runs `nufmt`, and `hooks.nu-check.settings.asModule` has no effect.
 
 ## Set up the dev shell and the check
 

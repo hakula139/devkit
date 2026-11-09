@@ -12,7 +12,7 @@ Tags containing a `-`, such as `v1.3.0-rc.1`, publish as prereleases. Before its
 
 - CI running from `.github/workflows/ci.yml` on pushes to the default branch, since `tagged-ci` counts only push and dispatched runs of that workflow on the tagged commit.
 - `packages.default` exposing a `version` attribute and building on `x86_64-linux` and `aarch64-darwin`. A repository whose package builds on fewer systems [writes its own release workflow](#write-your-own-release-workflow).
-- `CHANGELOG.md` with a section titled by the tag number without `v`, such as `## 1.2.3`.
+- `CHANGELOG.md` with a section titled by the tag number without `v`, such as `## [1.2.3] - 2026-01-31`.
 - The `CACHIX_AUTH_TOKEN` secret able to push and pin the `hakula` Cachix cache.
 
 ```yaml
@@ -146,8 +146,8 @@ Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugin
 
 Choose the release version according to the affected contract:
 
-- **Major:** A change breaks an existing caller of an action, reusable workflow, script, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute. Moving the shared `cliff.toml` or changing its `header` also requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
-- **Minor:** New or stricter baseline hooks or shared hook defaults.
+- **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since `@v1` and `#v1` references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Moving the shared `cliff.toml` or changing its `header` also requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
+- **Minor:** New or stricter baseline hooks or shared hook defaults. Additions and newer tool versions that `lib` selects are minor too.
 
 ### Roll back
 

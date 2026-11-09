@@ -23,12 +23,13 @@ let
       interpreter = "${pkgs.lib.getExe nushell} --no-config-file";
     } "/bin/${name}";
 
+  actionlint = pkgs.callPackage ./packages/actionlint.nix { };
+
   nodeToolchain = {
     nodejs = pkgs.nodejs_26;
     pnpm = pkgs.pnpm_12;
   };
 
-  actionlint = pkgs.callPackage ./packages/actionlint.nix { };
   nu-check = writeNuBin "nu-check" ../src/nu-check.nu;
   nu-test = writeNuBin "nu-test" ../src/nu-test.nu;
 in

@@ -78,8 +78,8 @@ preCommit = dk.preCommit {
 
 ## Run a lockfile-pinned tool
 
-- `dk.nodeToolchain` contains `nodejs` and `pnpm`. Add `builtins.attrValues dk.nodeToolchain` to the dev shell's `packages` to use the same versions as `nodeTool`.
 - `dk.nodeTool "<command>"` returns a package that runs `pnpm exec <command>`.
+- `dk.nodeToolchain` contains `nodejs` and `pnpm`. Add `builtins.attrValues dk.nodeToolchain` to the dev shell's `packages` to use the same versions as `nodeTool`.
 - `dk.uvTool "<command>"` returns a package that runs `uv run --locked <command>`.
 
 Enable the builtin hook and set its `package` under `devHooks`:

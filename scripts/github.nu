@@ -40,7 +40,7 @@ def "main settings" [
   ^gh api $"repos/($repo)/immutable-releases" --method PUT
 }
 
-# Create or replace the main branch ruleset.
+# Create or replace the branch ruleset that has the config's name.
 def "main ruleset" [
   repo: string # Target repository as OWNER/REPO
   --config: path # Complete ruleset JSON, defaulting to the shared main ruleset
@@ -52,11 +52,12 @@ def "main ruleset" [
     $config
   }
 
+  let name = (open --raw $source | from json | get name)
   mut endpoint = $"repos/($repo)/rulesets"
   let id = (
     ^gh api $endpoint
       --paginate
-      --jq '.[] | select(.name == "main") | .id'
+      --jq $".[] | select\(.name == ($name | to json)\) | .id"
     | str trim
   )
 

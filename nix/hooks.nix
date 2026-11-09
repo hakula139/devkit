@@ -176,13 +176,11 @@ let
           settings.configPath = "${../.markdownlint-cli2.jsonc}";
         };
 
-        # mypy checks the `files` that its configuration names.
         mypy = {
           package = uvTool "mypy";
           entry = lib.getExe config.hooks.mypy.package;
           files = "";
           pass_filenames = false;
-          types = [ "file" ];
           types_or = [
             "python"
             "pyi"
@@ -285,38 +283,6 @@ let
     ];
   };
 
-  # ------------------------------------------------------------------------------------------------
-  # Hook runner
-  # ------------------------------------------------------------------------------------------------
-  prepares = lib.unique (
-    lib.concatMap (hook: lib.optional (hook.enable && hook.package ? prepare) hook.package.prepare) (
-      lib.attrValues hooksRun.config.hooks
-    )
-  );
-
-  runHooks = pkgs.writeShellApplication {
-    name = "run-hooks";
-    runtimeInputs = [
-      hooksRun.config.package
-      hooksRun.config.gitPackage
-    ];
-    text = ''
-      cd "$(git rev-parse --show-toplevel)"
-      ${lib.concatMapStrings (prepare: "${lib.getExe prepare}\n") prepares}
-      exec prek run \
-        --config ${lib.escapeShellArg hooksRun.config.configPath} \
-        --all-files \
-        --show-diff-on-failure \
-        "$@"
-    '';
-  };
-
-  # ------------------------------------------------------------------------------------------------
-  # Hook installation
-  # ------------------------------------------------------------------------------------------------
-  flock = lib.getExe pkgs.flock;
-  git = lib.getExe hooksRun.config.gitPackage;
-
   hookTypes = lib.unique (
     map (
       stage:
@@ -332,6 +298,40 @@ let
         stage
     ) (lib.remove "manual" hooksRun.config.installStages)
   );
+
+  # ------------------------------------------------------------------------------------------------
+  # Hook runner
+  # ------------------------------------------------------------------------------------------------
+  prepares = lib.unique (lib.catAttrs "prepare" hooksRun.enabledPackages);
+
+  runHooks = pkgs.writeShellApplication {
+    name = "run-hooks";
+    runtimeInputs = [
+      hooksRun.config.package
+      hooksRun.config.gitPackage
+    ];
+    text = ''
+      cd "$(git rev-parse --show-toplevel)"
+      ${lib.concatMapStrings (prepare: "${lib.getExe prepare}\n") prepares}
+      status=0
+      for stage in ${lib.escapeShellArgs hookTypes}; do
+        prek run \
+          --config ${lib.escapeShellArg hooksRun.config.configPath} \
+          --stage "$stage" \
+          --all-files \
+          --show-diff-on-failure \
+          "$@" \
+          || status=1
+      done
+      exit "$status"
+    '';
+  };
+
+  # ------------------------------------------------------------------------------------------------
+  # Hook installation
+  # ------------------------------------------------------------------------------------------------
+  flock = lib.getExe pkgs.flock;
+  git = lib.getExe hooksRun.config.gitPackage;
 in
 pkgs.mkShell {
   # Listed directly, the hook packages' setup hooks would set the consumer's PYTHONPATH.

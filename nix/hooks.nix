@@ -34,11 +34,51 @@ let
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
-  taploConfig =
-    let
-      configPath = "${src}/.taplo.toml";
-    in
-    if builtins.pathExists configPath then configPath else pkgs.writeText "taplo.toml" "";
+  # A project config stays checkout-relative, since Prettier resolves `overrides` globs from the
+  # config file's directory.
+  projectConfig = file: shared: if builtins.pathExists "${src}/${file}" then file else "${shared}";
+
+  configEntry =
+    hook: arguments:
+    lib.concatStringsSep " " (
+      [ (lib.getExe hook.package) ]
+      ++ arguments
+      ++ lib.optionals (hook.settings.configPath != "") [
+        "--config"
+        (lib.escapeShellArg hook.settings.configPath)
+      ]
+    );
+
+  # ------------------------------------------------------------------------------------------------
+  # Hook options
+  # ------------------------------------------------------------------------------------------------
+  configPathOptions =
+    { hookModule, ... }:
+    {
+      options.hooks =
+        lib.genAttrs
+          [
+            "markdownlint-cli2"
+            "taplo"
+          ]
+          (
+            name:
+            lib.mkOption {
+              description = "${name} hook";
+              type = lib.types.submodule {
+                imports = [ hookModule ];
+                options.settings.configPath = lib.mkOption {
+                  type = lib.types.str;
+                  default = "";
+                  description = ''
+                    Configuration file path, relative to the checkout root or absolute.
+                    An empty string passes no `--config`, so ${name} finds its own configuration.
+                  '';
+                };
+              };
+            }
+          );
+    };
 
   # ------------------------------------------------------------------------------------------------
   # Hook defaults
@@ -90,9 +130,12 @@ let
 
         markdownlint-cli2 = {
           package = pkgs.markdownlint-cli2;
-          entry = lib.getExe config.hooks.markdownlint-cli2.package;
-          args = [ "--fix" ];
+          entry = configEntry config.hooks.markdownlint-cli2 [
+            "--fix"
+            "--no-globs"
+          ];
           files = "\\.md$";
+          settings.configPath = "${../.markdownlint-cli2.jsonc}";
         };
 
         nu-check = {
@@ -104,12 +147,7 @@ let
         prettier = {
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
           settings = {
-            configPath =
-              let
-                configPath = "${src}/.prettierrc.json";
-              in
-              lib.optionalString (builtins.pathExists configPath) configPath;
-            no-config = config.hooks.prettier.settings.configPath == "";
+            configPath = projectConfig ".prettierrc.json" ../.prettierrc.json;
             no-editorconfig = true;
           };
         };
@@ -137,7 +175,8 @@ let
         };
 
         taplo = {
-          args = [ "--config=${taploConfig}" ];
+          entry = configEntry config.hooks.taplo [ "fmt" ];
+          settings.configPath = projectConfig ".taplo.toml" ../.taplo.toml;
         };
 
         trim-trailing-whitespace = {
@@ -162,6 +201,7 @@ let
       inherit src;
       package = pkgs.prek;
       imports = [
+        configPathOptions
         baseline
         { inherit hooks excludes; }
       ]

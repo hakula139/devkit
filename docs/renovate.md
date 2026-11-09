@@ -5,7 +5,7 @@ Extend the preset from `.github/renovate.json`:
 ```json
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>hakula139/devkit"]
+  "extends": ["github>hakula139/devkit#v1"]
 }
 ```
 

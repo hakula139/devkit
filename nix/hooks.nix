@@ -197,7 +197,7 @@ in
   inherit check;
 
   shell = pkgs.mkShell {
-    # Linking only executables keeps the hook packages' setup hooks out of the consumer's shell.
+    # Listed directly, the hook packages' setup hooks would set the consumer's PYTHONPATH.
     packages = [
       (pkgs.buildEnv {
         name = "pre-commit-hook-tools";

@@ -237,7 +237,13 @@ let
     };
 
   dev = run [ { hooks = devHooks; } ];
-  check = run [ { hooks = lib.mapAttrs (_: _: { enable = lib.mkForce false; }) devHooks; } ];
+
+  # lychee loads CA certificates even with `--offline`, and the check sandbox has none. They stay
+  # out of the dev shell, where cacert's setup hook would replace the host's NIX_SSL_CERT_FILE.
+  check = run [
+    { hooks = lib.mapAttrs (_: _: { enable = lib.mkForce false; }) devHooks; }
+    { hooks.lychee.extraPackages = [ pkgs.cacert ]; }
+  ];
 
   # ------------------------------------------------------------------------------------------------
   # Hook installation

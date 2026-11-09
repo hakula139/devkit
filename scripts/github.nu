@@ -103,18 +103,3 @@ def "main labels" [
     )
   }
 }
-
-# Refresh a release's notes from CHANGELOG.md in the current directory.
-def "main release-notes" [
-  repo: string # Target repository as OWNER/REPO
-  tag: string # Release tag, such as v1.2.3
-] {
-  let version = ($tag | str replace --regex '^v' "")
-  let notes = (^parse-changelog "CHANGELOG.md" $version)
-
-  (
-    ^gh release edit $tag
-      --repo $repo
-      --notes $notes
-  )
-}

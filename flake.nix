@@ -84,8 +84,6 @@
         pkgs = nixpkgs.legacyPackages.${system};
         dk = self.lib.mkLib pkgs;
 
-        parse-changelog = pkgs.callPackage ./nix/packages/parse-changelog.nix { };
-
         scripts = lib.fileset.toSource {
           root = ./.;
           fileset = lib.fileset.unions [
@@ -142,7 +140,6 @@
           ];
           github = nuScript "github" [
             pkgs.gh
-            parse-changelog
           ];
         };
 

@@ -22,7 +22,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── .cspell/                    # Project spelling dictionary
 ├── .github/                    # Composite actions, workflows, and GitHub configuration
 ├── docs/                       # Adoption guides and shared tooling reference
-├── nix/                        # Nix library, hooks, builders, and private packages
+├── nix/                        # Nix library, hooks, builders, and private package overrides
 ├── scripts/                    # Repository administration helpers
 ├── src/                        # Exported Nushell executable sources
 ├── tests/                      # The Nushell tooling check's tests

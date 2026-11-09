@@ -25,6 +25,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── nix/                        # Nix library, hooks, builders, and private package overrides
 ├── scripts/                    # Repository administration helpers
 ├── src/                        # Exported Nushell executable sources
+├── tests/                      # The Nushell tooling check's tests
 ├── .markdownlint-cli2.jsonc    # The shared markdownlint-cli2 rules
 ├── .prettierrc.json            # The shared Prettier style, whose `overrides` must use basenames
 ├── .taplo.toml                 # The shared Taplo formatting

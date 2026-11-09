@@ -197,13 +197,19 @@ in
   inherit check;
 
   shell = pkgs.mkShell {
-    packages = dev.enabledPackages ++ [
+    # Listed directly, the hook packages' setup hooks would set the consumer's PYTHONPATH.
+    # A colliding executable keeps the first package's, matching the PATH order of a plain list.
+    packages = [
+      (pkgs.buildEnv {
+        name = "pre-commit-hook-tools";
+        paths = dev.enabledPackages;
+        pathsToLink = [ "/bin" ];
+        ignoreCollisions = true;
+      })
       dev.config.package
     ];
 
     shellHook = ''
-      unset PYTHONPATH
-
       if top=$(${git} rev-parse --show-toplevel 2>/dev/null); then
         # Linked worktrees share hooks, so their common Git directory owns the install lock.
         common=$(

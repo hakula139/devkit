@@ -49,13 +49,7 @@ Run the draft command from the target repository's root with an authenticated `g
 nix run github:hakula139/devkit/v1#changelog -- v1.2.3
 ```
 
-The command uses the repository's `cliff.toml` when present and otherwise uses the shared configuration of the devkit release it runs from. Prerelease tags automatically select the range since the previous tag.
-
-When the repository's git-cliff template supports highlights, pass a Markdown file to the command:
-
-```bash
-nix run github:hakula139/devkit/v1#changelog -- v1.2.3 --highlights highlights.md
-```
+The command uses the repository's `cliff.toml` when present and otherwise uses devkit's shared configuration. Prerelease tags automatically select the range since the previous tag. When the repository's git-cliff template supports highlights, pass a Markdown file with `--highlights <file>`.
 
 ### Recover a release
 

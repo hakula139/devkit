@@ -6,7 +6,7 @@
 
 Entering the dev shell from a Git checkout installs the hooks. The configuration path must be absent or a symlink into the Nix store.
 
-`run-hooks` runs every enabled hook outside the `manual` stage on every tracked file, one stage at a time, or only the hooks whose IDs it receives as arguments. It first installs the lockfile of each enabled hook whose package comes from `dk.nodeTool` or `dk.uvTool`. `nix flake check` runs no hooks, so verify a change with `nix develop -c run-hooks` as well, as [`nix.yml`](ci.md) does in CI.
+`run-hooks` runs every enabled hook of the `pre-commit`, `pre-merge-commit`, and `pre-push` stages on every tracked file, one stage at a time, or only the hooks whose IDs it receives as arguments. It first installs the lockfile of each enabled hook whose package comes from `dk.nodeTool` or `dk.uvTool`. `nix flake check` runs no hooks, so verify a change with `nix develop -c run-hooks` as well, as [`nix.yml`](ci.md) does in CI.
 
 ## Enable hooks
 
@@ -45,34 +45,17 @@ The shared hook configurations cover:
 | Web formats             | `prettier`                 | JavaScript, TypeScript, JSON, YAML, except `pnpm-lock.yaml` | Shared defaults, `.prettierrc.json`         |
 | YAML                    | `check-yaml`               | Syntax                                                      |                                             |
 
-git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings.
+git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
 
 ## Configure a hook
 
 ### Override the baseline
 
-A definition under `hooks` replaces the baseline's value of that attribute, except that `args` and `excludes` concatenate with the baseline's lists. Place a list's items with `lib.mkBefore` or `lib.mkAfter`, or replace the baseline's list with `lib.mkForce`:
-
-```nix
-preCommit = dk.preCommit {
-  src = ./.;
-  hooks = {
-    prettier = {
-      enable = true;
-      files = "\\.(js|mjs|json|jsonc|ya?ml)$";
-    };
-    trim-trailing-whitespace.excludes = [
-      "\\.patch$"
-    ];
-  };
-};
-```
-
-ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
+A hook's `entry` is its executable plus the subcommand and flags that its `settings` derive, and the baseline's other flags are in `args`. A definition under `hooks` replaces the baseline's value of that attribute, except that a repository's `args` and `excludes` append to the baseline's lists, and `lib.mkForce` replaces them.
 
 ### Use a project configuration file
 
-- **Prettier and Taplo:** Use devkit's [shared style](../.prettierrc.json) and [shared formatting](../.taplo.toml) unless the source root contains `.prettierrc.json` or `.taplo.toml`, which replaces the shared file entirely and so restates the shared options it keeps.
+- **Prettier and Taplo:** Use devkit's [shared style](../.prettierrc.json) and [shared formatting](../.taplo.toml) unless the source root contains `.prettierrc.json` or `.taplo.toml`, which replaces the shared file entirely, so it must restate the shared options it keeps.
 - **markdownlint-cli2:** Checks Markdown with devkit's [shared rules](../.markdownlint-cli2.jsonc), including `<!-- dprint-ignore -->` blocks that dprint leaves unformatted. Project `.markdownlint-cli2.jsonc` rules override them, core `.markdownlint.jsonc` files replace them, and configured `globs` are ignored.
 
 Set `hooks.<name>.settings.configPath` to pass markdownlint-cli2, Prettier, Ruff, or Taplo another `--config` file, relative to the checkout or absolute, or `""` to let the tool find its own. markdownlint-cli2 accepts only names ending in a supported name, such as `.markdownlint-cli2.jsonc`. A markdownlint-cli2 configuration with relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which replaces the shared rules.

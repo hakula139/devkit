@@ -108,7 +108,8 @@ Consumers follow the major tag without a PR, so classify each change by its effe
 
 - **Major:** An existing caller's configuration stops working or must change.
   - Removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output.
-  - Raising the [minimum nixpkgs release](flake.md), or the major version of `nodeToolchain`'s Node.js or pnpm, which fails consumers' [`devEngines`](hooks.md#declare-pnpm) ranges.
+  - Raising the [minimum nixpkgs release](flake.md).
+  - Raising the major version of `nodeToolchain`'s Node.js or pnpm, which fails consumers' [`devEngines`](hooks.md#declare-pnpm) ranges.
   - An action or reusable workflow change that can fail a caller's run other than through hook findings.
   - A Renovate preset change that lets more updates merge without review or changes the required merge strategy.
   - Changing the shared `cliff.toml`'s `header`, since `--prepend` replaces an existing header only when it matches exactly.

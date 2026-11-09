@@ -27,12 +27,16 @@ let
   # config file's directory.
   projectConfig = file: shared: if builtins.pathExists "${src}/${file}" then file else "${shared}";
 
-  configArgs =
-    hook:
-    lib.optionals (hook.settings.configPath != "") [
-      "--config"
-      hook.settings.configPath
-    ];
+  configEntry =
+    hook: command:
+    lib.escapeShellArgs (
+      [ (lib.getExe hook.package) ]
+      ++ command
+      ++ lib.optionals (hook.settings.configPath != "") [
+        "--config"
+        hook.settings.configPath
+      ]
+    );
 
   json = pkgs.formats.json { };
 
@@ -93,7 +97,7 @@ let
   };
 
   # git-hooks.nix defines its hooks with `mkDefault`, so baseline values sit between those and a
-  # consumer's definitions. `args` and `excludes` stay plain to concatenate with a consumer's.
+  # consumer's definitions. `args` and `excludes` concatenate, with a consumer's list last.
   baselinePriority =
     path: value:
     if
@@ -102,7 +106,7 @@ let
         "excludes"
       ]
     then
-      value
+      lib.mkBefore value
     else
       lib.mkOverride 900 value;
 
@@ -157,8 +161,8 @@ let
             "--no-warn-ignored"
             "--max-warnings=0"
           ];
-          files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts)$";
           require_serial = true;
+          settings.extensions = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts)$";
         };
 
         tsc = {
@@ -197,12 +201,11 @@ let
 
         markdownlint-cli2 = {
           package = pkgs.markdownlint-cli2;
-          entry = lib.getExe config.hooks.markdownlint-cli2.package;
+          entry = configEntry config.hooks.markdownlint-cli2 [ ];
           args = [
             "--fix"
             "--no-globs"
-          ]
-          ++ configArgs config.hooks.markdownlint-cli2;
+          ];
           files = "\\.md$";
           settings.configPath = "${../.markdownlint-cli2.jsonc}";
         };
@@ -230,18 +233,21 @@ let
 
         # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
         ruff = ruffHook // {
+          entry = configEntry config.hooks.ruff [
+            "check"
+            "--fix"
+          ];
           args = [
             "--force-exclude"
-          ]
-          ++ configArgs config.hooks.ruff;
+          ];
         };
 
+        # Upstream runs `hooks.ruff.package` for ruff-format.
         ruff-format = ruffHook // {
-          entry = "${lib.getExe config.hooks.ruff-format.package} format";
+          entry = configEntry config.hooks.ruff-format [ "format" ];
           args = [
             "--force-exclude"
-          ]
-          ++ configArgs config.hooks.ruff-format;
+          ];
         };
 
         # ------------------------------------------------------------------------------------------
@@ -279,7 +285,7 @@ let
         # TOML
         # ------------------------------------------------------------------------------------------
         taplo = {
-          args = configArgs config.hooks.taplo;
+          entry = configEntry config.hooks.taplo [ "fmt" ];
           settings.configPath = projectConfig ".taplo.toml" ../.taplo.toml;
         };
 
@@ -338,6 +344,13 @@ let
   # ------------------------------------------------------------------------------------------------
   # Hook runner
   # ------------------------------------------------------------------------------------------------
+  # Other stages need Git's hook arguments, such as a commit message file.
+  fileStages = lib.intersectLists [
+    "pre-commit"
+    "pre-merge-commit"
+    "pre-push"
+  ] hookTypes;
+
   prepares = lib.unique (lib.catAttrs "prepare" hooksRun.enabledPackages);
 
   runHooks = pkgs.writeShellApplication {
@@ -351,7 +364,7 @@ let
       ${lib.concatMapStringsSep "\n" lib.getExe prepares}
 
       status=0
-      for stage in ${lib.escapeShellArgs hookTypes}; do
+      for stage in ${lib.escapeShellArgs fileStages}; do
         prek run \
           --config ${lib.escapeShellArg hooksRun.config.configPath} \
           --stage "$stage" \

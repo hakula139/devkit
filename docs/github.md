@@ -33,7 +33,7 @@ The [security settings](../.github/settings/security.json) define the secret sca
 
 ### Immutable releases
 
-Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable. The major tag, such as `v1`, has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
+Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable. The major tag has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
 
 ## Apply the branch ruleset
 

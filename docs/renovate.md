@@ -18,4 +18,4 @@ The preset's merge policy requires squash merging:
 - Daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates automerge with squash.
 - Every other update opens for review.
 
-A devkit major update opens a separate `devkit` PR that updates the major-tag references, such as `@v1`, `#v1`, and `github:hakula139/devkit/v1`. Full-version references and `flake.lock` stay unchanged. Run `nix flake update devkit` on that PR before merging it.
+A devkit major update opens a separate `devkit` PR that updates the major-tag references. Full-version references and `flake.lock` stay unchanged. Run `nix flake update devkit` on that PR before merging it.

@@ -94,6 +94,10 @@
             doctoc.enable = true;
             dprint.enable = true;
             editorconfig-checker.enable = true;
+            lychee = {
+              enable = true;
+              settings.flags = "--offline";
+            };
             markdownlint-cli2.enable = true;
             nixfmt.enable = true;
             nu-check.enable = true;

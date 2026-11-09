@@ -59,6 +59,8 @@ let
         lib.genAttrs
           [
             "markdownlint-cli2"
+            "ruff"
+            "ruff-format"
             "taplo"
           ]
           (
@@ -166,8 +168,7 @@ let
 
         # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
         ruff = ruffHook // {
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.ruff.package)
+          entry = configEntry config.hooks.ruff [
             "check"
             "--fix"
             "--force-exclude"
@@ -175,8 +176,7 @@ let
         };
 
         ruff-format = ruffHook // {
-          entry = lib.concatStringsSep " " [
-            (lib.getExe config.hooks.ruff-format.package)
+          entry = configEntry config.hooks.ruff-format [
             "format"
             "--force-exclude"
           ];

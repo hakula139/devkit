@@ -17,7 +17,7 @@ The shared hook configurations cover:
 | `editorconfig-checker`                                                   | EditorConfig properties            | `.editorconfig`                             |
 | `markdownlint-cli2`                                                      | Markdown                           | Shared defaults, `.markdownlint-cli2.jsonc` |
 | `prettier`                                                               | JavaScript, TypeScript, JSON, YAML | Shared defaults, `.prettierrc.json`         |
-| `ruff`, `ruff-format`                                                    | Python, type stubs, notebooks      | Ruff configuration                          |
+| `ruff`, `ruff-format`                                                    | Python, type stubs, notebooks      | `ruff.toml`                                 |
 | `shellcheck`                                                             | Every shell file except zsh        |                                             |
 | `shfmt`                                                                  | Every shell file, zsh included     |                                             |
 | `sort-file-contents`                                                     | The order of `.cspell/words.txt`   |                                             |
@@ -36,7 +36,7 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 The shared defaults apply only to the hook, so editors and scripts that run Prettier, markdownlint-cli2, or Taplo directly still need a project configuration file.
 
-Set `hooks.<name>.settings.configPath` to pass markdownlint-cli2, Prettier, or Taplo another `--config` file, relative to the checkout or absolute, or `""` to let the tool find its own. markdownlint-cli2 accepts only names ending in a supported name, such as `.markdownlint-cli2.jsonc`. A markdownlint-cli2 configuration with relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which replaces the shared rules. Re-enter the dev shell after adding or removing a project configuration file.
+Set `hooks.<name>.settings.configPath` to pass markdownlint-cli2, Prettier, Ruff, or Taplo another `--config` file, relative to the checkout or absolute, or `""` to let the tool find its own. markdownlint-cli2 accepts only names ending in a supported name, such as `.markdownlint-cli2.jsonc`. A markdownlint-cli2 configuration with relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which replaces the shared rules. Re-enter the dev shell after adding or removing a project configuration file.
 
 ### Exclude fixtures
 

@@ -114,7 +114,7 @@ hooks = {
 };
 ```
 
-Set Cargo flags in `hooks.clippy.settings` and lint levels in `Cargo.toml` `[lints]`.
+Set Cargo flags in `hooks.clippy.settings` and lint levels in `Cargo.toml` `[lints]`. clippy runs with `--locked --all-targets`, so commit `Cargo.lock` or replace `settings.extraArgs`.
 
 ### Check shell files
 

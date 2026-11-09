@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking changes
 
-- _(hooks)_ `preCommit` takes one `hooks` set and returns the dev shell, which runs every hook at commit time, and `nix.yml` runs them in CI with `nix develop -c run-hooks`. `devHooks` and the `check` and `shell` outputs are removed, and `nix flake check` no longer runs hooks. Add the shell to `devShells.default` and delete `checks.pre-commit = preCommit.check;`:
+- _(hooks)_ `preCommit` takes one `hooks` set and returns the dev shell, which runs every hook at commit time. `devHooks` and the `check` and `shell` outputs are removed, and `nix flake check` no longer runs hooks. `nix.yml` runs `nix develop -c run-hooks` on Linux and builds the dev shell on macOS, so `devShells.default` must include `preCommit`. Replace `preCommit.shell` with `preCommit` in `inputsFrom` and delete `checks.pre-commit = preCommit.check;`:
 
   ```nix
   devShells.default = pkgs.mkShell {
@@ -18,32 +18,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
   Move every `devHooks` entry into `hooks`, delete CI steps that ran a hook's tool or installed its lockfile only for that hook, and verify locally with `nix develop -c run-hooks` as well as `nix flake check`. ([#49](https://github.com/hakula139/devkit/pull/49))
 
-- _(hooks)_ A consumer's `args` and `excludes` append to the baseline's, and `lib.mkForce` replaces them, while any other value a consumer sets replaces the baseline's. Baseline flags are back in `args`, so a custom `entry` keeps them. Drop consumer `args` that repeat a baseline flag, since some tools reject a repeated flag. ([#49](https://github.com/hakula139/devkit/pull/49))
+- _(hooks)_ A consumer's `args` and `excludes` append to the baseline's, and `lib.mkForce` replaces them. A custom `entry` keeps the baseline's `args`, so move any baseline flag it changed into `args = lib.mkForce [ ... ]`. Drop consumer `args` that repeat a baseline flag, including `eslint`'s and `tsc`'s new ones, since some tools reject a repeated flag. ([#49](https://github.com/hakula139/devkit/pull/49))
 
-- _(hooks)_ An enabled `eslint` or `mypy` runs from the repository's pnpm or uv lockfile, so the custom `package`, `entry`, `files`, and `pass_filenames` that ran it that way can go. `eslint` and `clippy` fail on warnings, and `clippy` no longer passes `--offline`, takes Cargo flags through `hooks.clippy.settings`, and passes `args` to clippy after `--`. ([#49](https://github.com/hakula139/devkit/pull/49))
+- _(hooks)_ An enabled `eslint` or `mypy` runs from the repository's pnpm or uv lockfile, so the custom `package`, `entry`, `files`, and `pass_filenames` that ran it that way can go. mypy checks only the `files` that `[tool.mypy]` names, so list them there. ([#49](https://github.com/hakula139/devkit/pull/49))
 
-  Point `clippy` and `rustfmt` at the repository's toolchain:
-
-  ```nix
-  hooks = {
-    clippy.packageOverrides = {
-      cargo = rustToolchain;
-      clippy = rustToolchain;
-    };
-    rustfmt.packageOverrides = {
-      cargo = rustToolchain;
-      rustfmt = rustToolchain;
-    };
-  };
-  ```
+- _(hooks)_ `clippy` passes `--locked --all-targets`, so commit `Cargo.lock` or set `hooks.clippy.settings.extraArgs`. ([#49](https://github.com/hakula139/devkit/pull/49))
 
 ### Added
 
-- _(hooks)_ `run-hooks [hook-id...]` runs the enabled `pre-commit`, `pre-merge-commit`, and `pre-push` hooks on every tracked file, or only the named hooks, after installing the pnpm and uv lockfiles that `dk.nodeTool` and `dk.uvTool` hooks run from. ([#49](https://github.com/hakula139/devkit/pull/49))
-- _(hooks)_ `eslint`, `tsc`, `mypy`, `clippy`, and `rustfmt` work with `enable = true` alone, with ESLint and tsc running from the pnpm lockfile and mypy from the uv lockfile. Declare pnpm with `devEngines` in `package.json`, matching the major of `dk.nodeToolchain`'s pnpm, which changes only in a devkit major release. ([#49](https://github.com/hakula139/devkit/pull/49))
+- _(hooks)_ `run-hooks [hook-id...]` runs the enabled `pre-commit`, `pre-merge-commit`, and `pre-push` hooks on every tracked file, or only the named hooks, after installing the pnpm and uv lockfiles that `dk.nodeTool` and `dk.uvTool` hooks run from, so `pnpm-workspace.yaml` no longer needs `verifyDepsBeforeRun`. ([#49](https://github.com/hakula139/devkit/pull/49))
+- _(hooks)_ `tsc` works with `enable = true` alone, type-checking the project from the pnpm lockfile. Declare pnpm for `eslint` and `tsc` with `devEngines` in `package.json`, matching the major of `dk.nodeToolchain`'s pnpm, which changes only in a devkit major release. ([#49](https://github.com/hakula139/devkit/pull/49))
 
 ### Changed
 
+- _(hooks)_ ESLint and clippy fail on warnings, and clippy no longer runs with `--offline`. ([#49](https://github.com/hakula139/devkit/pull/49))
 - _(hooks)_ Prettier skips `pnpm-lock.yaml`, so a `.prettierignore` that lists only that file can go. ([#49](https://github.com/hakula139/devkit/pull/49))
 
 [3.0.0]: https://github.com/hakula139/devkit/compare/v2.0.0...v3.0.0

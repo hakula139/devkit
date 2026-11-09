@@ -1,5 +1,6 @@
 argjson
 automerges
+basenames
 cachix
 deadnix
 devkit

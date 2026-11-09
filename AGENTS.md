@@ -16,17 +16,19 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 ```text
 .
-├── .cspell/        # Project spelling dictionary
-├── .github/        # Composite actions, workflows, and GitHub configuration
-├── docs/           # Adoption guides and shared tooling reference
-├── nix/            # Nix library, hooks, builders, and private package overrides
-├── scripts/        # Repository administration helpers
-├── src/            # Exported Nushell executable sources
-├── CHANGELOG.md    # Release notes, one section per tag
-├── cliff.toml      # The shared git-cliff config that drafts each release section
-├── default.json    # The Renovate preset consumers extend
-├── flake.nix       # The exported `lib`, checks, and dev shell
-└── README.md       # Project overview and documentation index
+├── .cspell/                    # Project spelling dictionary
+├── .github/                    # Composite actions, workflows, and GitHub configuration
+├── docs/                       # Adoption guides and shared tooling reference
+├── nix/                        # Nix library, hooks, builders, and private package overrides
+├── scripts/                    # Repository administration helpers
+├── src/                        # Exported Nushell executable sources
+├── .markdownlint-cli2.jsonc    # The shared markdownlint-cli2 rules the hook applies
+├── .prettierrc.json            # The shared Prettier style, whose `overrides` match basenames only
+├── CHANGELOG.md                # Release notes, one section per tag
+├── cliff.toml                  # The shared git-cliff config that drafts each release section
+├── default.json                # The Renovate preset consumers extend
+├── flake.nix                   # The exported `lib`, checks, and dev shell
+└── README.md                   # Project overview and documentation index
 ```
 
 ## Rules for every change

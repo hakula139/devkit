@@ -147,7 +147,7 @@ Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugin
 Choose the release version according to the affected contract:
 
 - **Major:** A change breaks an existing caller of an action, reusable workflow, script, `lib` function, or flake output, such as removing, renaming, or newly requiring an input, secret, argument, or returned attribute. Moving the shared `cliff.toml` or changing its `header` also requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
-- **Minor:** New or stricter baseline hooks, including stricter shared hook defaults.
+- **Minor:** New or stricter baseline hooks or shared hook defaults.
 
 ### Roll back
 

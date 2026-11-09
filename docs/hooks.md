@@ -28,20 +28,14 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 
 - **cspell:** Add a `cspell.json` that names a project dictionary, such as `.cspell/words.txt`.
 - **doctoc:** Fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. In marked files, use inline links in headings so doctoc generates anchors matching GitHub.
-- **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 checks it with devkit's [shared rules](../.markdownlint-cli2.jsonc), including `<!-- dprint-ignore -->` blocks. Project `.markdownlint-cli2.jsonc` rules, at the root or in a subdirectory, override the shared rules one by one, while core `.markdownlint.jsonc` files replace them. Configured `globs` are ignored, since the hook supplies the file list.
+- **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 checks it with devkit's [shared rules](../.markdownlint-cli2.jsonc), including `<!-- dprint-ignore -->` blocks. Project `.markdownlint-cli2.jsonc` rules override them, core `.markdownlint.jsonc` files replace them, and configured `globs` are ignored.
 - **Prettier:** Uses devkit's [shared style](../.prettierrc.json) unless the source root contains `.prettierrc.json`.
 - **shellcheck:** Start the repository's `.envrc` with `# shellcheck shell=bash`, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
 - **Taplo:** Uses devkit's [shared formatting](../.taplo.toml) unless the source root contains `.taplo.toml`.
 
-The shared defaults reach only the hook, so a repository whose editor integration or package scripts run Prettier, markdownlint-cli2, or Taplo outside the hook keeps its own configuration file.
+The shared defaults apply only to the hook, so editors and scripts that run Prettier, markdownlint-cli2, or Taplo directly still need a project configuration file.
 
-### Choose a configuration file
-
-`hooks.<name>.settings.configPath` sets the file that `markdownlint-cli2`, `prettier`, and `taplo` receive as `--config`, in place of the defaults above. A relative path resolves from the checkout root, and an absolute path, such as a store path, also works. `""` passes no `--config`, so the tool finds its own configuration.
-
-markdownlint-cli2 resolves relative `customRules` and `markdownItPlugins` paths from the `--config` file's directory, so a project configuration that loads them fails to import them under the shared rules. Set `configPath = ".markdownlint-cli2.jsonc"` to make the project file the base, which drops the shared rules. markdownlint-cli2 accepts a file only when its name is or ends with a supported configuration name, as `docs.markdownlint-cli2.jsonc` ends with `.markdownlint-cli2.jsonc`.
-
-Each default is chosen from the files Git tracks when the dev shell is entered, so re-enter it after adding or removing a project configuration file. Until then, the hook keeps the old choice, so Prettier fails on a removed `.prettierrc.json` and Taplo warns and falls back to its built-in defaults.
+Set `hooks.<name>.settings.configPath` to pass markdownlint-cli2, Prettier, or Taplo another `--config` file, relative to the checkout or absolute, or `""` to let the tool find its own. A markdownlint-cli2 configuration with relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which replaces the shared rules, and its file name must end in a supported name such as `.markdownlint-cli2.jsonc`. Re-enter the dev shell after adding or removing a project configuration file.
 
 ### Exclude fixtures
 

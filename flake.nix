@@ -84,6 +84,24 @@
         pkgs = nixpkgs.legacyPackages.${system};
         dk = self.lib.mkLib pkgs;
 
+        scripts = lib.fileset.toSource {
+          root = ./.;
+          fileset = lib.fileset.unions [
+            ./.github/settings
+            ./cliff.toml
+            ./scripts
+          ];
+        };
+
+        nuScript =
+          name: runtimeInputs:
+          pkgs.writeShellApplication {
+            inherit name runtimeInputs;
+            text = ''
+              exec ${lib.getExe dk.nushell} --no-config-file ${scripts}/scripts/${name}.nu "$@"
+            '';
+          };
+
         preCommit = dk.preCommit {
           src = ./.;
           hooks = {
@@ -112,6 +130,20 @@
       in
       {
         # ------------------------------------------------------------------------------------------
+        # Packages
+        # ------------------------------------------------------------------------------------------
+        packages = {
+          changelog = nuScript "changelog" [
+            pkgs.gh
+            pkgs.git
+            pkgs.git-cliff
+          ];
+          github = nuScript "github" [
+            pkgs.gh
+          ];
+        };
+
+        # ------------------------------------------------------------------------------------------
         # Dev shell
         # ------------------------------------------------------------------------------------------
         devShells.default = pkgs.mkShell {
@@ -128,7 +160,7 @@
         # ------------------------------------------------------------------------------------------
         # Checks
         # ------------------------------------------------------------------------------------------
-        checks = {
+        checks = self.packages.${system} // {
           nu-tooling = pkgs.testers.testBuildFailure' {
             drv = dk.nuTests {
               src = ./tests;

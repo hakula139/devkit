@@ -34,7 +34,7 @@ def main [
   }
 
   (
-    ^nix run "nixpkgs#git-cliff" --
+    ^git-cliff
       --offline
       --github-repo $repo
       --config $config

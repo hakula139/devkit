@@ -43,19 +43,13 @@ GitHub only lets a called workflow downgrade the caller's token, so the release 
 
 ### Draft a changelog
 
-Run the draft script from the target repository's root with authenticated `gh`, Nushell, and Nix available, replacing `<devkit-source>` with the local devkit directory:
+Run the draft command from the target repository's root with an authenticated `gh`:
 
 ```bash
-<devkit-source>/scripts/changelog.nu v1.2.3
+nix run github:hakula139/devkit/v1#changelog -- v1.2.3
 ```
 
-The script uses the repository's `cliff.toml` when present and otherwise uses devkit's shared configuration. Prerelease tags automatically select the range since the previous tag.
-
-When the repository's git-cliff template supports highlights, pass a Markdown file to the script:
-
-```bash
-<devkit-source>/scripts/changelog.nu v1.2.3 --highlights highlights.md
-```
+The command uses the repository's `cliff.toml` when present and otherwise uses devkit's shared configuration. Prerelease tags automatically select the range since the previous tag. When the repository's git-cliff template supports highlights, pass a Markdown file with `--highlights <file>`.
 
 ### Recover a release
 
@@ -104,21 +98,13 @@ publish:
 
 `assets` takes newline-separated globs relative to the repository root, and the step fails when a named file is missing or a glob matches nothing. Name each file explicitly, since a glob that matches only some archives publishes a partial set.
 
-### Republish release notes
-
-Run the following from a checkout of the target repository with an authenticated `gh`, Nushell, and [`parse-changelog`](https://github.com/taiki-e/parse-changelog#installation) on `PATH`:
-
-```bash
-<devkit-source>/scripts/github.nu release-notes OWNER/REPO v1.2.3
-```
-
 ## Release devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `./scripts/changelog.nu v1.2.3` and skipping the version bump because devkit publishes no package.
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `nix run .#changelog -- v1.2.3` and skipping the version bump because devkit's packages carry no version.
 
 Choose the release version according to the affected contract:
 
-- **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since `@v1` and `#v1` references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Moving the shared `cliff.toml` or changing its `header` also requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
+- **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since `@v1` and `#v1` references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Changing the shared `cliff.toml`'s `header` requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
 - **Minor:** New or stricter baseline hooks or shared hook defaults. Additions and newer tool versions that `lib` selects are minor too.
 
 ### Roll back

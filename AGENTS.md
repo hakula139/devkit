@@ -32,7 +32,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── CHANGELOG.md                # Release notes, one section per tag
 ├── cliff.toml                  # The shared git-cliff config that drafts each release section
 ├── default.json                # The Renovate preset consumers extend
-├── flake.nix                   # The exported `lib`, checks, and dev shell
+├── flake.nix                   # The exported `lib`, script packages, checks, and dev shell
 └── README.md                   # Project overview and documentation index
 ```
 

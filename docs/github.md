@@ -9,7 +9,7 @@ Run each command with an authenticated `gh`, passing the target repository as `O
 Apply repository and workflow settings, security features, and immutable releases:
 
 ```bash
-nix run github:hakula139/devkit/v2#github -- settings OWNER/REPO
+nix run github:hakula139/devkit/v1#github -- settings OWNER/REPO
 ```
 
 ### Repository and workflow settings
@@ -33,7 +33,7 @@ The [security settings](../.github/settings/security.json) define the secret sca
 
 ### Immutable releases
 
-Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable. The major tag, such as `v2`, has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
+Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable. The major tag, such as `v1`, has no release of its own, so `tag.yml` and a [rollback](releasing.md#roll-back) can still move it, and no tag ruleset is needed.
 
 ## Apply the branch ruleset
 
@@ -47,7 +47,7 @@ The ruleset blocks deleting and force-pushing the default branch, and requires a
 Apply [the main ruleset](../.github/settings/rulesets/main.json) to a repository:
 
 ```bash
-nix run github:hakula139/devkit/v2#github -- ruleset OWNER/REPO
+nix run github:hakula139/devkit/v1#github -- ruleset OWNER/REPO
 ```
 
 The helper replaces the repository's ruleset with the same `name` as the JSON, or creates one when none exists. For project-specific required checks, pass `--config` with a repository-maintained JSON file.
@@ -59,7 +59,7 @@ Create or update the [shared labels](../.github/settings/labels.json) while pres
 Use lowercase `area: <component>` labels for repository-defined components, and apply multiple area labels to an issue when needed. Pass component names without the prefix, or omit them to apply only the shared labels:
 
 ```bash
-nix run github:hakula139/devkit/v2#github -- labels OWNER/REPO cli parser
+nix run github:hakula139/devkit/v1#github -- labels OWNER/REPO cli parser
 ```
 
 ## Inherit the community files

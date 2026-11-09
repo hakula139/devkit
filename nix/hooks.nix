@@ -83,11 +83,15 @@ let
   # ------------------------------------------------------------------------------------------------
   # Hook defaults
   # ------------------------------------------------------------------------------------------------
-  ruffTypes = {
+  # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
+  ruffHook = {
+    args = [ "--force-exclude" ];
+    require_serial = true;
     types = [ "file" ];
     types_or = [
       "python"
       "pyi"
+      "jupyter"
     ];
   };
 
@@ -160,8 +164,8 @@ let
           };
         };
 
-        ruff = ruffTypes;
-        ruff-format = ruffTypes;
+        ruff = ruffHook;
+        ruff-format = ruffHook;
 
         shellcheck = {
           exclude_types = [

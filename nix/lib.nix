@@ -10,11 +10,12 @@
 
 let
   lockedTool =
-    runtimeInputs: runner: command:
+    runtimeInputs: runner: prepare: command:
     pkgs.writeShellApplication {
       inherit runtimeInputs;
       name = command;
       text = "exec ${runner} ${command} \"$@\"";
+      passthru.prepare = pkgs.writeShellApplication (prepare // { inherit runtimeInputs; });
     };
 
   writeNuBin =
@@ -30,15 +31,27 @@ let
     pnpm = pkgs.pnpm_12;
   };
 
+  nodeTool = lockedTool (builtins.attrValues nodeToolchain) "pnpm exec" {
+    name = "pnpm-install";
+    text = "exec pnpm install --frozen-lockfile";
+  };
+
+  uvTool = lockedTool [ pkgs.uv ] "uv run --locked" {
+    name = "uv-sync";
+    text = "exec uv sync --locked";
+  };
+
   nu-check = writeNuBin "nu-check" ../src/nu-check.nu;
   nu-test = writeNuBin "nu-test" ../src/nu-test.nu;
 in
 {
   inherit
+    nodeTool
     nodeToolchain
     nu-check
     nu-test
     nushell
+    uvTool
     ;
 
   preCommit = import ./hooks.nix {
@@ -46,15 +59,11 @@ in
       pkgs
       git-hooks-nix
       actionlint
+      nodeTool
       nu-check
+      uvTool
       ;
   };
-
-  nodeTool = lockedTool (builtins.attrValues nodeToolchain) "pnpm exec";
-
-  uvTool = lockedTool [
-    pkgs.uv
-  ] "uv run --locked";
 
   nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
 

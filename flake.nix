@@ -153,7 +153,7 @@
             dk.nu-test
           ];
           inputsFrom = [
-            preCommit.shell
+            preCommit
           ];
         };
 
@@ -173,7 +173,6 @@
               "2 passed, 1 failed"
             ];
           };
-          pre-commit = preCommit.check;
         };
 
         # ------------------------------------------------------------------------------------------

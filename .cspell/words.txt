@@ -2,6 +2,7 @@ argjson
 automerges
 basenames
 cachix
+clippy
 deadnix
 devkit
 direnv
@@ -14,6 +15,7 @@ fetchpatch
 fileset
 hakula
 intraword
+lockfiles
 maxlevel
 mktemp
 mypy
@@ -21,13 +23,14 @@ nixfmt
 nixos
 nixpkgs
 notitle
-nufmt
 nuon
+passthru
 pkgs
 pname
 postprocessors
 prek
 pypi
+pyproject
 pythonpath
 realise
 rhysd

@@ -53,13 +53,30 @@ The command uses the repository's `cliff.toml` when present and otherwise uses d
 
 ### Recover a release
 
-Releases that use `tagged-ci` require a passing push or dispatched run of `ci.yml` on the tagged commit. Rerun failed CI jobs or dispatch `gh workflow run ci.yml --ref v1.2.3`, then rerun the failed release jobs once CI passes. Other workflows must satisfy their own validation gates before publication.
+Releases that use `tagged-ci` require a passing push or dispatched run of `ci.yml` on the tagged commit. Rerun the failed CI jobs or dispatch a run on the tag:
+
+```bash
+gh workflow run ci.yml --ref v1.2.3
+```
+
+Rerun the failed release jobs once CI passes. Other workflows must satisfy their own validation gates before publication.
 
 To restore a deleted pin:
 
 1. Check out the tag on each system it pins (`x86_64-linux` and `aarch64-darwin`).
-2. Build with `nix build .#default.out --no-link --print-out-paths`.
-3. Push the output with `cachix push hakula <path>` and pin it with `cachix pin hakula <repository>-<tag>-<system> <path>`.
+
+2. Build the package:
+
+   ```bash
+   nix build .#default.out --no-link --print-out-paths
+   ```
+
+3. Push the output and pin it:
+
+   ```bash
+   cachix push hakula <path>
+   cachix pin hakula <repository>-<tag>-<system> <path>
+   ```
 
 ### Write your own release workflow
 
@@ -100,12 +117,27 @@ publish:
 
 ## Release devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), drafting with `nix run .#changelog -- v1.2.3` and skipping the version bump because devkit's packages carry no version.
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), skipping the version bump because devkit's packages carry no version, and draft the changelog with:
 
-Choose the release version according to the affected contract:
+```bash
+nix run .#changelog -- v1.2.3
+```
 
-- **Major:** A change that requires an existing caller to change, such as removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output, or raising the [minimum nixpkgs release](flake.md). Since major-tag references reach callers' default branches without a PR, an action or reusable workflow change that can fail an existing caller is major too, as is a Renovate preset change that lets more updates merge without review or changes the required merge strategy. Changing the shared `cliff.toml`'s `header` requires a major release, since `--prepend` replaces an existing header only when it matches exactly.
-- **Minor:** New or stricter baseline hooks or shared hook defaults. Additions and newer tool versions that `lib` selects are minor too.
+### Choose the version
+
+Consumers follow the major tag without a PR, so classify each change by its effect on an existing caller and release at the highest level any change reaches.
+
+- **Major:** An existing caller's configuration stops working or must change.
+  - Removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output.
+  - Raising the [minimum nixpkgs release](flake.md).
+  - Raising the major version of `nodeToolchain`'s Node.js or pnpm, which fails consumers' [`devEngines`](hooks.md#declare-pnpm) ranges.
+  - An action or reusable workflow change that can fail a caller's run other than through hook findings.
+  - A Renovate preset change that lets more updates merge without review or changes the required merge strategy.
+  - Changing the shared `cliff.toml`'s `header`, since `--prepend` replaces an existing header only when it matches exactly.
+- **Minor:** Callers keep working unchanged, even when new checks report findings.
+  - New or stricter baseline hooks or shared hook defaults.
+  - Additions and newer tool versions that `lib` selects.
+- **Patch:** Everything else, such as fixes that keep every contract.
 
 ### Roll back
 

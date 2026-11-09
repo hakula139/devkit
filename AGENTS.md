@@ -48,6 +48,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 ```bash
 nix flake check --all-systems
+nix develop -c run-hooks
 ```
 
 ## Documentation maintenance

@@ -164,11 +164,20 @@ let
 
         # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
         ruff = ruffHook // {
-          entry = "${lib.getExe config.hooks.ruff.package} check --fix --force-exclude";
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.ruff.package)
+            "check"
+            "--fix"
+            "--force-exclude"
+          ];
         };
 
         ruff-format = ruffHook // {
-          entry = "${lib.getExe config.hooks.ruff-format.package} format --force-exclude";
+          entry = lib.concatStringsSep " " [
+            (lib.getExe config.hooks.ruff-format.package)
+            "format"
+            "--force-exclude"
+          ];
         };
 
         shellcheck = {

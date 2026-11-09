@@ -83,9 +83,7 @@ let
   # ------------------------------------------------------------------------------------------------
   # Hook defaults
   # ------------------------------------------------------------------------------------------------
-  # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
   ruffHook = {
-    args = [ "--force-exclude" ];
     require_serial = true;
     types = [ "file" ];
     types_or = [
@@ -164,8 +162,14 @@ let
           };
         };
 
-        ruff = ruffHook;
-        ruff-format = ruffHook;
+        # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
+        ruff = ruffHook // {
+          entry = "${lib.getExe config.hooks.ruff.package} check --fix --force-exclude";
+        };
+
+        ruff-format = ruffHook // {
+          entry = "${lib.getExe config.hooks.ruff-format.package} format --force-exclude";
+        };
 
         shellcheck = {
           exclude_types = [

@@ -198,11 +198,13 @@ in
 
   shell = pkgs.mkShell {
     # Listed directly, the hook packages' setup hooks would set the consumer's PYTHONPATH.
+    # A colliding executable keeps the first package's, matching the PATH order of a plain list.
     packages = [
       (pkgs.buildEnv {
         name = "pre-commit-hook-tools";
         paths = dev.enabledPackages;
         pathsToLink = [ "/bin" ];
+        ignoreCollisions = true;
       })
       dev.config.package
     ];

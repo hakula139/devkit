@@ -34,19 +34,9 @@ let
     plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
   };
 
-  # Prettier resolves `overrides` globs from the config file's directory, so a project config must
-  # stay in the checkout.
-  prettierConfig =
-    if builtins.pathExists "${src}/.prettierrc.json" then
-      ".prettierrc.json"
-    else
-      "${../.prettierrc.json}";
-
-  taploConfig =
-    if builtins.pathExists "${src}/.taplo.toml" then
-      "${src}/.taplo.toml"
-    else
-      "${pkgs.writeText "taplo.toml" ""}";
+  # A project config stays checkout-relative, since Prettier resolves `overrides` globs from the
+  # config file's directory.
+  projectConfig = file: shared: if builtins.pathExists "${src}/${file}" then file else "${shared}";
 
   # ------------------------------------------------------------------------------------------------
   # Hook options
@@ -79,6 +69,7 @@ let
                 imports = [ hookModule ];
                 options.settings.configPath = lib.mkOption {
                   type = lib.types.str;
+                  default = "";
                   description = ''
                     Configuration file path, relative to the checkout root or absolute.
                     An empty string passes no `--config`, so ${name} finds its own configuration.
@@ -157,7 +148,7 @@ let
         prettier = {
           files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
           settings = {
-            configPath = prettierConfig;
+            configPath = projectConfig ".prettierrc.json" ../.prettierrc.json;
             no-config = config.hooks.prettier.settings.configPath == "";
             no-editorconfig = true;
           };
@@ -187,7 +178,7 @@ let
 
         taplo = {
           entry = configEntry config.hooks.taplo [ "fmt" ];
-          settings.configPath = taploConfig;
+          settings.configPath = projectConfig ".taplo.toml" ../.taplo.toml;
         };
 
         trim-trailing-whitespace = {

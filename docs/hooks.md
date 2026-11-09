@@ -20,7 +20,7 @@ The shared hook configurations cover:
 | `shellcheck`                                                             | Every shell file except zsh        |                                             |
 | `shfmt`                                                                  | Every shell file, zsh included     |                                             |
 | `sort-file-contents`                                                     | The order of `.cspell/words.txt`   |                                             |
-| `taplo`                                                                  | TOML                               | `.taplo.toml`                               |
+| `taplo`                                                                  | TOML                               | Shared defaults, `.taplo.toml`              |
 
 git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines each hook's settings.
 
@@ -31,9 +31,9 @@ git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/bl
 - **dprint and markdownlint-cli2:** dprint formats Markdown, and markdownlint-cli2 checks it with devkit's [shared rules](../.markdownlint-cli2.jsonc), including `<!-- dprint-ignore -->` blocks. Project `.markdownlint-cli2.jsonc` rules, at the root or in a subdirectory, override the shared rules one by one, while core `.markdownlint.jsonc` files replace them. Configured `globs` are ignored, since the hook supplies the file list.
 - **Prettier:** Uses devkit's [shared style](../.prettierrc.json) unless the source root contains `.prettierrc.json`.
 - **shellcheck:** Start the repository's `.envrc` with `# shellcheck shell=bash`, since prek tags `.envrc` as a bash file and shellcheck rejects one without a shebang or shell directive.
-- **Taplo:** Uses the source root's `.taplo.toml` when present and otherwise runs with its defaults.
+- **Taplo:** Uses devkit's [shared formatting](../.taplo.toml) unless the source root contains `.taplo.toml`.
 
-The shared defaults reach only the hook, so a repository whose editor integration or package scripts run Prettier or markdownlint-cli2 outside the hook keeps its own configuration file.
+The shared defaults reach only the hook, so a repository whose editor integration or package scripts run Prettier, markdownlint-cli2, or Taplo outside the hook keeps its own configuration file.
 
 ### Choose a configuration file
 
@@ -41,7 +41,7 @@ The shared defaults reach only the hook, so a repository whose editor integratio
 
 markdownlint-cli2 resolves relative `customRules` and `markdownItPlugins` paths from the `--config` file's directory, so a project configuration that loads them fails to import them under the shared rules. Set `configPath = ".markdownlint-cli2.jsonc"` to make the project file the base, which drops the shared rules. markdownlint-cli2 accepts a file only when its name is or ends with a supported configuration name, as `docs.markdownlint-cli2.jsonc` ends with `.markdownlint-cli2.jsonc`.
 
-Each default is chosen from the files Git tracks when the dev shell is entered, so re-enter it after adding or removing a project configuration file. Until then, Prettier fails on a removed `.prettierrc.json`. Taplo reads a copy of `.taplo.toml` taken at the same time, so re-enter the shell after editing that file too.
+Each default is chosen from the files Git tracks when the dev shell is entered, so re-enter it after adding or removing a project configuration file. Until then, the hook keeps the old choice, so Prettier fails on a removed `.prettierrc.json` and Taplo warns and falls back to its built-in defaults.
 
 ### Exclude fixtures
 

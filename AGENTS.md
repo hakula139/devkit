@@ -24,6 +24,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── src/                        # Exported Nushell executable sources
 ├── .markdownlint-cli2.jsonc    # The shared markdownlint-cli2 rules the hook applies
 ├── .prettierrc.json            # The shared Prettier style, whose `overrides` match basenames only
+├── .taplo.toml                 # The shared Taplo formatting the hook applies
 ├── CHANGELOG.md                # Release notes, one section per tag
 ├── cliff.toml                  # The shared git-cliff config that drafts each release section
 ├── default.json                # The Renovate preset consumers extend

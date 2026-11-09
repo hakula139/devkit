@@ -50,7 +50,7 @@ From a devkit checkout, apply [the main ruleset](../.github/settings/rulesets/ma
 ./scripts/github.nu ruleset OWNER/REPO
 ```
 
-The helper replaces the named `main` ruleset. For project-specific required checks, pass `--config` with a repository-maintained JSON file.
+The helper replaces the repository's ruleset with the same `name` as the JSON, or creates one when none exists. For project-specific required checks, pass `--config` with a repository-maintained JSON file.
 
 ## Set up the labels
 

@@ -46,6 +46,6 @@ taplo
 tera
 testlib
 toplevel
-waka
+wakatime
 worktree
 worktrees

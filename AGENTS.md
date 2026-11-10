@@ -40,6 +40,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 - Run the pre-commit hooks on every commit. In each new checkout or worktree, run `nix develop -c true` once to install them. Never bypass the hooks with `--no-verify` or `PRE_COMMIT_ALLOW_NO_CONFIG`, and fix the cause whenever a hook, test, or CI job fails.
 - Wrap code and comments at 100 columns, counting the indent, end section banners at column 100, and keep a single-line string literal whole at any length.
+- Every consumer inherits devkit's choices, so redesign each construct the change touches to its ecosystem's simple, conventional idiom, consistent with the rest of devkit. Reach for the upstream tool's own option first and, in Nix, a nixpkgs `lib` primitive next. Keep a non-standard choice only for a concrete reason, recorded in a comment at the choice or in the docs page that owns its contract.
 - Update whatever the change makes stale, including adoption snippets and the docs page that owns the changed contract.
 - Workflows use `$/` self-repository references for both actions and job-level reusable workflow calls. `$/` resolves against the repository of the file it appears in at the running commit, so a caller at any ref runs that ref's actions and workflows. Do not replace it with `./` or a hard-coded tag.
 - Link only public material in issues, pull requests, and their comments, and never reference local working notes, private paths, or private repositories.

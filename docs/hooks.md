@@ -6,6 +6,8 @@
 
 Entering the dev shell from a Git checkout installs the hooks. The configuration path must be absent or a symlink into the Nix store.
 
+The hook installation reports on stderr, so `nix develop -c <cmd>` writes only the command's output to stdout. A repository's own `shellHook` must keep stdout clean too.
+
 `run-hooks` runs the enabled `pre-commit`, `pre-merge-commit`, and `pre-push` hooks on every tracked file, or only the hooks whose IDs it receives, after installing the lockfiles of [lockfile-pinned tools](#run-a-lockfile-pinned-tool). `nix flake check` runs no hooks, so verify a change with `run-hooks` as well, as [`nix.yml`](ci.md) does in CI:
 
 ```bash

@@ -105,6 +105,7 @@ pkgs.mkShell {
           --git-common-dir
       )
 
+      # Callers of `nix develop -c` read the command's stdout, so the install reports on stderr.
       (
         set -e
         ${lib.getExe pkgs.flock} 9
@@ -128,7 +129,7 @@ pkgs.mkShell {
               ]) hookTypes
             )}
         ''}
-      ) 9>"$common/git-hooks.lock"
+      ) 9>"$common/git-hooks.lock" >&2
     fi
   '';
 }

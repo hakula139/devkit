@@ -1,0 +1,118 @@
+name: Rust
+
+on:
+  workflow_call:
+    inputs:
+      all-features:
+        description: Pass `--all-features` to the test and MSRV commands
+        type: boolean
+        default: false
+      coverage:
+        description: Measure test coverage with `cargo llvm-cov` and upload it to Codecov
+        type: boolean
+        default: true
+      macos:
+        description: Also run the macOS leg
+        type: boolean
+        default: true
+      msrv:
+        description: Also check the MSRV in the `msrv` dev shell
+        type: boolean
+        default: false
+    secrets:
+      CACHIX_AUTH_TOKEN:
+        description: Upload token for the `hakula` Cachix cache
+      CODECOV_TOKEN:
+        description: Upload token for Codecov
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust Check (${{ matrix.os }})
+    runs-on: ${{ matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.macos && '["Linux", "macOS"]' || '["Linux"]') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Nix
+        uses: $/.github/actions/setup-nix
+        with:
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cmd-format: nix develop -c {0}
+          save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+      - name: Run clippy
+        if: ${{ matrix.os == 'macOS' }}
+        run: nix develop -c cargo clippy --locked --all-targets
+
+      - name: Run tests
+        if: ${{ inputs.coverage }}
+        run: |
+          nix develop -c cargo llvm-cov \
+            --locked \
+            ${{ inputs.all-features && '--all-features' || '' }} \
+            --lcov \
+            --output-path lcov.info
+
+      - name: Upload to Codecov
+        if: ${{ inputs.coverage }}
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+
+      - name: Run doc tests
+        if: ${{ inputs.coverage }}
+        run: |
+          nix develop -c cargo test \
+            --locked \
+            --doc \
+            ${{ inputs.all-features && '--all-features' || '' }}
+
+      - name: Run tests
+        if: ${{ !inputs.coverage }}
+        run: |
+          nix develop -c cargo test \
+            --locked \
+            ${{ inputs.all-features && '--all-features' || '' }}
+
+  msrv:
+    name: MSRV Check
+    if: ${{ inputs.msrv }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Nix
+        uses: $/.github/actions/setup-nix
+        with:
+          cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          cmd-format: nix develop .#msrv -c {0}
+          save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+      - name: Check MSRV
+        run: |
+          nix develop .#msrv -c cargo check \
+            --locked \
+            --workspace \
+            --all-targets \
+            ${{ inputs.all-features && '--all-features' || '' }}

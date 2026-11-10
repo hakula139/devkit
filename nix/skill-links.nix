@@ -13,10 +13,20 @@ let
     ".testlib.nu"
   ];
 
-  packagedFile = file: !lib.any (suffix: lib.hasSuffix suffix file.name) skippedSuffixes;
+  packagedFile = name: !lib.any (suffix: lib.hasSuffix suffix name) skippedSuffixes;
+
+  skillEntry =
+    skill:
+    if lib.isPath skill then
+      {
+        name = baseNameOf skill;
+        src = skill;
+      }
+    else
+      skill;
 in
 {
-  inherit packagedFile;
+  inherit packagedFile skillEntry;
 
   skillDirectoriesOption = {
     type = lib.types.listOf lib.types.str;
@@ -29,9 +39,9 @@ in
 
   skillSource =
     skill:
-    lib.fileset.toSource {
-      root = skill;
-      fileset = lib.fileset.fileFilter packagedFile skill;
+    lib.cleanSourceWith {
+      inherit (skillEntry skill) name src;
+      filter = path: type: type == "directory" || packagedFile (baseNameOf path);
     };
 
   skillLinks =

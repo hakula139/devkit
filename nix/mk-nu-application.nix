@@ -19,11 +19,11 @@
 
 let
   inherit (pkgs) lib;
-  inherit (import ./skill-links.nix { inherit lib; }) packagedFile skillSource;
+  inherit (import ./skill-links.nix { inherit lib; }) packagedFile skillEntry skillSource;
 
   source = lib.fileset.toSource {
     root = src;
-    fileset = lib.fileset.fileFilter (file: file.hasExt "nu" && packagedFile file) src;
+    fileset = lib.fileset.fileFilter (file: file.hasExt "nu" && packagedFile file.name) src;
   };
 
   pathArgs = lib.optionalString (
@@ -46,8 +46,8 @@ pkgs.stdenvNoCC.mkDerivation {
   ''
   + lib.concatMapStrings (skill: ''
     mkdir -p $out/share/skills
-    cp -r ${skillSource skill} $out/share/skills/${baseNameOf skill}
-  '') skills
+    cp -r ${skillSource skill} $out/share/skills/${skill.name}
+  '') (map skillEntry skills)
   + ''
     makeWrapper ${lib.getExe nushell} $out/bin/${entry} \
       --add-flags "--no-config-file $out/share/${pname}/${entry}" \

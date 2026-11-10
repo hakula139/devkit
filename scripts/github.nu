@@ -7,6 +7,16 @@
 const SETTINGS_DIR = path self "../.github/settings"
 const ACTIONS_APP_ID = 15368
 
+# Bind a required check to the app in its trailing @APP-ID, or to GitHub Actions without one.
+def required-check [check: string]: nothing -> record {
+  let app_check = ($check | parse --regex '^(?<context>.+)@(?<id>\d+)$')
+  if ($app_check | is-empty) {
+    {context: $check, integration_id: $ACTIONS_APP_ID}
+  } else {
+    {context: $app_check.0.context, integration_id: ($app_check.0.id | into int)}
+  }
+}
+
 # Show the repository administration commands.
 def main [] {
   help main
@@ -98,16 +108,6 @@ def "main ruleset" [
       --method $method
       --input -
   )
-}
-
-# Bind a required check to the app in its trailing @APP-ID, or to GitHub Actions without one.
-def required-check [check: string]: nothing -> record {
-  let app_check = ($check | parse --regex '^(?<context>.+)@(?<id>\d+)$')
-  if ($app_check | is-empty) {
-    {context: $check, integration_id: $ACTIONS_APP_ID}
-  } else {
-    {context: $app_check.0.context, integration_id: ($app_check.0.id | into int)}
-  }
 }
 
 # Create or update the shared labels.

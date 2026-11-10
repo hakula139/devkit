@@ -53,13 +53,13 @@ nix run github:hakula139/devkit/v3#github -- ruleset OWNER/REPO
 
 The helper replaces the repository's ruleset with the same `name` as the template, or creates one when none exists, so rerunning it picks up template changes.
 
-To require checks that another app reports, list them after the repository as `<context>@<app-id>`, such as Codecov's `codecov/patch` from app `254`:
+To require checks that another app reports, list them after the repository as `CONTEXT@APP-ID`, taking the ID from `gh api apps/<slug> --jq .id`. For example, Codecov reports `codecov/patch` as app `254`:
 
 ```bash
 nix run github:hakula139/devkit/v3#github -- ruleset OWNER/REPO codecov/patch@254
 ```
 
-A check without `@<app-id>` binds to GitHub Actions. Gate the repository's own Actions jobs through `CI Result`'s `needs`, as the [CI workflow](ci.md) describes, so the ruleset keeps requiring `CI Result` alone from Actions.
+A check without `@APP-ID` binds to GitHub Actions. Gate the repository's own Actions jobs through `CI Result`'s `needs`, as the [CI workflow](ci.md) describes, so the ruleset keeps requiring `CI Result` alone from Actions.
 
 ## Set up the labels
 

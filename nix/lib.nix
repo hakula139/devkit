@@ -54,7 +54,7 @@ in
     uvTool
     ;
 
-  preCommit = import ./hooks.nix {
+  preCommit = import ./hooks {
     inherit
       pkgs
       git-hooks-nix

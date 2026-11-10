@@ -95,14 +95,25 @@
           ];
         };
 
+        nuWrapper = import ./nix/nu-wrapper.nix {
+          inherit pkgs;
+          inherit (dk) nushell;
+        };
+
         nuScript =
           name: runtimeInputs:
-          pkgs.writeShellApplication {
-            inherit name runtimeInputs;
-            text = ''
-              exec ${lib.getExe dk.nushell} --no-config-file ${scripts}/scripts/${name}.nu "$@"
-            '';
-          };
+          pkgs.runCommand name
+            {
+              nativeBuildInputs = [
+                pkgs.makeShellWrapper
+              ];
+              meta.mainProgram = name;
+            }
+            (nuWrapper {
+              bin = "$out/bin/${name}";
+              script = "${scripts}/scripts/${name}.nu";
+              inherit runtimeInputs;
+            });
 
         preCommit = dk.preCommit {
           src = ./.;
@@ -162,7 +173,7 @@
             };
             expectedBuilderLogEntries = [
               "FAIL ./nu-tooling.test.nu: test fails on purpose"
-              "2 passed, 1 failed"
+              "3 passed, 1 failed"
             ];
           };
         };

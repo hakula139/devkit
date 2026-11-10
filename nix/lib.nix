@@ -20,11 +20,24 @@ let
       passthru.prepare = pkgs.writeShellApplication (prepare // { inherit runtimeInputs; });
     };
 
+  nuWrapper = import ./nu-wrapper.nix { inherit pkgs nushell; };
+
   writeNuBin =
-    name:
-    pkgs.writers.makeScriptWriter {
-      interpreter = "${pkgs.lib.getExe nushell} --no-config-file";
-    } "/bin/${name}";
+    name: script:
+    pkgs.runCommand name
+      {
+        nativeBuildInputs = [
+          pkgs.makeShellWrapper
+        ];
+        meta.mainProgram = name;
+      }
+      ''
+        install -D -m 0644 ${script} $out/share/${name}/${name}
+        ${nuWrapper {
+          bin = "$out/bin/${name}";
+          script = "$out/share/${name}/${name}";
+        }}
+      '';
 
   actionlint = pkgs.callPackage ./packages/actionlint.nix { };
 

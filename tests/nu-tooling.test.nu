@@ -14,6 +14,16 @@ def "test reports nu-check errors" [] {
   assert str contains $result.stderr $"($file):1:"
 }
 
+def "test rejects a flag argument that Nushell would run as code" [] {
+  let marker = ($env.TMPDIR | path join "marker")
+
+  let result = (^nu-check $"--help;^touch ($marker)" | complete)
+
+  assert equal $result.exit_code 1
+  assert str contains $result.stderr "must be --name or --name=value"
+  assert not ($marker | path exists)
+}
+
 # `checks.nu-tooling` expects this failure, which shows that the runner reports one.
 def "test fails on purpose" [] {
   assert false

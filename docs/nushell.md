@@ -20,6 +20,7 @@ checks.tests = dk.nuTests {
 [Nushell test runner](nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` packages the application as follows:
 
 - Reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`.
+- Exits 1 before running the script when an argument starting with `--` is anything other than `--`, `--<name>`, or `--<name>=<value>`, where `<name>` is a letter followed by letters, digits, and hyphens. Nushell splices the arguments into the `main` call as source text and leaves the part of such an argument before any `=` unquoted, so `--help;cmd` would run `cmd`. An operand that may start with `--` has to be passed in another form, such as an absolute path.
 - Packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`.
 - Copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill.
 - Sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.

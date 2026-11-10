@@ -32,6 +32,7 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
             exit 1
           fi
+
           if [[ -f .claude-plugin/plugin.json ]]; then
             plugin_version=$(jq -r '.version // empty' .claude-plugin/plugin.json)
             if [[ -n "$plugin_version" && "$plugin_version" != "$version" ]]; then

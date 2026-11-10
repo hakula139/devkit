@@ -54,9 +54,9 @@ Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to
 
 ## Language jobs
 
-`nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. Each job's id names what it checks, and its `name` is that subject followed by `Check`, as in `MSRV Check`, with `(${{ matrix.os }})` after it for an OS matrix. A blank line separates a job's settings from its `steps`.
+`nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. Each job's id names what it checks, and its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix. A blank line separates a job's settings from its `steps`.
 
-A check belongs in `nix flake check` only when it runs offline on dependencies that Nix supplies without a hash to maintain and needs no build cache, since the build sandbox has no network, a fixed-output dependency hash would break on every Renovate lockfile update, and a sandbox build compiles every dependency again on each change. `checks.tests = dk.nuTests { ... }` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job, while every other language's tests run in one.
+A check belongs in `nix flake check` only when it runs offline on dependencies that Nix supplies without a hash to maintain and needs no build cache, since the build sandbox has no network, a fixed-output dependency hash would break on every Renovate lockfile update, and a sandbox build compiles every dependency again on each change. `dk.nuTests` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job, while every other language's tests run in one.
 
 Every job runs its commands in the default dev shell, which `nix.yml` requires to hold every hook tool and caches from the default branch, unless the job needs another toolchain, as the MSRV job does. Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while the lockfile assertions `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a separate Windows job that installs its toolchain natively and lists it in `CI Result`'s `needs`, leaving the Nix jobs unchanged.
 
@@ -77,14 +77,20 @@ python:
 
     - name: Run tests
       run: nix develop -c uv run --locked pytest
+
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v7
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage.xml
 ```
 
-`uv run --locked` syncs the environment, so the job needs no install step. uv reads its interpreter settings from [`[tool.uv]`](hooks.md#declare-uv), and pytest reads its flags from `pyproject.toml`:
+`uv run --locked` syncs the environment, so the job needs no install step. uv reads its interpreter settings from [`[tool.uv]`](hooks.md#declare-uv), and pytest reads its flags from `pyproject.toml`, where `--cov` needs `pytest-cov` in the `dev` group:
 
 ```toml
 [tool.pytest]
 minversion = "9.0"
-addopts = ["--quiet"]
+addopts = ["--quiet", "--cov", "--cov-report=xml"]
 strict = true
 testpaths = ["tests"]
 ```
@@ -111,9 +117,30 @@ node:
 
     - name: Run tests
       run: nix develop -c pnpm test
+
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v7
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage/lcov.info
 ```
 
-`package.json` scripts carry the runner flags, and `vitest.config.ts` enables coverage. Add a `nix develop -c pnpm build` step when the repository has a `build` script, and a dry-run publish or pack step for a published package.
+`package.json` scripts carry the runner flags, and `vitest.config.ts` turns on the coverage that the upload step reads, which needs `@vitest/coverage-v8` in `devDependencies`:
+
+```ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    coverage: {
+      enabled: true,
+      reporter: ['text', 'lcov'],
+    },
+  },
+});
+```
+
+Add a `nix develop -c pnpm build` step when the repository has a `build` script, and a dry-run publish or pack step for a published package.
 
 A static site's job is `site` (`Site Check`), whose last step is `Build site` running `nix develop -c pnpm build`. Build options belong in the site's configuration or its `build` script, and the job uploads the output with `actions/upload-artifact@v7` only when a later job downloads it.
 
@@ -147,7 +174,13 @@ rust:
       run: nix develop -c cargo clippy --locked --all-targets
 
     - name: Run tests
-      run: nix develop -c cargo test --locked
+      run: nix develop -c cargo llvm-cov --locked --lcov --output-path lcov.info
+
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v7
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: lcov.info
 
 msrv:
   name: MSRV Check
@@ -178,23 +211,44 @@ The `clippy` hook covers Linux. On Cargo 1.97 or later, `.cargo/config.toml` den
 warnings = "deny"
 ```
 
-The `msrv` dev shell holds the toolchain at `Cargo.toml`'s `rust-version`, such as rust-overlay's `rust-bin.stable.${lib.versions.pad 3 rustVersion}.minimal`, where `rustVersion` is that field read with `lib.importTOML`.
+`cargo llvm-cov` needs LLVM's tools in the toolchain that `rust-toolchain.toml` pins:
 
-For coverage, add `llvm-tools-preview` to `rust-toolchain.toml`'s `components` and `cargo-llvm-cov` to the dev shell, and replace `cargo test --locked` with `cargo llvm-cov --locked --lcov --output-path lcov.info`. Add `--all-features` to coverage and MSRV when the crate has features.
+```toml
+[toolchain]
+components = ["clippy", "llvm-tools-preview", "rustfmt"]
+```
+
+It also needs `cargo-llvm-cov` in the default dev shell, beside that toolchain:
+
+```nix
+devShells.default = pkgs.mkShell {
+  inputsFrom = [ preCommit ];
+  packages = [
+    rustToolchain
+    pkgs.cargo-llvm-cov
+  ];
+};
+```
+
+The `msrv` dev shell builds the toolchain from `Cargo.toml`'s `rust-version` with rust-overlay, so the MSRV has one home:
+
+```nix
+devShells.msrv =
+  let
+    rustBin = rust-overlay.lib.mkRustBin { } pkgs;
+    rustVersion = (lib.importTOML ./Cargo.toml).workspace.package.rust-version;
+  in
+  pkgs.mkShell {
+    packages = [ rustBin.stable.${lib.versions.pad 3 rustVersion}.minimal ];
+  };
+```
+
+Add `--all-features` to the coverage and MSRV steps when the crate has features.
 
 ### Coverage
 
-Upload each report directly after the step that writes it:
+Each job uploads its report to Codecov directly after the step that writes it. A repository without Codecov drops the upload step and the coverage settings, and its Rust job runs `cargo test --locked`.
 
-```yaml
-- name: Upload to Codecov
-  uses: codecov/codecov-action@v7
-  with:
-    token: ${{ secrets.CODECOV_TOKEN }}
-    files: lcov.info
-```
-
-- Rust writes `lcov.info`, Vitest `coverage/lcov.info`, and pytest-cov `coverage.xml` once `addopts` holds `--cov` and `--cov-report=xml`.
 - Set `flags` only when the repository uploads several reports.
 - `fail_ci_if_error` stays unset, so a Codecov outage or a fork pull request without the secret leaves `CI Result` passing, while Codecov's own status checks gate coverage.
 - Path filters go in `codecov.yml` `ignore`.

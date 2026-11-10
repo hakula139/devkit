@@ -5,6 +5,17 @@
 # ==================================================================================================
 
 const SETTINGS_DIR = path self "../.github/settings"
+const ACTIONS_APP_ID = 15368
+
+# Bind a required check to the app in its trailing @APP-ID, or to GitHub Actions without one.
+def required-check [check: string]: nothing -> record {
+  let app_check = ($check | parse --regex '^(?<context>.+)@(?<id>\d+)$')
+  if ($app_check | is-empty) {
+    {context: $check, integration_id: $ACTIONS_APP_ID}
+  } else {
+    {context: $app_check.0.context, integration_id: ($app_check.0.id | into int)}
+  }
+}
 
 # Show the repository administration commands.
 def main [] {
@@ -50,10 +61,10 @@ def "main settings" [
   ^gh api $"repos/($repo)/immutable-releases" --method PUT
 }
 
-# Create or replace the branch ruleset that has the config's name.
+# Create or replace the shared main ruleset, adding any extra required checks.
 def "main ruleset" [
   repo: string # Target repository as OWNER/REPO
-  --config: path # Complete ruleset JSON, defaulting to the shared main ruleset
+  ...checks: string # Extra required checks as CONTEXT from GitHub Actions or CONTEXT@APP-ID
   --private # Skip the ruleset for a private repository
 ] {
   if $private {
@@ -62,18 +73,25 @@ def "main ruleset" [
   }
 
   let main_ruleset = ($SETTINGS_DIR | path join "rulesets/main.json")
-  let source = if $config == null {
-    $main_ruleset
-  } else {
-    $config
-  }
+  let required = ($checks | each {|check| required-check $check })
+  let ruleset = (
+    open $main_ruleset
+    | update rules {
+      each {|rule|
+        if $rule.type == "required_status_checks" {
+          $rule | update parameters.required_status_checks { append $required }
+        } else {
+          $rule
+        }
+      }
+    }
+  )
 
-  let name = (open --raw $source | from json | get name)
   mut endpoint = $"repos/($repo)/rulesets"
   let id = (
     ^gh api $endpoint
       --paginate
-      --jq $".[] | select\(.name == ($name | to json)\) | .id"
+      --jq $".[] | select\(.name == ($ruleset.name | to json)\) | .id"
     | str trim
   )
 
@@ -84,9 +102,11 @@ def "main ruleset" [
   }
 
   (
-    ^gh api $endpoint
+    $ruleset
+    | to json
+    | ^gh api $endpoint
       --method $method
-      --input $source
+      --input -
   )
 }
 

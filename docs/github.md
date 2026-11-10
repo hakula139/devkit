@@ -2,7 +2,7 @@
 
 These conventions provide defaults for public repositories, and you can extend the required checks and labels to fit each repository.
 
-Run each command with an authenticated `gh`, passing the target repository as `OWNER/REPO`.
+Run each command with an authenticated `gh`, passing the target repository as `OWNER/REPO`. For a private repository, pass `--private` to `settings` and `ruleset`, which then skip private vulnerability reporting, secret scanning, and the ruleset.
 
 ## Apply repository settings
 

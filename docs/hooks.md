@@ -22,7 +22,6 @@ The shared hook configurations cover:
 | ----------------------- | -------------------------- | ------- | ------------------------------------------------ | ------------------------------------------- |
 | General                 | `check-added-large-files`  | ✓       | Large files being committed                      |                                             |
 |                         | `check-merge-conflicts`    | ✓       | Conflict markers                                 |                                             |
-|                         | `check-yaml`               | ✓       | YAML syntax                                      |                                             |
 |                         | `cspell`                   | ✓       | Spelling                                         | `cspell.json`                               |
 |                         | `editorconfig-checker`     | ✓       | EditorConfig properties                          | `.editorconfig`                             |
 |                         | `end-of-file-fixer`        | ✓       | Final newlines                                   |                                             |
@@ -38,7 +37,7 @@ The shared hook configurations cover:
 | Nix                     | `deadnix`                  | ✓       | Unused code                                      |                                             |
 |                         | `nixfmt`                   | ✓       | Formatting                                       |                                             |
 |                         | `statix`                   | ✓       | Lint                                             |                                             |
-| Nushell                 | `nu-check`                 |         | Nushell syntax                                   |                                             |
+| Nushell                 | `nu-check`                 |         | Syntax                                           |                                             |
 | Python                  | `mypy`                     |         | Types                                            | `[tool.mypy]` in `pyproject.toml`           |
 |                         | `ruff`                     |         | Lint                                             | Ruff configuration                          |
 |                         | `ruff-format`              |         | Formatting                                       | Ruff configuration                          |
@@ -48,6 +47,7 @@ The shared hook configurations cover:
 |                         | `shfmt`                    |         | Formatting                                       |                                             |
 | TOML                    | `taplo`                    |         | Formatting                                       | Shared defaults, `.taplo.toml`              |
 | Web formats             | `prettier`                 |         | Formatting of JavaScript, TypeScript, JSON, YAML | Shared defaults, `.prettierrc.json`         |
+| YAML                    | `check-yaml`               | ✓       | Syntax                                           |                                             |
 
 devkit's [baseline](../nix/hooks/baseline.nix) sets each hook's defaults, and git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines its settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
 

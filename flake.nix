@@ -165,7 +165,7 @@
                   name = "echo-args";
                   text = builtins.readFile ./tests/echo-args.nu;
                   makeWrapperArgs = [
-                    "--add-flags"
+                    "--add-flag"
                     "--baked"
                   ];
                 })

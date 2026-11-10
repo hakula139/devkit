@@ -50,6 +50,7 @@ def "test passes baked flags to main after the script and keeps the guard" [] {
   assert equal $result.exit_code 0
   assert equal ($result.stdout | from nuon) {baked: true rest: ["a"]}
   assert equal $rejected.exit_code 1
+  assert str contains $rejected.stderr "would parse this argument as code"
   assert not ($marker | path exists)
 }
 

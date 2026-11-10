@@ -34,15 +34,15 @@ packages.my-command = dk.writeNuApplication {
     pkgs.git
   ];
   makeWrapperArgs = [
-    "--add-flags"
+    "--add-flag"
     "--verbose"
   ];
 };
 ```
 
-It installs `text` as `bin/<name>`, the name `--help` shows, with `runtimeInputs` on its `PATH`. It appends `makeWrapperArgs` to its `makeShellWrapper` call, so a flag added with `--add-flags` reaches `main` ahead of the caller's arguments, and it sets `meta.mainProgram` to `name` and merges any `meta` argument over it.
+It installs `text` as `bin/<name>`, the name `--help` shows, with `runtimeInputs` on its `PATH`. It appends `makeWrapperArgs` to its `makeShellWrapper` call, so an argument added with `--add-flag` reaches `main` ahead of the caller's arguments. It sets `meta.mainProgram` to `name`, merging any `meta` argument over it as `mkNuApplication` does.
 
-Both builders exit 1 before running the script on an argument that Nushell would parse as code. Nushell splices the arguments into the `main` call as source text, so the wrapper rejects an argument starting with `--` other than `--`, `--<name>`, and `--<name>=<value>` (where `<name>` is a letter followed by letters, digits, `_`, and `-`), a bare redirection such as `o>` or `e>>`, and an argument starting with `...$`. An operand of one of those shapes has to be passed in another form, such as an absolute path. Flags in `makeWrapperArgs` bypass this check.
+Both builders exit 1 before running the script on an argument that Nushell would parse as code. Nushell splices the arguments into the `main` call as source text, so the wrapper rejects an argument starting with `--` other than `--`, `--<name>`, and `--<name>=<value>` (where `<name>` is a letter followed by letters, digits, `_`, and `-`), a bare redirection such as `o>` or `e>>`, and an argument starting with `...$`. An operand of one of those shapes has to be passed in another form, such as an absolute path. Arguments that `makeWrapperArgs` adds bypass this check.
 
 `mkNuApplication`, `writeNuApplication`, `nuTests`, and the `nu-*` tools run on `dk.nushell`, the Nushell that [`mkLib` selects](flake.md).
 

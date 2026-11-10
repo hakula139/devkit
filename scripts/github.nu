@@ -14,6 +14,7 @@ def main [] {
 # Apply repository and workflow settings, security defaults, and immutable releases.
 def "main settings" [
   repo: string # Target repository as OWNER/REPO
+  --private # Skip private vulnerability reporting and secret scanning for a private repository
 ] {
   let repository_settings = ($SETTINGS_DIR | path join "repository.json")
   let workflow_permissions = ($SETTINGS_DIR | path join "workflow-permissions.json")
@@ -24,19 +25,28 @@ def "main settings" [
       --method PATCH
       --input $repository_settings
   )
+
   (
     ^gh api $"repos/($repo)/actions/permissions/workflow"
       --method PUT
       --input $workflow_permissions
   )
+
   ^gh api $"repos/($repo)/vulnerability-alerts" --method PUT
   ^gh api $"repos/($repo)/automated-security-fixes" --method DELETE
-  ^gh api $"repos/($repo)/private-vulnerability-reporting" --method PUT
-  (
-    ^gh api $"repos/($repo)"
-      --method PATCH
-      --input $security_settings
-  )
+
+  if $private {
+    print -e "Skipped private vulnerability reporting for a private repository."
+    print -e "Skipped secret scanning for a private repository."
+  } else {
+    ^gh api $"repos/($repo)/private-vulnerability-reporting" --method PUT
+    (
+      ^gh api $"repos/($repo)"
+        --method PATCH
+        --input $security_settings
+    )
+  }
+
   ^gh api $"repos/($repo)/immutable-releases" --method PUT
 }
 
@@ -44,7 +54,13 @@ def "main settings" [
 def "main ruleset" [
   repo: string # Target repository as OWNER/REPO
   --config: path # Complete ruleset JSON, defaulting to the shared main ruleset
+  --private # Skip the ruleset for a private repository
 ] {
+  if $private {
+    print -e "Skipped the ruleset for a private repository."
+    return
+  }
+
   let main_ruleset = ($SETTINGS_DIR | path join "rulesets/main.json")
   let source = if $config == null {
     $main_ruleset

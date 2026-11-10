@@ -156,26 +156,7 @@
         # Checks
         # ------------------------------------------------------------------------------------------
         checks = self.packages.${system} // {
-          nu-tooling = pkgs.testers.testBuildFailure' {
-            drv = dk.nuTests {
-              src = ./tests;
-              runtimeInputs = [
-                dk.nu-check
-                (dk.writeNuApplication {
-                  name = "echo-args";
-                  text = builtins.readFile ./tests/echo-args.nu;
-                  makeWrapperArgs = [
-                    "--add-flag"
-                    "--baked"
-                  ];
-                })
-              ];
-            };
-            expectedBuilderLogEntries = [
-              "FAIL ./nu-tooling.test.nu: test fails on purpose"
-              "5 passed, 1 failed"
-            ];
-          };
+          nu-tooling = import ./tests { inherit pkgs dk; };
         };
 
         # ------------------------------------------------------------------------------------------

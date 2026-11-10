@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- _(hooks)_ `run-hooks` runs each hook once, so a hook staged for both `pre-commit` and `pre-push`, such as `trim-trailing-whitespace`, no longer runs twice. ([#52](https://github.com/hakula139/devkit/pull/52))
+- _(hooks)_ `run-hooks` no longer runs a hook twice when git-hooks.nix assigns it to both the `pre-commit` and `pre-push` stages, as it does `trim-trailing-whitespace`. ([#52](https://github.com/hakula139/devkit/pull/52))
 
 [3.0.1]: https://github.com/hakula139/devkit/compare/v3.0.0...v3.0.1
 

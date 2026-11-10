@@ -14,7 +14,7 @@ nix develop -c run-hooks
 
 ## Enable hooks
 
-Turn a hook on or off with `hooks.<name>.enable`. Without a [`cspell.json`](#add-a-spelling-dictionary) that names a project dictionary, `cspell` flags project terms such as `nixpkgs`.
+Turn a hook on or off with `hooks.<name>.enable`.
 
 The shared hook configurations cover:
 

@@ -136,7 +136,7 @@ Consumers follow the major tag without a PR, so classify each change by its effe
   - Changing the shared `cliff.toml`'s `header`, since `--prepend` replaces an existing header only when it matches exactly.
 - **Minor:** Callers keep working unchanged, even when new checks report findings.
   - New or stricter baseline hooks or shared hook defaults.
-  - Stricter shared repository settings or branch ruleset, which reach a repository only when the `github` helper reapplies them.
+  - Stricter or looser shared repository settings or branch ruleset, which reach a repository only when the `github` helper reapplies them.
   - Additions and newer tool versions that `lib` selects.
 - **Patch:** Everything else, such as fixes that keep every contract.
 

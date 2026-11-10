@@ -25,8 +25,11 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/(^|/)flake\\.nix$/"],
-      "matchStrings": ["github:hakula139/devkit/(?<currentValue>v\\d+)[^.\\d]"],
+      "managerFilePatterns": ["/(^|/)flake\\.nix$/", "**/!(CHANGELOG).md"],
+      "matchStrings": [
+        "github:hakula139/devkit/(?<currentValue>v\\d+)[^.\\d]",
+        "github\\.com/hakula139/devkit/(?:blob|tree)/(?<currentValue>v\\d+)/"
+      ],
       "depNameTemplate": "hakula139/devkit",
       "datasourceTemplate": "github-tags",
       "extractVersionTemplate": "^(?<version>v\\d+)$"

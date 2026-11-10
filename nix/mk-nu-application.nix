@@ -20,21 +20,18 @@
 let
   inherit (pkgs) lib;
   inherit (import ./skill-links.nix { inherit lib; }) packagedFile skillSource;
+  nuWrapper = import ./nu-wrapper.nix { inherit pkgs nushell; };
 
   source = lib.fileset.toSource {
     root = src;
     fileset = lib.fileset.fileFilter (file: file.hasExt "nu" && packagedFile file) src;
   };
-
-  pathArgs = lib.optionalString (
-    runtimeInputs != [ ]
-  ) "--prefix PATH : ${lib.makeBinPath runtimeInputs}";
 in
 pkgs.stdenvNoCC.mkDerivation {
   inherit pname version;
   src = source;
   nativeBuildInputs = [
-    pkgs.makeBinaryWrapper
+    pkgs.makeShellWrapper
   ];
   dontBuild = true;
 
@@ -48,11 +45,11 @@ pkgs.stdenvNoCC.mkDerivation {
     mkdir -p $out/share/skills
     cp -r ${skillSource skill} $out/share/skills/${baseNameOf skill}
   '') skills
-  + ''
-    makeWrapper ${lib.getExe nushell} $out/bin/${entry} \
-      --add-flags "--no-config-file $out/share/${pname}/${entry}" \
-      ${pathArgs}
-  '';
+  + nuWrapper.command {
+    bin = "$out/bin/${entry}";
+    script = "$out/share/${pname}/${entry}";
+    inherit runtimeInputs;
+  };
 
   meta = {
     mainProgram = entry;

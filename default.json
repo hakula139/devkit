@@ -28,7 +28,7 @@
       "managerFilePatterns": ["/(^|/)flake\\.nix$/", "**/!(CHANGELOG).md"],
       "matchStrings": [
         "github:hakula139/devkit/(?<currentValue>v\\d+)[^.\\d]",
-        "github\\.com/hakula139/devkit/(?:blob|tree)/(?<currentValue>v\\d+)/"
+        "github\\.com/hakula139/devkit/(?:blob|tree)/(?<currentValue>v\\d+)[^.\\d]"
       ],
       "depNameTemplate": "hakula139/devkit",
       "datasourceTemplate": "github-tags",

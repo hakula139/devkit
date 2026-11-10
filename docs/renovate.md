@@ -20,8 +20,8 @@ The preset's merge policy requires squash merging:
 
 A devkit major update opens a separate `devkit` PR that updates these major-tag references:
 
-- Action and workflow refs such as `hakula139/devkit/.github/actions/setup-nix@v3` in workflow and action files.
-- The preset ref `github>hakula139/devkit#v3` in the Renovate config.
+- Action and workflow refs such as `hakula139/devkit/.github/actions/setup-nix@v3` in workflow, action, and Markdown files.
+- The preset ref `github>hakula139/devkit#v3` in the Renovate config and Markdown files.
 - `github:hakula139/devkit/v3` refs in `flake.nix` and Markdown files.
 - `github.com/hakula139/devkit/blob/v3` and `tree/v3` links in Markdown files.
 

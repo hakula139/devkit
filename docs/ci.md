@@ -90,7 +90,7 @@ python:
 ```toml
 [tool.pytest]
 minversion = "9.0"
-addopts = ["--quiet", "--cov", "--cov-report=xml"]
+addopts = ["--quiet", "--cov", "--cov-report=term", "--cov-report=xml"]
 strict = true
 testpaths = ["tests"]
 ```
@@ -125,7 +125,7 @@ node:
         files: coverage/lcov.info
 ```
 
-`package.json` scripts carry the runner flags, and `vitest.config.ts` turns on the coverage that the upload step reads, which needs `@vitest/coverage-v8` in `devDependencies`:
+`package.json` scripts carry the runner flags, and `vitest.config.ts` turns on coverage and its lcov report for the upload step, and coverage needs `@vitest/coverage-v8` in `devDependencies`:
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -218,38 +218,47 @@ warnings = "deny"
 components = ["clippy", "llvm-tools-preview", "rustfmt"]
 ```
 
-It also needs `cargo-llvm-cov` in the default dev shell, beside that toolchain:
+The default dev shell puts `cargo-llvm-cov` beside that toolchain, and the `msrv` dev shell builds rust-overlay's toolchain at the workspace's `rust-version`, so the MSRV has one home:
 
 ```nix
-devShells.default = pkgs.mkShell {
-  inputsFrom = [ preCommit ];
-  packages = [
-    rustToolchain
-    pkgs.cargo-llvm-cov
-  ];
-};
-```
-
-The `msrv` dev shell builds the toolchain from `Cargo.toml`'s `rust-version` with rust-overlay, so the MSRV has one home:
-
-```nix
-devShells.msrv =
-  let
-    rustBin = rust-overlay.lib.mkRustBin { } pkgs;
-    rustVersion = (lib.importTOML ./Cargo.toml).workspace.package.rust-version;
-  in
-  pkgs.mkShell {
-    packages = [ rustBin.stable.${lib.versions.pad 3 rustVersion}.minimal ];
+let
+  rustBin = rust-overlay.lib.mkRustBin { } pkgs;
+  rustToolchain = rustBin.fromRustupToolchainFile ./rust-toolchain.toml;
+  rustVersion = (lib.importTOML ./Cargo.toml).workspace.package.rust-version;
+in
+{
+  devShells.default = pkgs.mkShell {
+    packages = [
+      rustToolchain
+      pkgs.cargo-llvm-cov
+    ];
+    inputsFrom = [
+      preCommit
+    ];
   };
+
+  devShells.msrv = pkgs.mkShell {
+    packages = [
+      rustBin.stable.${lib.versions.pad 3 rustVersion}.minimal
+    ];
+  };
+}
 ```
 
-Add `--all-features` to the coverage and MSRV steps when the crate has features.
+`cargo llvm-cov` skips doc tests, so a crate with a library target adds a `nix develop -c cargo test --locked --doc` step. Add `--all-features` to the test and MSRV steps when the crate has features.
 
 ### Coverage
 
 Each job uploads its report to Codecov directly after the step that writes it. A repository without Codecov drops the upload step and the coverage settings, and its Rust job runs `cargo test --locked`.
 
-- Set `flags` only when the repository uploads several reports.
+- Set `flags` only when the repository uploads reports from several jobs.
 - `fail_ci_if_error` stays unset, so a Codecov outage or a fork pull request without the secret leaves `CI Result` passing, while Codecov's own status checks gate coverage.
 - Path filters go in `codecov.yml` `ignore`.
-- A matrix that uploads from several legs sets `codecov.notify.after_n_builds` to the leg count in `codecov.yml`.
+
+A matrix job uploads once per leg, so `codecov.yml` holds Codecov's status until every leg has reported, two for the Rust job:
+
+```yaml
+codecov:
+  notify:
+    after_n_builds: 2
+```

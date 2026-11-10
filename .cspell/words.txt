@@ -40,6 +40,7 @@ realise
 rhysd
 rustc
 rustdoc
+rustup
 shellcheck
 shfmt
 startswith

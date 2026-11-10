@@ -47,6 +47,7 @@ statix
 stdenv
 striptags
 substituters
+Swatinem
 taiki
 taplo
 tera

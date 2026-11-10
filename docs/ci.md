@@ -56,9 +56,9 @@ Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to
 
 `nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. Each job's id names what it checks, and its `name` is that subject followed by `Check`, as in `MSRV Check`, with `(${{ matrix.os }})` after it for an OS matrix. A blank line separates a job's settings from its `steps`.
 
-A check belongs in `nix flake check` only when it runs offline on dependencies that Nix supplies without a hash to maintain, since the build sandbox has no network and a fixed-output dependency hash would break on every Renovate lockfile update. `checks.tests = dk.nuTests { ... }` meets both for the [Nushell tests](nu-test.md), so Nushell needs no language job, while every other language's tests run in one.
+A check belongs in `nix flake check` only when it runs offline on dependencies that Nix supplies without a hash to maintain and needs no build cache, since the build sandbox has no network, a fixed-output dependency hash would break on every Renovate lockfile update, and a sandbox build compiles every dependency again on each change. `checks.tests = dk.nuTests { ... }` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job, while every other language's tests run in one.
 
-Every job runs its commands in the default dev shell, which `nix.yml` requires to hold every hook tool and caches from the default branch. Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while the lockfile assertions `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a separate Windows job that installs its toolchain natively and lists it in `CI Result`'s `needs`, leaving the Nix jobs unchanged.
+Every job runs its commands in the default dev shell, which `nix.yml` requires to hold every hook tool and caches from the default branch, unless the job needs another toolchain, as the MSRV job does. Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while the lockfile assertions `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a separate Windows job that installs its toolchain natively and lists it in `CI Result`'s `needs`, leaving the Nix jobs unchanged.
 
 ### Python
 
@@ -136,8 +136,14 @@ rust:
     - name: Set up Nix
       uses: hakula139/devkit/.github/actions/setup-nix@v3
 
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        cmd-format: nix develop -c {0}
+        save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+
     - name: Run clippy
-      if: ${{ matrix.os != 'Linux' }}
+      if: ${{ matrix.os == 'macOS' }}
       run: nix develop -c cargo clippy --locked --all-targets
 
     - name: Run tests
@@ -155,18 +161,26 @@ msrv:
     - name: Set up Nix
       uses: hakula139/devkit/.github/actions/setup-nix@v3
 
+    - name: Cache dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        cmd-format: nix develop .#msrv -c {0}
+        save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+
     - name: Check MSRV
       run: nix develop .#msrv -c cargo check --locked --workspace --all-targets
 ```
 
-The `clippy` hook covers Linux. The `msrv` dev shell holds the toolchain at `Cargo.toml`'s `rust-version`, such as rust-overlay's `rust-bin.stable."1.91.0".minimal` for `rust-version = "1.91"`. On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
+The `clippy` hook covers Linux. On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
 
 ```toml
 [build]
 warnings = "deny"
 ```
 
-For coverage, add `cargo-llvm-cov` and the toolchain's `llvm-tools-preview` extension to the dev shell, and replace `cargo test --locked` with `cargo llvm-cov --locked --lcov --output-path lcov.info`. Add `--all-features` to coverage and MSRV when the crate has features.
+The `msrv` dev shell holds the toolchain at `Cargo.toml`'s `rust-version`, such as rust-overlay's `rust-bin.stable.${lib.versions.pad 3 rustVersion}.minimal`, where `rustVersion` is that field read with `lib.importTOML`.
+
+For coverage, add `llvm-tools-preview` to `rust-toolchain.toml`'s `components` and `cargo-llvm-cov` to the dev shell, and replace `cargo test --locked` with `cargo llvm-cov --locked --lcov --output-path lcov.info`. Add `--all-features` to coverage and MSRV when the crate has features.
 
 ### Coverage
 

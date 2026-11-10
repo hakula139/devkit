@@ -39,7 +39,7 @@ jobs:
 
 Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
 
-Each leg times out after 45 minutes, so pass a larger `timeout_minutes` if a cold build needs longer.
+Pass the `nix` job a `timeout_minutes` above the default 45 if a cold build needs longer.
 
 `nix.yml` runs `nix flake check` on each leg, which builds only the `checks` outputs, so expose the package as a check to have CI build it:
 

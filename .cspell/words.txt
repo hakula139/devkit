@@ -1,3 +1,4 @@
+addopts
 argjson
 automerges
 basenames
@@ -17,7 +18,9 @@ hakula
 intraword
 lockfiles
 maxlevel
+minversion
 mktemp
+msrv
 mypy
 nixfmt
 nixos
@@ -31,9 +34,13 @@ postprocessors
 prek
 pypi
 pyproject
+pytest
 pythonpath
 realise
 rhysd
+rustc
+rustdoc
+rustup
 shellcheck
 shfmt
 startswith
@@ -41,11 +48,14 @@ statix
 stdenv
 striptags
 substituters
+Swatinem
 taiki
 taplo
 tera
 testlib
+testpaths
 toplevel
+venv
 wakatime
 worktree
 worktrees

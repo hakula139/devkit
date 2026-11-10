@@ -9,6 +9,7 @@
   configEntry,
   nodeTool,
   nu-check,
+  ruff,
   uvTool,
 }:
 
@@ -197,6 +198,7 @@ in
 
     # Mirrors astral-sh/ruff-pre-commit, except that dprint owns Markdown.
     ruff = ruffHook // {
+      package = ruff;
       entry = configEntry config.hooks.ruff [
         "check"
         "--fix"
@@ -206,8 +208,8 @@ in
       ];
     };
 
-    # Upstream runs `hooks.ruff.package` for ruff-format.
     ruff-format = ruffHook // {
+      inherit (config.hooks.ruff) package;
       entry = configEntry config.hooks.ruff-format [ "format" ];
       args = [
         "--force-exclude"

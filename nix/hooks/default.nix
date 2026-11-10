@@ -8,6 +8,7 @@
   actionlint,
   nodeTool,
   nu-check,
+  ruff,
   uvTool,
 }:
 
@@ -33,6 +34,7 @@ let
       configEntry
       nodeTool
       nu-check
+      ruff
       uvTool
       ;
   };

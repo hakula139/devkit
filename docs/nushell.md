@@ -24,7 +24,7 @@ checks.tests = dk.nuTests {
 - Copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill.
 - Sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
 
-`mkNuApplication`, `nuTests`, and the `nu-*` tools run on `dk.nushell`, which is the consumer's `pkgs.nushell` when it is 0.116 or later, and otherwise the one from devkit's `nixpkgs-unstable` input, so `nixpkgs-unstable` must not follow a stable nixpkgs.
+`mkNuApplication`, `nuTests`, and the `nu-*` tools run on `dk.nushell`, the Nushell that [`mkLib` selects](flake.md).
 
 `devkit.lib` also provides the skill option and links for a Home Manager module:
 

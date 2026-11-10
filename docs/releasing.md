@@ -95,6 +95,7 @@ publish:
   timeout-minutes: 10
   permissions:
     contents: write
+
   steps:
     - name: Checkout
       uses: actions/checkout@v7

@@ -40,7 +40,6 @@ realise
 rhysd
 rustc
 rustdoc
-rustup
 shellcheck
 shfmt
 startswith
@@ -48,7 +47,6 @@ statix
 stdenv
 striptags
 substituters
-Swatinem
 taiki
 taplo
 tera

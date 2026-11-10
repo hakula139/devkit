@@ -32,6 +32,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       actions: read
+
     steps:
       - name: Check results
         uses: hakula139/devkit/.github/actions/ci-result@v3
@@ -53,9 +54,11 @@ Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to
 
 ## Language jobs
 
-`nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. Each job's id names its ecosystem, and its `name` is `<Ecosystem> Check`, with `(${{ matrix.os }})` appended for an OS matrix.
+`nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. Each job's id names what it checks, and its `name` is that subject followed by `Check`, as in `MSRV Check`, with `(${{ matrix.os }})` after it for an OS matrix. A blank line separates a job's settings from its `steps`.
 
-Jobs other than Rust's run in the default dev shell, which `nix.yml` requires to hold every hook tool and caches from the default branch. Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while the lockfile assertions `--locked` and `--frozen-lockfile` stay on the command.
+A check belongs in `nix flake check` only when it runs offline on dependencies that Nix supplies without a hash to maintain, since the build sandbox has no network and a fixed-output dependency hash would break on every Renovate lockfile update. `checks.tests = dk.nuTests { ... }` meets both for the [Nushell tests](nu-test.md), so Nushell needs no language job, while every other language's tests run in one.
+
+Every job runs its commands in the default dev shell, which `nix.yml` requires to hold every hook tool and caches from the default branch. Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while the lockfile assertions `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a separate Windows job that installs its toolchain natively and lists it in `CI Result`'s `needs`, leaving the Nix jobs unchanged.
 
 ### Python
 
@@ -64,6 +67,7 @@ python:
   name: Python Check
   runs-on: ubuntu-latest
   timeout-minutes: 30
+
   steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -71,7 +75,7 @@ python:
     - name: Set up Nix
       uses: hakula139/devkit/.github/actions/setup-nix@v3
 
-    - name: Test
+    - name: Run tests
       run: nix develop -c uv run --locked pytest
 ```
 
@@ -94,6 +98,7 @@ node:
   name: Node Check
   runs-on: ubuntu-latest
   timeout-minutes: 30
+
   steps:
     - name: Checkout
       uses: actions/checkout@v7
@@ -104,108 +109,64 @@ node:
     - name: Install dependencies
       run: nix develop -c pnpm install --frozen-lockfile
 
-    - name: Test
+    - name: Run tests
       run: nix develop -c pnpm test
 ```
 
 `package.json` scripts carry the runner flags, and `vitest.config.ts` enables coverage. Add a `nix develop -c pnpm build` step when the repository has a `build` script, and a dry-run publish or pack step for a published package.
 
-### Rust
+A static site's job is `site` (`Site Check`), whose last step is `Build site` running `nix develop -c pnpm build`. Build options belong in the site's configuration or its `build` script, and the job uploads the output with `actions/upload-artifact@v7` only when a later job downloads it.
 
-Rust jobs install the toolchain named in `rust-toolchain.toml` through rustup, since Windows runners cannot run Nix:
+### Rust
 
 ```yaml
 rust:
   name: Rust Check (${{ matrix.os }})
-  runs-on: ${{ matrix.runner }}
+  runs-on: ${{ matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
   timeout-minutes: 30
   strategy:
     fail-fast: false
     matrix:
-      include:
-        - os: Linux
-          runner: ubuntu-latest
-        - os: macOS
-          runner: macos-latest
-        - os: Windows
-          runner: windows-latest
+      os: [Linux, macOS]
+
   steps:
     - name: Checkout
       uses: actions/checkout@v7
 
-    - name: Set up Rust
-      run: rustup toolchain install
+    - name: Set up Nix
+      uses: hakula139/devkit/.github/actions/setup-nix@v3
 
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
-        save-if: ${{ github.ref == 'refs/heads/main' }}
-
-    - name: Clippy
+    - name: Run clippy
       if: ${{ matrix.os != 'Linux' }}
-      run: cargo clippy --locked --all-targets
+      run: nix develop -c cargo clippy --locked --all-targets
 
-    - name: Test
-      run: cargo test --locked
+    - name: Run tests
+      run: nix develop -c cargo test --locked
 
 msrv:
   name: MSRV Check
   runs-on: ubuntu-latest
   timeout-minutes: 30
+
   steps:
     - name: Checkout
       uses: actions/checkout@v7
 
-    - name: Set up Rust
-      run: rustup toolchain install
+    - name: Set up Nix
+      uses: hakula139/devkit/.github/actions/setup-nix@v3
 
-    - name: Install cargo-hack
-      uses: taiki-e/install-action@cargo-hack
-
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
-        save-if: ${{ github.ref == 'refs/heads/main' }}
-
-    - name: Check
-      run: cargo hack check --rust-version --workspace --all-targets --locked
+    - name: Check MSRV
+      run: nix develop .#msrv -c cargo check --locked --workspace --all-targets
 ```
 
-The `clippy` hook covers Linux. `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
+The `clippy` hook covers Linux. The `msrv` dev shell holds the toolchain at `Cargo.toml`'s `rust-version`, such as rust-overlay's `rust-bin.stable."1.91.0".minimal` for `rust-version = "1.91"`. On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
 
 ```toml
 [build]
 warnings = "deny"
 ```
 
-For coverage, install `taiki-e/install-action@cargo-llvm-cov` and replace `cargo test --locked` with `cargo llvm-cov --locked --lcov --output-path lcov.info`. Add `--all-features` to coverage and MSRV when the crate has features.
-
-### Sites
-
-```yaml
-site:
-  name: Site Check
-  runs-on: ubuntu-latest
-  timeout-minutes: 30
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Set up Nix
-      uses: hakula139/devkit/.github/actions/setup-nix@v3
-
-    - name: Install dependencies
-      run: nix develop -c pnpm install --frozen-lockfile
-
-    - name: Build
-      run: nix develop -c pnpm build
-```
-
-Build options belong in the site's configuration or its `build` script. Upload the output with `actions/upload-artifact@v7` only when a later job downloads it.
-
-### Nushell
-
-`checks.tests = dk.nuTests { ... }` runs the [Nushell tests](nu-test.md) inside `nix flake check`, so Nushell needs no language job.
+For coverage, add `cargo-llvm-cov` and the toolchain's `llvm-tools-preview` extension to the dev shell, and replace `cargo test --locked` with `cargo llvm-cov --locked --lcov --output-path lcov.info`. Add `--all-features` to coverage and MSRV when the crate has features.
 
 ### Coverage
 
@@ -222,4 +183,5 @@ Upload each report directly after the step that writes it:
 - Rust writes `lcov.info`, Vitest `coverage/lcov.info`, and pytest-cov `coverage.xml` once `addopts` holds `--cov` and `--cov-report=xml`.
 - Set `flags` only when the repository uploads several reports.
 - `fail_ci_if_error` stays unset, so a Codecov outage or a fork pull request without the secret leaves `CI Result` passing, while Codecov's own status checks gate coverage.
-- Path filters go in `codecov.yml` `ignore`, where a matrix that uploads from several legs also sets `codecov.notify.after_n_builds` to the leg count.
+- Path filters go in `codecov.yml` `ignore`.
+- A matrix that uploads from several legs sets `codecov.notify.after_n_builds` to the leg count in `codecov.yml`.

@@ -99,7 +99,7 @@ mypy checks the `files` that `[tool.mypy]` names, whichever files changed.
 
 ### Lint and format Python
 
-`ruff` and `ruff-format` both run `hooks.ruff.package`, which is the consumer's `pkgs.ruff` when it is 0.17 or later, and otherwise the one from devkit's `nixpkgs-unstable` input. To run the Ruff that the repository's `uv.lock` pins, add `ruff` to its `dev` dependency group and set:
+`ruff` runs the Ruff that [`mkLib` selects](flake.md), and `ruff-format.package` defaults to `hooks.ruff.package`. To run both hooks on the Ruff that the repository's `uv.lock` pins, add `ruff` to its `dev` dependency group and set:
 
 ```nix
 hooks.ruff.package = dk.uvTool "ruff";
@@ -136,13 +136,11 @@ Start the repository's `.envrc` with a shell directive, which shellcheck needs t
 
 `dk.nodeTool "<command>"` and `dk.uvTool "<command>"` return packages that run the command from the repository's pnpm or uv lockfile, which `run-hooks` installs first. `eslint` and `tsc` use `dk.nodeTool` and `mypy` uses `dk.uvTool` by default. Set `package` to `dk.nodeTool "prettier"` for Prettier with plugins, or to `dk.nodeTool "cspell"` for cspell with npm dictionaries.
 
-Add `dk.nodeToolchain` to the dev shell to use the same Node.js and pnpm as `nodeTool`, and `dk.uvToolchain` to use the same uv as `uvTool`:
+Add `dk.nodeToolchain` to the dev shell to use the same Node.js and pnpm as `nodeTool`, and `dk.uvToolchain` to use the same uv as `uvTool`, which is the uv that [`mkLib` selects](flake.md):
 
 ```nix
 packages = builtins.attrValues dk.nodeToolchain ++ builtins.attrValues dk.uvToolchain;
 ```
-
-`dk.uvToolchain`'s uv is the consumer's `pkgs.uv` when it is 0.13 or later, and otherwise the one from devkit's `nixpkgs-unstable` input, since an older uv rewrites a `uv.lock` to an older revision.
 
 ### Declare pnpm
 
@@ -173,7 +171,7 @@ python-downloads = "never"
 python-preference = "only-system"
 ```
 
-`only-system` makes uv use the dev shell's Python, and unlike `system` it also replaces a `.venv` built on a uv-managed Python. Add the `pkgs.python3xx` that satisfies `requires-python` to the dev shell.
+`required-version` stops an older uv before it rewrites `uv.lock` to an older revision. `only-system` makes uv use the dev shell's Python, and unlike `system` it also replaces a `.venv` built on a uv-managed Python. Add the `pkgs.python3xx` that satisfies `requires-python` to the dev shell.
 
 ## Exclude files
 

@@ -45,7 +45,7 @@ pkgs.stdenvNoCC.mkDerivation {
     mkdir -p $out/share/skills
     cp -r ${skillSource skill} $out/share/skills/${baseNameOf skill}
   '') skills
-  + nuWrapper {
+  + nuWrapper.command {
     bin = "$out/bin/${entry}";
     script = "$out/share/${pname}/${entry}";
     inherit runtimeInputs;

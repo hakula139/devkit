@@ -1,10 +1,16 @@
 # shellcheck shell=bash
 
-# Nushell runs a script's `main` by splicing the arguments into source text, and it leaves the
-# flag name of an argument starting with `--` unquoted, so `--help;cmd` would run `cmd`.
+# Nushell runs a script's `main` by splicing the arguments into source text, quoting an argument
+# only when it holds a separator, bracket, or quote or starts with `$`. The flag name of an argument
+# starting with `--`, a bare redirection such as `o>`, and a `...$` spread therefore take effect, so
+# `--help;cmd` would run `cmd`.
+flag='^--([A-Za-z][A-Za-z0-9_-]*(=.*)?)?$'
+redirection='^(o|out|e|err|o\+e|e\+o|out\+err|err\+out)>>?$'
 for arg in "$@"; do
-  if [[ "$arg" == --* && ! "$arg" =~ ^--([A-Za-z][A-Za-z0-9-]*(=.*)?)?$ ]]; then
-    echo "${0##*/}: an argument starting with -- must be --name or --name=value: $arg" >&2
+  if [[ "$arg" == --* && ! "$arg" =~ $flag ]] \
+    || [[ "$arg" =~ $redirection ]] \
+    || [[ "$arg" == '...$'* ]]; then
+    echo "${0##*/}: Nushell would parse this argument as code: $arg" >&2
     exit 1
   fi
 done

@@ -24,20 +24,10 @@ let
 
   writeNuBin =
     name: script:
-    pkgs.runCommand name
-      {
-        nativeBuildInputs = [
-          pkgs.makeShellWrapper
-        ];
-        meta.mainProgram = name;
-      }
-      ''
-        install -D -m 0644 ${script} $out/share/${name}/${name}
-        ${nuWrapper {
-          bin = "$out/bin/${name}";
-          script = "$out/share/${name}/${name}";
-        }}
-      '';
+    nuWrapper.package {
+      inherit name;
+      script = "${pkgs.writeTextDir name (builtins.readFile script)}/${name}";
+    };
 
   actionlint = pkgs.callPackage ./packages/actionlint.nix { };
 

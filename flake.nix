@@ -102,18 +102,10 @@
 
         nuScript =
           name: runtimeInputs:
-          pkgs.runCommand name
-            {
-              nativeBuildInputs = [
-                pkgs.makeShellWrapper
-              ];
-              meta.mainProgram = name;
-            }
-            (nuWrapper {
-              bin = "$out/bin/${name}";
-              script = "${scripts}/scripts/${name}.nu";
-              inherit runtimeInputs;
-            });
+          nuWrapper.package {
+            inherit name runtimeInputs;
+            script = "${scripts}/scripts/${name}.nu";
+          };
 
         preCommit = dk.preCommit {
           src = ./.;
@@ -173,7 +165,7 @@
             };
             expectedBuilderLogEntries = [
               "FAIL ./nu-tooling.test.nu: test fails on purpose"
-              "3 passed, 1 failed"
+              "4 passed, 1 failed"
             ];
           };
         };

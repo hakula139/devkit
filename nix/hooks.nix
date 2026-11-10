@@ -323,31 +323,50 @@ let
     ];
   };
 
-  hookTypes = lib.unique (
-    map (
-      stage:
-      if
-        lib.elem stage [
-          "commit"
-          "merge-commit"
-          "push"
-        ]
-      then
-        "pre-${stage}"
-      else
-        stage
-    ) (lib.remove "manual" hooksRun.config.installStages)
-  );
+  hookType =
+    stage:
+    if
+      lib.elem stage [
+        "commit"
+        "merge-commit"
+        "push"
+      ]
+    then
+      "pre-${stage}"
+    else
+      stage;
+
+  hookTypes = lib.unique (map hookType (lib.remove "manual" hooksRun.config.installStages));
 
   # ------------------------------------------------------------------------------------------------
   # Hook runner
   # ------------------------------------------------------------------------------------------------
   # Other stages need Git's hook arguments, such as a commit message file.
-  fileStages = lib.intersectLists [
+  fileStages = [
     "pre-commit"
     "pre-merge-commit"
     "pre-push"
-  ] hookTypes;
+  ];
+
+  # Each hook runs once, in its first file stage, while installed hooks keep every stage.
+  runStage = hook: lib.findFirst (stage: lib.elem stage (map hookType hook.stages)) null fileStages;
+
+  runHook =
+    hook:
+    let
+      stage = runStage hook;
+    in
+    hook // lib.optionalAttrs (stage != null) { stages = [ stage ]; };
+
+  # `rawConfig` is git-hooks.nix's internal option holding the installed configuration.
+  inherit (hooksRun.config) rawConfig;
+
+  runConfig = pkgs.writers.writeJSON "run-hooks-config.json" (
+    rawConfig // { repos = map (repo: repo // { hooks = map runHook repo.hooks; }) rawConfig.repos; }
+  );
+
+  rawHooks = lib.concatMap (repo: repo.hooks) rawConfig.repos;
+  runStages = lib.intersectLists (map runStage rawHooks) fileStages;
 
   prepares = lib.unique (lib.catAttrs "prepare" hooksRun.enabledPackages);
 
@@ -361,10 +380,11 @@ let
       cd "$(git rev-parse --show-toplevel)"
       ${lib.concatMapStringsSep "\n" lib.getExe prepares}
 
+      stages=(${lib.escapeShellArgs runStages})
       status=0
-      for stage in ${lib.escapeShellArgs fileStages}; do
+      for stage in "''${stages[@]}"; do
         prek run \
-          --config ${lib.escapeShellArg hooksRun.config.configPath} \
+          --config ${runConfig} \
           --stage "$stage" \
           --all-files \
           --show-diff-on-failure \
@@ -420,9 +440,9 @@ pkgs.mkShell {
           ${lib.getExe hooksRun.config.package} install \
             --config ${lib.escapeShellArg hooksRun.config.configPath} \
             ${lib.escapeShellArgs (
-              lib.concatMap (hookType: [
+              lib.concatMap (type: [
                 "--hook-type"
-                hookType
+                type
               ]) hookTypes
             )}
         ''}

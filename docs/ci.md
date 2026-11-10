@@ -50,44 +50,49 @@ The Linux leg then runs `nix develop -c run-hooks`, and the macOS leg enters the
 
 The [branch ruleset](github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
 
-Every run reads the public `hakula` Cachix cache, and `nix.yml` pushes builds to it only from the default branch. Create a `CACHIX_AUTH_TOKEN` secret to enable pushing.
+Every run reads the public `hakula` Cachix cache. With a `CACHIX_AUTH_TOKEN` secret, `nix.yml` and the language workflows push builds to it from the default branch.
 
 ## Language jobs
 
-`nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. Each job's id names what it checks, and its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix. A blank line separates a job's settings from its `steps`.
+`nix.yml` runs the hooks, so a language job runs only what no hook covers. Call `python.yml`, `node.yml`, or `rust.yml` for tests, coverage, and the Rust MSRV, and list each job in `CI Result`'s `needs`. Builds, packaging, and other project-specific steps go in the repository's own jobs.
 
-A check belongs in `nix flake check` only when it runs offline on dependencies that Nix supplies without a hash to maintain and needs no build cache, since the build sandbox has no network, a fixed-output dependency hash would break on every Renovate lockfile update, and a sandbox build compiles every dependency again on each change. `dk.nuTests` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job, while every other language's tests run in one.
+A repository's own job runs its commands in the default dev shell unless it needs another toolchain. Its id names what it checks, its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix, and a blank line separates its settings from its `steps`.
 
-Every job runs its commands in the default dev shell, which `nix.yml` requires to hold every hook tool and caches from the default branch, unless the job needs another toolchain, as the MSRV job does. Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while the lockfile assertions `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a separate Windows job that installs its toolchain natively and lists it in `CI Result`'s `needs`, leaving the Nix jobs unchanged.
+Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a native Windows job to `CI Result`'s `needs`.
+
+A check belongs in `nix flake check` only when it runs offline, on dependencies that Nix supplies without a hash to maintain, and without a build cache. The sandbox has no network, a fixed-output hash breaks on every Renovate lockfile update, and a sandbox build compiles every dependency again. `dk.nuTests` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job.
+
+| Input          | Workflows  | Default                            | Effect                           |
+| -------------- | ---------- | ---------------------------------- | -------------------------------- |
+| `coverage`     | All        | `true`                             | Uploads test coverage to Codecov |
+| `macos`        | All        | `true` in `rust.yml`, else `false` | Adds the macOS leg               |
+| `msrv`         | `rust.yml` | `false`                            | Adds the `MSRV Check` job        |
+| `all_features` | `rust.yml` | `false`                            | Passes `--all-features` to Cargo |
+
+| Secret              | Workflows | Required | Purpose                             |
+| ------------------- | --------- | -------- | ----------------------------------- |
+| `CACHIX_AUTH_TOKEN` | All       | No       | Pushes builds to the `hakula` cache |
+
+The Codecov upload authenticates with OIDC, so the calling job grants `id-token: write`, even with `coverage: false`.
 
 ### Python
 
 ```yaml
 python:
-  name: Python Check
-  runs-on: ubuntu-latest
-  timeout-minutes: 30
-
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Set up Nix
-      uses: hakula139/devkit/.github/actions/setup-nix@v3
-
-    - name: Run tests
-      run: nix develop -c uv run --locked pytest
-
-    - name: Upload to Codecov
-      uses: codecov/codecov-action@v7
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: coverage.xml
+  permissions:
+    contents: read
+    id-token: write
+  uses: hakula139/devkit/.github/workflows/python.yml@v3
+  secrets:
+    CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
 
-`uv run --locked` syncs the environment, so the job needs no install step. uv reads its interpreter settings from [`[tool.uv]`](hooks.md#declare-uv), and pytest reads its flags from `pyproject.toml`, where `--cov` needs `pytest-cov` in the `dev` group:
+The job runs `uv run --locked pytest` with the interpreter settings from [`[tool.uv]`](hooks.md#declare-uv). pytest reads its flags from `pyproject.toml`, where `--cov` needs `pytest-cov` in the `dev` group, and `source` must name the measured package or directory, since a bare `--cov` measures whatever the dev shell puts on `PYTHONPATH` and misses modules no test imports:
 
 ```toml
+[tool.coverage.run]
+source = ["<package>"]
+
 [tool.pytest]
 minversion = "9.0"
 addopts = ["--quiet", "--cov", "--cov-report=term", "--cov-report=xml"]
@@ -95,37 +100,21 @@ strict = true
 testpaths = ["tests"]
 ```
 
-Add `pythonpath = ["src"]` only for a `src` layout that uv does not install as a package. A project that publishes to PyPI adds a `nix develop -c uv build` step when no Nix check builds the package.
+Add `pythonpath = ["src"]` only for a `src` layout that uv does not install as a package. A Nix package that runs the tests through `pytestCheckHook` lists `pytest-cov-stub` in `nativeCheckInputs`, so the `--cov` flags don't fail its build. A PyPI package adds a job running `nix develop -c uv build` when no Nix check builds it.
 
 ### Node
 
 ```yaml
 node:
-  name: Node Check
-  runs-on: ubuntu-latest
-  timeout-minutes: 30
-
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Set up Nix
-      uses: hakula139/devkit/.github/actions/setup-nix@v3
-
-    - name: Install dependencies
-      run: nix develop -c pnpm install --frozen-lockfile
-
-    - name: Run tests
-      run: nix develop -c pnpm test
-
-    - name: Upload to Codecov
-      uses: codecov/codecov-action@v7
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: coverage/lcov.info
+  permissions:
+    contents: read
+    id-token: write
+  uses: hakula139/devkit/.github/workflows/node.yml@v3
+  secrets:
+    CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
 
-`package.json` scripts carry the runner flags, and `vitest.config.ts` turns on coverage and its lcov report for the upload step, and coverage needs `@vitest/coverage-v8` in `devDependencies`:
+The job runs `pnpm install --frozen-lockfile` and `pnpm test`, whose runner flags live in `package.json` scripts. `vitest.config.ts` turns on coverage with an lcov report, which needs `@vitest/coverage-v8` in `devDependencies`:
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -140,71 +129,23 @@ export default defineConfig({
 });
 ```
 
-Add a `nix develop -c pnpm build` step when the repository has a `build` script, and a dry-run publish or pack step for a published package.
-
-A static site's job is `site` (`Site Check`), whose last step is `Build site` running `nix develop -c pnpm build`. Build options belong in the site's configuration or its `build` script, and the job uploads the output with `actions/upload-artifact@v7` only when a later job downloads it.
+A repository with a `build` script adds a job running `nix develop -c pnpm build`, with a dry-run publish or pack step for a published package. For a static site, that job is `site` (`Site Check`) with a `Build site` step, and it uploads the output with `actions/upload-artifact@v7` only when a later job downloads it. Build options belong in the site's configuration or its `build` script.
 
 ### Rust
 
 ```yaml
 rust:
-  name: Rust Check (${{ matrix.os }})
-  runs-on: ${{ matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
-  timeout-minutes: 30
-  strategy:
-    fail-fast: false
-    matrix:
-      os: [Linux, macOS]
-
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Set up Nix
-      uses: hakula139/devkit/.github/actions/setup-nix@v3
-
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
-        cmd-format: nix develop -c {0}
-        save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-
-    - name: Run clippy
-      if: ${{ matrix.os == 'macOS' }}
-      run: nix develop -c cargo clippy --locked --all-targets
-
-    - name: Run tests
-      run: nix develop -c cargo llvm-cov --locked --lcov --output-path lcov.info
-
-    - name: Upload to Codecov
-      uses: codecov/codecov-action@v7
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        files: lcov.info
-
-msrv:
-  name: MSRV Check
-  runs-on: ubuntu-latest
-  timeout-minutes: 30
-
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Set up Nix
-      uses: hakula139/devkit/.github/actions/setup-nix@v3
-
-    - name: Cache dependencies
-      uses: Swatinem/rust-cache@v2
-      with:
-        cmd-format: nix develop .#msrv -c {0}
-        save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-
-    - name: Check MSRV
-      run: nix develop .#msrv -c cargo check --locked --workspace --all-targets
+  permissions:
+    contents: read
+    id-token: write
+  uses: hakula139/devkit/.github/workflows/rust.yml@v3
+  with:
+    msrv: true
+  secrets:
+    CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
 
-The `clippy` hook covers Linux. On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
+On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
 
 ```toml
 [build]
@@ -218,7 +159,7 @@ warnings = "deny"
 components = ["clippy", "llvm-tools-preview", "rustfmt"]
 ```
 
-The default dev shell puts `cargo-llvm-cov` beside that toolchain, and the `msrv` dev shell builds rust-overlay's toolchain at the workspace's `rust-version`, so the MSRV has one home:
+The default dev shell adds `cargo-llvm-cov`, and the `msrv` dev shell builds rust-overlay's toolchain at the workspace's `rust-version`, so the MSRV has one home:
 
 ```nix
 let
@@ -245,17 +186,13 @@ in
 }
 ```
 
-`cargo llvm-cov` skips doc tests, so a crate with a library target adds a `nix develop -c cargo test --locked --doc` step. Add `--all-features` to the test and MSRV steps when the crate has features.
+`cargo llvm-cov` skips doc tests, so with coverage the job also runs `cargo test --locked --doc`, which fails without a library target. A workspace without one passes `coverage: false`.
 
 ### Coverage
 
-Each job uploads its report to Codecov directly after the step that writes it. A repository without Codecov drops the upload step and the coverage settings, and its Rust job runs `cargo test --locked`.
+A repository without Codecov passes `coverage: false` and drops the coverage settings. A Codecov outage leaves `CI Result` passing, since Codecov's own status checks gate coverage, and a fork pull request, which gets no OIDC token, uploads without one.
 
-- Set `flags` only when the repository uploads reports from several jobs.
-- `fail_ci_if_error` stays unset, so a Codecov outage or a fork pull request without the secret leaves `CI Result` passing, while Codecov's own status checks gate coverage.
-- Path filters go in `codecov.yml` `ignore`.
-
-A matrix job uploads once per leg, so `codecov.yml` holds Codecov's status until every leg has reported, two for the Rust job:
+Path filters go in `codecov.yml` `ignore`. Each matrix leg uploads its own report, so `codecov.yml` holds Codecov's status until every upload arrives, two for `rust.yml` with its macOS leg:
 
 ```yaml
 codecov:

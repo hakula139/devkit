@@ -39,12 +39,10 @@ Once a release is published, its tag cannot move or be deleted and its assets ar
 
 The ruleset blocks deleting and force-pushing the default branch, and requires a pull request for every change:
 
-- The default branch history must stay linear, so no merge commit can land on it.
-- Squash is the only allowed merge method, matching the [repository settings](#repository-and-workflow-settings).
+- Squash is the only allowed merge method, matching the [repository settings](#repository-and-workflow-settings), and the default branch history must stay linear.
 - `CI Result` from GitHub Actions must pass on a branch that is up to date with the default branch.
 - Every review thread must be resolved.
-- No approval is required.
-- A new push dismisses earlier approvals.
+- No approval is required, and a new push dismisses earlier approvals so that each approval covers only the commits it reviewed.
 - The admin role can bypass the ruleset in an emergency.
 
 Apply [the main ruleset](../.github/settings/rulesets/main.json) to a repository:

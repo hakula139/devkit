@@ -15,7 +15,13 @@ A test is a command named `test <behavior>` in a `.test.nu` file, using assertio
 
 ## Run the check
 
-`nuTests` takes `src` and an optional `runtimeInputs` list, as shown in [Nushell tooling](nushell.md):
+`nuTests` takes `src` and an optional `runtimeInputs` list. After [setting up the flake](flake.md), add it to the per-system output attribute set:
+
+```nix
+checks.tests = dk.nuTests {
+  src = ./.;
+};
+```
 
 - The check copies every directory containing a test file and runs those files from the `src` root with `dk.nushell` and `runtimeInputs` on `PATH`.
 - Run `chmod u+w` on any file copied by a test before writing to it.

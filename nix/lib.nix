@@ -6,6 +6,8 @@
   pkgs,
   git-hooks-nix,
   nushell,
+  ruff,
+  uv,
 }:
 
 let
@@ -36,7 +38,11 @@ let
     text = "exec pnpm install --frozen-lockfile";
   };
 
-  uvTool = lockedTool [ pkgs.uv ] "uv run --locked" {
+  uvToolchain = {
+    inherit uv;
+  };
+
+  uvTool = lockedTool (builtins.attrValues uvToolchain) "uv run --locked" {
     name = "uv-sync";
     text = "exec uv sync --locked";
   };
@@ -52,6 +58,7 @@ in
     nu-test
     nushell
     uvTool
+    uvToolchain
     ;
 
   preCommit = import ./hooks {
@@ -61,6 +68,7 @@ in
       actionlint
       nodeTool
       nu-check
+      ruff
       uvTool
       ;
   };

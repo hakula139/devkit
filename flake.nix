@@ -53,12 +53,12 @@
           map (system: lib.mapAttrs (_: value: { ${system} = value; }) (f system)) systemList
         );
 
-      nushellFor =
-        pkgs:
-        if lib.versionAtLeast pkgs.nushell.version "0.116" then
-          pkgs.nushell
+      packageAtLeast =
+        pkgs: name: version:
+        if lib.versionAtLeast pkgs.${name}.version version then
+          pkgs.${name}
         else
-          nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.nushell;
+          nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.${name};
 
       skillHelpers = import ./nix/skill-links.nix { inherit lib; };
     in
@@ -74,7 +74,9 @@
           pkgs:
           import ./nix/lib.nix {
             inherit pkgs git-hooks-nix;
-            nushell = nushellFor pkgs;
+            nushell = packageAtLeast pkgs "nushell" "0.116";
+            ruff = packageAtLeast pkgs "ruff" "0.17";
+            uv = packageAtLeast pkgs "uv" "0.13";
           };
       };
     }

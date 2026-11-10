@@ -97,6 +97,14 @@ No hook formats Nushell, so `editorconfig-checker` checks its indentation agains
 
 mypy checks the `files` that `[tool.mypy]` names, whichever files changed.
 
+### Lint and format Python
+
+`ruff` and `ruff-format` both run `hooks.ruff.package`, which is the consumer's `pkgs.ruff` when it is 0.17 or later, and otherwise the one from devkit's `nixpkgs-unstable` input. To run the Ruff that the repository's `uv.lock` pins, add `ruff` to its `dev` dependency group and set:
+
+```nix
+hooks.ruff.package = dk.uvTool "ruff";
+```
+
 ### Lint and format Rust
 
 Point clippy and rustfmt at the repository's toolchain:
@@ -128,11 +136,13 @@ Start the repository's `.envrc` with a shell directive, which shellcheck needs t
 
 `dk.nodeTool "<command>"` and `dk.uvTool "<command>"` return packages that run the command from the repository's pnpm or uv lockfile, which `run-hooks` installs first. `eslint` and `tsc` use `dk.nodeTool` and `mypy` uses `dk.uvTool` by default. Set `package` to `dk.nodeTool "prettier"` for Prettier with plugins, or to `dk.nodeTool "cspell"` for cspell with npm dictionaries.
 
-Add `dk.nodeToolchain` to the dev shell to use the same Node.js and pnpm as `nodeTool`:
+Add `dk.nodeToolchain` to the dev shell to use the same Node.js and pnpm as `nodeTool`, and `dk.uvToolchain` to use the same uv as `uvTool`:
 
 ```nix
-packages = builtins.attrValues dk.nodeToolchain;
+packages = builtins.attrValues dk.nodeToolchain ++ builtins.attrValues dk.uvToolchain;
 ```
+
+`dk.uvToolchain`'s uv is the consumer's `pkgs.uv` when it is 0.13 or later, and otherwise the one from devkit's `nixpkgs-unstable` input, since an older uv rewrites a `uv.lock` to an older revision.
 
 ### Declare pnpm
 
@@ -151,6 +161,19 @@ Declare pnpm in `package.json` with `devEngines`, matching the toolchain's major
 ```
 
 Leave out a `packageManager` field, which would make pnpm download and run that exact version instead. npm refuses to run in a project whose `devEngines` names pnpm, so publish with `pnpm publish`, which runs npm's OIDC trusted publishing, and run npm-only commands from outside the checkout.
+
+### Declare uv
+
+Set uv's version floor and interpreter in `pyproject.toml`, which every `uv` invocation reads, inside the dev shell or not:
+
+```toml
+[tool.uv]
+required-version = ">=0.13"
+python-downloads = "never"
+python-preference = "only-system"
+```
+
+`only-system` makes uv use the dev shell's Python, and unlike `system` it also replaces a `.venv` built on a uv-managed Python. Add the `pkgs.python3xx` that satisfies `requires-python` to the dev shell.
 
 ## Exclude files
 

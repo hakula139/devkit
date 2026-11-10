@@ -46,6 +46,7 @@ taplo
 tera
 testlib
 toplevel
+venv
 wakatime
 worktree
 worktrees

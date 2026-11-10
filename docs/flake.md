@@ -9,6 +9,8 @@ devkit = {
 };
 ```
 
+`mkLib` takes Nushell, Ruff, and uv from devkit's `nixpkgs-unstable` input when the consumer's are too old, so `nixpkgs-unstable` must not follow a stable nixpkgs.
+
 `devkit.lib.systems` and `devkit.lib.eachSystem` replace `flake-utils`:
 
 - `devkit.lib.systems` lists the shared target systems.

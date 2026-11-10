@@ -69,8 +69,6 @@ let
     else
       stage;
 
-  hookTypes = lib.unique (map hookType (lib.remove "manual" hooksRun.config.installStages));
-
   # ------------------------------------------------------------------------------------------------
   # Hook runner
   # ------------------------------------------------------------------------------------------------
@@ -80,6 +78,7 @@ let
   # Hook installation
   # ------------------------------------------------------------------------------------------------
   git = lib.getExe hooksRun.config.gitPackage;
+  hookTypes = lib.unique (map hookType (lib.remove "manual" hooksRun.config.installStages));
 in
 pkgs.mkShell {
   # Listed directly, the hook packages' setup hooks would set the consumer's PYTHONPATH.

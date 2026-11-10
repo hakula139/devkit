@@ -76,6 +76,7 @@ in
     check-merge-conflicts.enable = true;
 
     cspell = {
+      enable = true;
       args = [
         "--no-progress"
         "--no-must-find-files"
@@ -144,6 +145,7 @@ in
     };
 
     dprint = {
+      enable = true;
       package = pkgs.dprint;
       entry = "${lib.getExe config.hooks.dprint.package} fmt";
       args = [
@@ -154,6 +156,7 @@ in
     };
 
     markdownlint-cli2 = {
+      enable = true;
       package = pkgs.markdownlint-cli2;
       entry = configEntry config.hooks.markdownlint-cli2 [ ];
       args = [

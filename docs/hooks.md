@@ -14,7 +14,7 @@ nix develop -c run-hooks
 
 ## Enable hooks
 
-The General, GitHub Actions, and Nix hooks are enabled by default, except `cspell` and `lychee`. Disable one with `hooks.<name>.enable = false;`, and enable any other with `hooks.<name>.enable = true;`.
+The General, GitHub Actions, and Nix hooks except `lychee` are enabled by default, along with `dprint` and `markdownlint-cli2`. `cspell` expects a [`cspell.json`](#add-a-spelling-dictionary). Disable a hook with `hooks.<name>.enable = false;`, and enable any other with `hooks.<name>.enable = true;`.
 
 The shared hook configurations cover:
 

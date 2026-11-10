@@ -106,14 +106,11 @@
           src = ./.;
           hooks = {
             check-yaml.enable = true;
-            cspell.enable = true;
             doctoc.enable = true;
-            dprint.enable = true;
             lychee = {
               enable = true;
               settings.flags = "--offline";
             };
-            markdownlint-cli2.enable = true;
             nu-check.enable = true;
             prettier.enable = true;
             shellcheck.enable = true;

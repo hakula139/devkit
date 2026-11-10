@@ -11,6 +11,9 @@
 }:
 
 let
+  # ------------------------------------------------------------------------------------------------
+  # Locked tools
+  # ------------------------------------------------------------------------------------------------
   lockedTool =
     runtimeInputs: runner: prepare: command:
     pkgs.writeShellApplication {
@@ -19,17 +22,6 @@ let
       text = "exec ${runner} ${command} \"$@\"";
       passthru.prepare = pkgs.writeShellApplication (prepare // { inherit runtimeInputs; });
     };
-
-  nuWrapper = import ./nu-wrapper.nix { inherit pkgs nushell; };
-
-  writeNuBin =
-    name: script:
-    nuWrapper.package {
-      inherit name;
-      script = "${pkgs.writeTextDir name (builtins.readFile script)}/${name}";
-    };
-
-  actionlint = pkgs.callPackage ./packages/actionlint.nix { };
 
   nodeToolchain = {
     nodejs = pkgs.nodejs_26;
@@ -50,19 +42,28 @@ let
     text = "exec uv sync --locked";
   };
 
+  # ------------------------------------------------------------------------------------------------
+  # Nushell tools
+  # ------------------------------------------------------------------------------------------------
+  mkNuApplication = import ./mk-nu-application.nix { inherit pkgs nushell; };
+  nuWrapper = import ./nu-wrapper.nix { inherit pkgs nushell; };
+
+  writeNuBin =
+    name: script:
+    nuWrapper.package {
+      inherit name;
+      script = "${pkgs.writeTextDir name (builtins.readFile script)}/${name}";
+    };
+
   nu-check = writeNuBin "nu-check" ../src/nu-check.nu;
   nu-test = writeNuBin "nu-test" ../src/nu-test.nu;
-in
-{
-  inherit
-    nodeTool
-    nodeToolchain
-    nu-check
-    nu-test
-    nushell
-    uvTool
-    uvToolchain
-    ;
+
+  nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
+
+  # ------------------------------------------------------------------------------------------------
+  # Pre-commit hooks
+  # ------------------------------------------------------------------------------------------------
+  actionlint = pkgs.callPackage ./packages/actionlint.nix { };
 
   preCommit = import ./hooks {
     inherit
@@ -75,8 +76,18 @@ in
       uvTool
       ;
   };
-
-  nuTests = import ./nu-test-check.nix { inherit pkgs nushell nu-test; };
-
-  mkNuApplication = import ./mk-nu-application.nix { inherit pkgs nushell; };
+in
+{
+  inherit
+    mkNuApplication
+    nodeTool
+    nodeToolchain
+    nu-check
+    nu-test
+    nuTests
+    nushell
+    preCommit
+    uvTool
+    uvToolchain
+    ;
 }

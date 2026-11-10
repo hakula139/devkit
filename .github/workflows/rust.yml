@@ -3,8 +3,8 @@ name: Rust
 on:
   workflow_call:
     inputs:
-      all-features:
-        description: Pass `--all-features` to the test and MSRV commands
+      all_features:
+        description: Pass `--all-features` to every Cargo command
         type: boolean
         default: false
       coverage:
@@ -51,20 +51,23 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           cmd-format: nix develop -c {0}
-          save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          save-if: >-
+            ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: Run clippy
         if: ${{ matrix.os == 'macOS' }}
-        run: nix develop -c cargo clippy --locked --all-targets
+        run: |
+          nix develop -c cargo clippy \
+            --locked \
+            --all-targets \
+            ${{ inputs.all_features && '--all-features' || '' }}
 
       - name: Run tests
-        if: ${{ inputs.coverage }}
         run: |
-          nix develop -c cargo llvm-cov \
+          nix develop -c cargo ${{ inputs.coverage && 'llvm-cov' || 'test' }} \
             --locked \
-            ${{ inputs.all-features && '--all-features' || '' }} \
-            --lcov \
-            --output-path lcov.info
+            ${{ inputs.all_features && '--all-features' || '' }} \
+            ${{ inputs.coverage && '--lcov --output-path lcov.info' || '' }}
 
       - name: Upload to Codecov
         if: ${{ inputs.coverage }}
@@ -79,14 +82,7 @@ jobs:
           nix develop -c cargo test \
             --locked \
             --doc \
-            ${{ inputs.all-features && '--all-features' || '' }}
-
-      - name: Run tests
-        if: ${{ !inputs.coverage }}
-        run: |
-          nix develop -c cargo test \
-            --locked \
-            ${{ inputs.all-features && '--all-features' || '' }}
+            ${{ inputs.all_features && '--all-features' || '' }}
 
   msrv:
     name: MSRV Check
@@ -107,7 +103,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           cmd-format: nix develop .#msrv -c {0}
-          save-if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          save-if: >-
+            ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: Check MSRV
         run: |
@@ -115,4 +112,4 @@ jobs:
             --locked \
             --workspace \
             --all-targets \
-            ${{ inputs.all-features && '--all-features' || '' }}
+            ${{ inputs.all_features && '--all-features' || '' }}

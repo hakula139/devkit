@@ -54,7 +54,7 @@ Every run reads the public `hakula` Cachix cache, and `nix.yml` and the language
 
 ## Language jobs
 
-`nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. `python.yml`, `node.yml`, and `rust.yml` run a language's tests and upload their coverage, and a repository adds its own job for any other step. Each job's id names what it checks, and its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix. A blank line separates a job's settings from its `steps`.
+`nix.yml` runs the hooks, so a language job runs only what no hook covers: tests, coverage, builds, MSRV, and packaging. `python.yml`, `node.yml`, and `rust.yml` run the tests and upload their coverage, `rust.yml` also checks the MSRV, and a repository adds its own jobs for builds and packaging. Each job's id names what it checks, and its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix. A blank line separates a job's settings from its `steps`.
 
 A check belongs in `nix flake check` only when it runs offline on dependencies that Nix supplies without a hash to maintain and needs no build cache, since the build sandbox has no network, a fixed-output dependency hash would break on every Renovate lockfile update, and a sandbox build compiles every dependency again on each change. `dk.nuTests` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job, while every other language's tests run in one.
 
@@ -62,12 +62,12 @@ Every job runs its commands in the default dev shell, which `nix.yml` requires t
 
 The language workflows take the `CACHIX_AUTH_TOKEN` and `CODECOV_TOKEN` secrets and these inputs:
 
-| Input          | Workflows  | Default                            | Effect                                                |
-| -------------- | ---------- | ---------------------------------- | ----------------------------------------------------- |
-| `coverage`     | All        | `true`                             | Uploads test coverage to Codecov                      |
-| `macos`        | All        | `true` in `rust.yml`, else `false` | Also runs the macOS leg                               |
-| `msrv`         | `rust.yml` | `false`                            | Adds the `MSRV Check` job                             |
-| `all-features` | `rust.yml` | `false`                            | Passes `--all-features` to the test and MSRV commands |
+| Input          | Workflows  | Default                            | Effect                                         |
+| -------------- | ---------- | ---------------------------------- | ---------------------------------------------- |
+| `coverage`     | All        | `true`                             | Uploads test coverage to Codecov               |
+| `macos`        | All        | `true` in `rust.yml`, else `false` | Also runs the macOS leg                        |
+| `msrv`         | `rust.yml` | `false`                            | Adds the `MSRV Check` job                      |
+| `all_features` | `rust.yml` | `false`                            | Passes `--all-features` to every Cargo command |
 
 ### Python
 
@@ -139,7 +139,7 @@ result:
   needs: [nix, rust]
 ```
 
-`rust.yml` caches dependencies with `Swatinem/rust-cache`, runs `cargo clippy --locked --all-targets` on macOS, since the `clippy` hook covers Linux, and tests with `cargo llvm-cov --locked`. On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
+`rust.yml` runs `cargo clippy --locked --all-targets` on macOS, since the `clippy` hook covers Linux, and tests with `cargo llvm-cov --locked`. On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
 
 ```toml
 [build]
@@ -184,7 +184,7 @@ in
 
 ### Coverage
 
-Each job uploads its report to Codecov directly after the step that writes it. A repository without Codecov passes `coverage: false` and drops the coverage settings.
+A repository without Codecov passes `coverage: false` and drops the coverage settings.
 
 - The upload leaves `fail_ci_if_error` unset, so a Codecov outage or a fork pull request without the secret leaves `CI Result` passing, while Codecov's own status checks gate coverage.
 - Path filters go in `codecov.yml` `ignore`.

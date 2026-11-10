@@ -161,11 +161,19 @@
               src = ./tests;
               runtimeInputs = [
                 dk.nu-check
+                (dk.writeNuApplication {
+                  name = "echo-args";
+                  text = builtins.readFile ./tests/echo-args.nu;
+                  makeWrapperArgs = [
+                    "--add-flags"
+                    "--baked"
+                  ];
+                })
               ];
             };
             expectedBuilderLogEntries = [
               "FAIL ./nu-tooling.test.nu: test fails on purpose"
-              "4 passed, 1 failed"
+              "5 passed, 1 failed"
             ];
           };
         };

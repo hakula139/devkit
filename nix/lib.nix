@@ -46,13 +46,13 @@ let
   # Nushell tools
   # ------------------------------------------------------------------------------------------------
   mkNuApplication = import ./mk-nu-application.nix { inherit pkgs nushell; };
-  nuWrapper = import ./nu-wrapper.nix { inherit pkgs nushell; };
+  writeNuApplication = import ./write-nu-application.nix { inherit pkgs nushell; };
 
   writeNuBin =
     name: script:
-    nuWrapper.package {
+    writeNuApplication {
       inherit name;
-      script = "${pkgs.writeTextDir name (builtins.readFile script)}/${name}";
+      text = builtins.readFile script;
     };
 
   nu-check = writeNuBin "nu-check" ../src/nu-check.nu;
@@ -89,5 +89,6 @@ in
     preCommit
     uvTool
     uvToolchain
+    writeNuApplication
     ;
 }

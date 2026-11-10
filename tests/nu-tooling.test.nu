@@ -41,6 +41,18 @@ def "test passes a flag value with Nushell syntax through as a string" [] {
   assert not ($marker | path exists)
 }
 
+def "test passes baked flags to main after the script and keeps the guard" [] {
+  let marker = ($env.TMPDIR | path join "marker")
+
+  let result = (^echo-args "a" | complete)
+  let rejected = (^echo-args $"--help;^touch ($marker)" | complete)
+
+  assert equal $result.exit_code 0
+  assert equal ($result.stdout | from nuon) {baked: true rest: ["a"]}
+  assert equal $rejected.exit_code 1
+  assert not ($marker | path exists)
+}
+
 # `checks.nu-tooling` expects this failure, which shows that the runner reports one.
 def "test fails on purpose" [] {
   assert false

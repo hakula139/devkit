@@ -7,6 +7,10 @@ on:
         description: Also run the macOS leg
         type: boolean
         default: true
+      timeout_minutes:
+        description: Minutes each leg may run before GitHub cancels it
+        type: number
+        default: 45
     secrets:
       CACHIX_AUTH_TOKEN:
         description: Upload token for the `hakula` Cachix cache
@@ -18,7 +22,7 @@ jobs:
   nix:
     name: Nix (${{ matrix.os }})
     runs-on: ${{ matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
-    timeout-minutes: 60
+    timeout-minutes: ${{ inputs.timeout_minutes }}
     strategy:
       fail-fast: false
       matrix:

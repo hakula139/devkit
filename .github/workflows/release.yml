@@ -14,7 +14,7 @@ jobs:
   tagged-ci:
     name: Check Release
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 60
     permissions:
       actions: read
       contents: read
@@ -46,7 +46,7 @@ jobs:
     name: Publish GitHub Release
     needs: nix-cache
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     permissions:
       contents: write
     steps:

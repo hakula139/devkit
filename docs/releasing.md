@@ -92,7 +92,7 @@ publish:
   name: Publish GitHub Release
   needs: [tagged-ci, build]
   runs-on: ubuntu-latest
-  timeout-minutes: 10
+  timeout-minutes: 5
   permissions:
     contents: write
   steps:

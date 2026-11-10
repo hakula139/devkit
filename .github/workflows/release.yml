@@ -32,6 +32,13 @@ jobs:
             echo "::error::Tag $GITHUB_REF_NAME does not match the package version $version"
             exit 1
           fi
+          if [[ -f .claude-plugin/plugin.json ]]; then
+            plugin_version=$(jq -r .version .claude-plugin/plugin.json)
+            if [[ "$plugin_version" != "$version" ]]; then
+              echo "::error file=.claude-plugin/plugin.json::Plugin version $plugin_version does not match the package version $version"
+              exit 1
+            fi
+          fi
 
       - name: Wait for CI on the tagged commit
         uses: $/.github/actions/tagged-ci

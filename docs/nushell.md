@@ -1,6 +1,10 @@
 # Nushell tooling
 
-After [setting up the flake](flake.md), add the package and tests to the per-system output attribute set:
+After [setting up the flake](flake.md), `dk` provides `mkNuApplication`, `writeNuApplication`, `nuTests`, and the `nu-*` tools, which run on `dk.nushell`, the Nushell that `mkLib` selects. [Nushell test runner](nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`.
+
+## Package a project
+
+Add the package to the per-system output attribute set:
 
 ```nix
 packages.default = dk.mkNuApplication {
@@ -11,23 +15,48 @@ packages.default = dk.mkNuApplication {
     ./skills/my-tool
   ];
 };
-
-checks.tests = dk.nuTests {
-  src = ./.;
-};
 ```
 
-[Nushell test runner](nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`. `mkNuApplication` packages the application as follows:
+`mkNuApplication` packages the application as follows:
 
 - Reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`.
-- Exits 1 before running the script on an argument that Nushell would parse as code. Nushell splices the arguments into the `main` call as source text, so the wrapper rejects an argument starting with `--` other than `--`, `--<name>`, and `--<name>=<value>` (where `<name>` is a letter followed by letters, digits, `_`, and `-`), a bare redirection such as `o>` or `e>>`, and an argument starting with `...$`. An operand of one of those shapes has to be passed in another form, such as an absolute path.
 - Packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`.
 - Copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill.
 - Sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
 
-`mkNuApplication`, `nuTests`, and the `nu-*` tools run on `dk.nushell`, the Nushell that [`mkLib` selects](flake.md).
+## Package a single file
 
-`devkit.lib` also provides the skill option and links for a Home Manager module:
+`writeNuApplication` packages a single-file command that needs no source directory, version, or skills:
+
+```nix
+packages.my-command = dk.writeNuApplication {
+  name = "my-command";
+  text = builtins.readFile ./my-command.nu;
+  runtimeInputs = [
+    pkgs.git
+  ];
+  makeWrapperArgs = [
+    "--add-flag"
+    "--verbose"
+  ];
+};
+```
+
+It installs `text` as `bin/<name>`, the name `--help` shows, with `runtimeInputs` on its `PATH`. It appends `makeWrapperArgs` to its `makeShellWrapper` call, so an argument added with `--add-flag` reaches `main` ahead of the caller's arguments. It sets `meta.mainProgram` to `name` and merges any `meta` argument over it.
+
+## Pass code-like arguments
+
+The `mkNuApplication` and `writeNuApplication` wrappers exit 1 before running the script on an argument that Nushell would parse as code:
+
+- An argument starting with `--`, other than `--`, `--<name>`, and `--<name>=<value>`, where `<name>` is a letter followed by letters, digits, `_`, and `-`
+- A bare redirection, such as `o>` or `e>>`
+- An argument starting with `...$`
+
+Pass such an operand in another form, such as an absolute path. Arguments that `makeWrapperArgs` adds bypass this check.
+
+## Link skills from Home Manager
+
+`devkit.lib` provides the skill option and links for a Home Manager module:
 
 ```nix
 options.programs.my-tool.skillDirectories = lib.mkOption devkit.lib.skillDirectoriesOption;

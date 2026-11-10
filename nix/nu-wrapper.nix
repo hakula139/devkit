@@ -17,6 +17,7 @@ let
       bin,
       script,
       runtimeInputs ? [ ],
+      makeWrapperArgs ? [ ],
     }:
     let
       pathArgs = lib.optionalString (
@@ -27,7 +28,8 @@ let
       makeShellWrapper ${lib.getExe nushell} ${bin} \
         --run ${lib.escapeShellArg (builtins.readFile ./nu-wrapper.sh)} \
         --add-flags "--no-config-file ${script}" \
-        ${pathArgs}
+        ${pathArgs} \
+        ${lib.escapeShellArgs makeWrapperArgs}
     '';
 in
 {
@@ -39,16 +41,21 @@ in
       name,
       script,
       runtimeInputs ? [ ],
+      makeWrapperArgs ? [ ],
+      meta ? { },
     }:
     pkgs.runCommand name
       {
         nativeBuildInputs = [
           pkgs.makeShellWrapper
         ];
-        meta.mainProgram = name;
+        meta = {
+          mainProgram = name;
+        }
+        // meta;
       }
       (command {
         bin = "$out/bin/${name}";
-        inherit script runtimeInputs;
+        inherit script runtimeInputs makeWrapperArgs;
       });
 }

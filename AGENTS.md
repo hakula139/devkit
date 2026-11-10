@@ -8,7 +8,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 | ----------------------------------------------------------------------------------------- | -------------------------------------- |
 | `mkLib`, `lib.systems`, or `lib.eachSystem`                                               | [Nix flake](docs/flake.md)             |
 | The pre-commit baseline or the dev shell                                                  | [Hooks](docs/hooks.md)                 |
-| `mkNuApplication`, `dk.nushell`, or the skill helpers                                     | [Nushell tooling](docs/nushell.md)     |
+| `mkNuApplication`, `writeNuApplication`, `dk.nushell`, or the skill helpers               | [Nushell tooling](docs/nushell.md)     |
 | `nu-test`, `nu-check`, or `nuTests`                                                       | [Nushell test runner](docs/nu-test.md) |
 | `nix.yml`, `ci-result`, or the language job convention                                    | [CI workflow and gate](docs/ci.md)     |
 | An action, a reusable workflow, the git-cliff config, a release, or a versioning decision | [Releasing](docs/releasing.md)         |
@@ -25,7 +25,7 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── nix/                        # Nix library, hooks, builders, and private package overrides
 ├── scripts/                    # Repository administration helpers
 ├── src/                        # Exported Nushell executable sources
-├── tests/                      # The Nushell tooling check's tests
+├── tests/                      # The Nushell tooling check and its tests
 ├── .markdownlint-cli2.jsonc    # The shared markdownlint-cli2 rules
 ├── .prettierrc.json            # The shared Prettier style, whose `overrides` must use basenames
 ├── .taplo.toml                 # The shared Taplo formatting

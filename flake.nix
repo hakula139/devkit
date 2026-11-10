@@ -156,18 +156,7 @@
         # Checks
         # ------------------------------------------------------------------------------------------
         checks = self.packages.${system} // {
-          nu-tooling = pkgs.testers.testBuildFailure' {
-            drv = dk.nuTests {
-              src = ./tests;
-              runtimeInputs = [
-                dk.nu-check
-              ];
-            };
-            expectedBuilderLogEntries = [
-              "FAIL ./nu-tooling.test.nu: test fails on purpose"
-              "4 passed, 1 failed"
-            ];
-          };
+          nu-tooling = import ./tests { inherit pkgs dk; };
         };
 
         # ------------------------------------------------------------------------------------------

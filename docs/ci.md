@@ -60,7 +60,7 @@ A check belongs in `nix flake check` only when it runs offline on dependencies t
 
 Every job runs its commands in the default dev shell, which `nix.yml` requires to hold every hook tool and caches from the default branch, unless the job needs another toolchain, as the MSRV job does. Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while the lockfile assertions `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a separate Windows job that installs its toolchain natively and lists it in `CI Result`'s `needs`, leaving the workflow calls unchanged.
 
-The language workflows take the `CACHIX_AUTH_TOKEN` and `CODECOV_TOKEN` secrets and these inputs:
+The language workflows take these inputs and secrets:
 
 | Input          | Workflows  | Default                            | Effect                                         |
 | -------------- | ---------- | ---------------------------------- | ---------------------------------------------- |
@@ -68,6 +68,11 @@ The language workflows take the `CACHIX_AUTH_TOKEN` and `CODECOV_TOKEN` secrets 
 | `macos`        | All        | `true` in `rust.yml`, else `false` | Also runs the macOS leg                        |
 | `msrv`         | `rust.yml` | `false`                            | Adds the `MSRV Check` job                      |
 | `all_features` | `rust.yml` | `false`                            | Passes `--all-features` to every Cargo command |
+
+| Secret              | Workflows | Required | Purpose                                                     |
+| ------------------- | --------- | -------- | ----------------------------------------------------------- |
+| `CACHIX_AUTH_TOKEN` | All       | No       | Pushes builds to the `hakula` cache from the default branch |
+| `CODECOV_TOKEN`     | All       | No       | Uploads coverage to Codecov                                 |
 
 ### Python
 

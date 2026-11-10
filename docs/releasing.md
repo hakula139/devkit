@@ -143,7 +143,7 @@ Consumers follow the major tag without a PR, so classify each change by its effe
 
 ### Roll back
 
-devkit's own release never runs `release.yml`, `nix-cache.yml`, or `publish-release`'s `assets`, and its CI never runs `python.yml`, `node.yml`, or `rust.yml`, so after changing any of them, watch the next consumer run of the changed piece and roll back if it fails.
+devkit's own release never runs `release.yml`, `nix-cache.yml`, or `publish-release`'s `assets`, and its CI never runs `python.yml`, `node.yml`, or `rust.yml`. After changing any of them, watch the next consumer run of the changed piece and roll back if it fails.
 
 Force-move the major tag back to the previous release:
 

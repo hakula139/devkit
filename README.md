@@ -14,7 +14,7 @@ Shared development tooling for Hakula's repositories.
 | [Hooks]                | Pre-commit setup and configuration      |
 | [Nushell tooling]      | Application and skill packaging         |
 | [Nushell test runner]  | Tests and script checks                 |
-| [CI workflow and gate] | Nix checks and required status gate     |
+| [CI workflow and gate] | Nix checks, language jobs, status gate  |
 | [Releasing]            | Release setup and publishing            |
 | [Renovate preset]      | Dependency updates and automerge        |
 | [GitHub conventions]   | Repository settings, rulesets, labels   |

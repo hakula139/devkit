@@ -72,23 +72,26 @@ A check belongs in `nix flake check` only when it runs offline, on dependencies 
 | Secret              | Workflows | Required | Purpose                             |
 | ------------------- | --------- | -------- | ----------------------------------- |
 | `CACHIX_AUTH_TOKEN` | All       | No       | Pushes builds to the `hakula` cache |
-| `CODECOV_TOKEN`     | All       | No       | Uploads coverage to Codecov         |
+
+The Codecov upload authenticates with OIDC, so the calling job grants `id-token: write`, even with `coverage: false`.
 
 ### Python
 
 ```yaml
 python:
+  permissions:
+    contents: read
+    id-token: write
   uses: hakula139/devkit/.github/workflows/python.yml@v3
   secrets:
     CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-The job runs `uv run --locked pytest` with the interpreter settings from [`[tool.uv]`](hooks.md#declare-uv). pytest reads its flags from `pyproject.toml`, where `--cov` needs `pytest-cov` in the `dev` group and `source` keeps modules that no test imports in the report:
+The job runs `uv run --locked pytest` with the interpreter settings from [`[tool.uv]`](hooks.md#declare-uv). pytest reads its flags from `pyproject.toml`, where `--cov` needs `pytest-cov` in the `dev` group, and `source` must name the measured package or directory, since a bare `--cov` measures whatever the dev shell puts on `PYTHONPATH` and misses modules no test imports:
 
 ```toml
 [tool.coverage.run]
-source = ["src"]
+source = ["<package>"]
 
 [tool.pytest]
 minversion = "9.0"
@@ -103,10 +106,12 @@ Add `pythonpath = ["src"]` only for a `src` layout that uv does not install as a
 
 ```yaml
 node:
+  permissions:
+    contents: read
+    id-token: write
   uses: hakula139/devkit/.github/workflows/node.yml@v3
   secrets:
     CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
 
 The job runs `pnpm install --frozen-lockfile` and `pnpm test`, whose runner flags live in `package.json` scripts. `vitest.config.ts` turns on coverage with an lcov report, which needs `@vitest/coverage-v8` in `devDependencies`:
@@ -130,12 +135,14 @@ A repository with a `build` script adds a job running `nix develop -c pnpm build
 
 ```yaml
 rust:
+  permissions:
+    contents: read
+    id-token: write
   uses: hakula139/devkit/.github/workflows/rust.yml@v3
   with:
     msrv: true
   secrets:
     CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
 
 On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
@@ -183,7 +190,7 @@ in
 
 ### Coverage
 
-A repository without Codecov passes `coverage: false` and drops the coverage settings. A Codecov outage or a fork pull request without the secret leaves `CI Result` passing, since Codecov's own status checks gate coverage.
+A repository without Codecov passes `coverage: false` and drops the coverage settings. A Codecov outage leaves `CI Result` passing, since Codecov's own status checks gate coverage, and a fork pull request, which gets no OIDC token, uploads without one.
 
 Path filters go in `codecov.yml` `ignore`. Each matrix leg uploads its own report, so `codecov.yml` holds Codecov's status until every upload arrives, two for `rust.yml` with its macOS leg:
 

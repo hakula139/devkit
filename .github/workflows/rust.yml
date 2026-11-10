@@ -22,8 +22,6 @@ on:
     secrets:
       CACHIX_AUTH_TOKEN:
         description: Upload token for the `hakula` Cachix cache
-      CODECOV_TOKEN:
-        description: Upload token for Codecov
 
 permissions:
   contents: read
@@ -33,6 +31,9 @@ jobs:
     name: Rust Check (${{ matrix.os }})
     runs-on: ${{ matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
     timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -73,8 +74,8 @@ jobs:
         if: ${{ inputs.coverage }}
         uses: codecov/codecov-action@v7
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
+          use_oidc: true
 
       - name: Run doc tests
         if: ${{ inputs.coverage }}

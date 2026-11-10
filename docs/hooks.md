@@ -14,7 +14,7 @@ nix develop -c run-hooks
 
 ## Enable hooks
 
-The General, GitHub Actions, and Nix hooks except `lychee` are enabled by default, along with `dprint` and `markdownlint-cli2`. `cspell` expects a [`cspell.json`](#add-a-spelling-dictionary). Disable a hook with `hooks.<name>.enable = false;`, and enable any other with `hooks.<name>.enable = true;`.
+The General, GitHub Actions, Markdown, and Nix hooks are enabled by default, except `lychee` and `doctoc`. Without a [`cspell.json`](#add-a-spelling-dictionary) that names a project dictionary, `cspell` flags project terms such as `nixpkgs`. Disable a hook with `hooks.<name>.enable = false;`, and enable any other with `hooks.<name>.enable = true;`.
 
 The shared hook configurations cover:
 

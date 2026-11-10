@@ -82,9 +82,11 @@ in
       ];
     };
 
+    editorconfig-checker.enable = true;
     end-of-file-fixer.enable = true;
 
     sort-file-contents = {
+      enable = true;
       files = "^\\.cspell/words\\.txt$";
       settings.ignore-case = true;
     };
@@ -100,6 +102,7 @@ in
     # GitHub Actions
     # ----------------------------------------------------------------------------------------------
     actionlint = {
+      enable = true;
       package = actionlint;
     };
 
@@ -160,6 +163,13 @@ in
       files = "\\.md$";
       settings.configPath = "${../../.markdownlint-cli2.jsonc}";
     };
+
+    # ----------------------------------------------------------------------------------------------
+    # Nix
+    # ----------------------------------------------------------------------------------------------
+    deadnix.enable = true;
+    nixfmt.enable = true;
+    statix.enable = true;
 
     # ----------------------------------------------------------------------------------------------
     # Nushell

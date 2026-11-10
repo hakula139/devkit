@@ -14,7 +14,7 @@ nix develop -c run-hooks
 
 ## Enable hooks
 
-Only `check-added-large-files`, `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` are enabled by default. Enable other hooks with `hooks.<name>.enable = true;`.
+The General, GitHub Actions, and Nix hooks are enabled by default, except `cspell` and `lychee`. Disable one with `hooks.<name>.enable = false;`, and enable any other with `hooks.<name>.enable = true;`.
 
 The shared hook configurations cover:
 

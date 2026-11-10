@@ -49,7 +49,7 @@ The shared hook configurations cover:
 | Web formats             | `prettier`                 | Formatting of JavaScript, TypeScript, JSON, YAML | Shared defaults, `.prettierrc.json`         |
 | YAML                    | `check-yaml`               | Syntax                                           |                                             |
 
-devkit's [baseline](../nix/hooks.nix) sets each hook's defaults, and git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines its settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
+devkit's [baseline](../nix/hooks/baseline.nix) sets each hook's defaults, and git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines its settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
 
 ## Configure a hook
 

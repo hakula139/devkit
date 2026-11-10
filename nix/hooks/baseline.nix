@@ -74,6 +74,7 @@ in
     # ----------------------------------------------------------------------------------------------
     check-added-large-files.enable = true;
     check-merge-conflicts.enable = true;
+    check-yaml.enable = true;
 
     cspell = {
       enable = true;

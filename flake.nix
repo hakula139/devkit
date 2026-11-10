@@ -105,7 +105,6 @@
         preCommit = dk.preCommit {
           src = ./.;
           hooks = {
-            check-yaml.enable = true;
             doctoc.enable = true;
             lychee = {
               enable = true;

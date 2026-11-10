@@ -84,9 +84,12 @@ python:
     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 ```
 
-The job runs `uv run --locked pytest` with the interpreter settings from [`[tool.uv]`](hooks.md#declare-uv). pytest reads its flags from `pyproject.toml`, where `--cov` needs `pytest-cov` in the `dev` group:
+The job runs `uv run --locked pytest` with the interpreter settings from [`[tool.uv]`](hooks.md#declare-uv). pytest reads its flags from `pyproject.toml`, where `--cov` needs `pytest-cov` in the `dev` group and `source` keeps modules that no test imports in the report:
 
 ```toml
+[tool.coverage.run]
+source = ["src"]
+
 [tool.pytest]
 minversion = "9.0"
 addopts = ["--quiet", "--cov", "--cov-report=term", "--cov-report=xml"]
@@ -94,7 +97,7 @@ strict = true
 testpaths = ["tests"]
 ```
 
-Add `pythonpath = ["src"]` only for a `src` layout that uv does not install as a package. A PyPI package adds a job running `nix develop -c uv build` when no Nix check builds it.
+Add `pythonpath = ["src"]` only for a `src` layout that uv does not install as a package. A Nix package that runs the tests through `pytestCheckHook` lists `pytest-cov-stub` in `nativeCheckInputs`, so the `--cov` flags don't fail its build. A PyPI package adds a job running `nix develop -c uv build` when no Nix check builds it.
 
 ### Node
 

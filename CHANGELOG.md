@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-11-10
+
+### Added
+
+- _(ci)_ The reusable `python.yml`, `node.yml`, and `rust.yml` workflows run a repository's tests with Codecov coverage, plus doc tests and an optional MSRV check in `rust.yml`, and are called like `nix.yml`. Codecov authenticates through OIDC, so the calling job grants `id-token: write`, even with `coverage: false`, and no `CODECOV_TOKEN` secret is needed. `docs/ci.md` sets the conventions for a repository's own CI jobs, including job ids and names, tool flags kept in the tool's configuration, and which checks belong in `nix flake check`. ([#61](https://github.com/hakula139/devkit/pull/61), [#73](https://github.com/hakula139/devkit/pull/73))
+- _(nushell)_ `dk.writeNuApplication { name, text, runtimeInputs, makeWrapperArgs, meta }` builds a single-file Nushell command, shaped like `writeShellApplication` and guarded like `mkNuApplication`. ([#63](https://github.com/hakula139/devkit/pull/63))
+- _(github)_ `settings --private` and `ruleset --private` skip what GitHub lacks for a private repository, namely private vulnerability reporting, secret scanning, and the ruleset, printing a note for each. ([#55](https://github.com/hakula139/devkit/pull/55))
+- _(release)_ When `.claude-plugin/plugin.json` sets a `version`, `release.yml` fails unless it matches the package version. ([#70](https://github.com/hakula139/devkit/pull/70))
+- _(renovate)_ The devkit major update also bumps the refs in every Markdown file except `CHANGELOG.md`, and in both Markdown and `flake.nix` it matches `uses: hakula139/devkit/...@vN`, `github>hakula139/devkit#vN`, and `github.com/hakula139/devkit/blob/vN` or `tree/vN` besides `github:hakula139/devkit/vN`. ([#68](https://github.com/hakula139/devkit/pull/68))
+
+### Changed
+
+- _(hooks)_ The baseline enables `actionlint`, `check-yaml`, `cspell`, `deadnix`, `dprint`, `editorconfig-checker`, `markdownlint-cli2`, `nixfmt`, `sort-file-contents`, and `statix` by default, so a repository that left them off gets their findings after updating. `cspell` needs a `cspell.json` with a project dictionary, and `hooks.<name>.enable = false` turns any of them off. ([#54](https://github.com/hakula139/devkit/pull/54))
+- _(hooks)_ `mkLib` takes Ruff and uv from the consumer's nixpkgs only at 0.17 and 0.13 or later, and otherwise from devkit's `nixpkgs-unstable`, which replaces nixos-26.05's Ruff 0.15.14 and uv 0.11.21 with 0.17.3 and 0.13.5. The newer Ruff may reformat code or report new findings. `ruff-format.package` defaults to `hooks.ruff.package`, so `hooks.ruff.package = dk.uvTool "ruff"` runs the `uv.lock` Ruff for both hooks, and `dk.uvToolchain.uv` exposes the uv that `dk.uvTool` runs. ([#61](https://github.com/hakula139/devkit/pull/61))
+- _(github)_ `ruleset` takes extra required checks after the repository, binding a bare context to GitHub Actions and `CONTEXT@APP-ID` to that app, for example `codecov/patch@254`. `--config` is removed. ([#67](https://github.com/hakula139/devkit/pull/67))
+- _(github)_ The shared ruleset requires linear history, allows only squash merges, dismisses stale approvals on push, and no longer requires a branch to be up to date before merging. Before reapplying it with `ruleset`, confirm that the repository merges by squash only. ([#65](https://github.com/hakula139/devkit/pull/65))
+
+### Fixed
+
+- _(hooks)_ The dev shell hook reports on stderr, so `nix develop -c <cmd>` prints only the command's output on stdout, and `Swatinem/rust-cache` probing through `nix develop -c` no longer fails. ([#74](https://github.com/hakula139/devkit/pull/74))
+- _(nushell)_ `mkNuApplication` commands, `nu-check`, `nu-test`, `changelog`, and `github` reject arguments that Nushell would parse as code, exiting 1 before Nushell runs. `docs/nushell.md` lists the rejected shapes. ([#62](https://github.com/hakula139/devkit/pull/62))
+- _(setup-nix)_ Substituters that a caller adds through `extra_nix_config` now take effect. A plain `substituters` or `trusted-public-keys` line there replaces the `hakula` cache. ([#60](https://github.com/hakula139/devkit/pull/60))
+
+[3.1.0]: https://github.com/hakula139/devkit/compare/v3.0.1...v3.1.0
+
 ## [3.0.1] - 2026-11-10
 
 ### Fixed

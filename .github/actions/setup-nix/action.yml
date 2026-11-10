@@ -5,7 +5,7 @@ inputs:
   cachix_auth_token:
     description: Upload token, used only on the default branch
   extra_nix_config:
-    description: Additional Nix configuration lines, appended after `fallback = true`
+    description: Additional Nix configuration lines, appended after the action's defaults
 
 runs:
   using: composite
@@ -16,6 +16,8 @@ runs:
         # `fallback = true` builds a path whose substitute fails to download, which Nix would
         # otherwise report as a failed build.
         extra_nix_config: |
+          extra-substituters = https://hakula.cachix.org
+          extra-trusted-public-keys = hakula.cachix.org-1:7zwB3fhMfReHdOjh6DmnaLXgqbPDBcojvN9F+osZw0k=
           fallback = true
           ${{ inputs.extra_nix_config }}
 
@@ -28,3 +30,6 @@ runs:
         authToken: ${{ inputs.cachix_auth_token }}
         skipPush: >-
           ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+        # `cachix use` writes a plain `substituters` list to the user's `nix.conf`, which drops
+        # every `extra-substituters` entry, so the install step adds the cache instead.
+        skipAddingSubstituter: true

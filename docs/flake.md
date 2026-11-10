@@ -30,11 +30,6 @@ outputs =
 
       preCommit = dk.preCommit {
         src = ./.;
-        hooks = {
-          deadnix.enable = true;
-          nixfmt.enable = true;
-          statix.enable = true;
-        };
       };
     in
     {

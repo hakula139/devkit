@@ -76,15 +76,18 @@ in
     check-merge-conflicts.enable = true;
 
     cspell = {
+      enable = true;
       args = [
         "--no-progress"
         "--no-must-find-files"
       ];
     };
 
+    editorconfig-checker.enable = true;
     end-of-file-fixer.enable = true;
 
     sort-file-contents = {
+      enable = true;
       files = "^\\.cspell/words\\.txt$";
       settings.ignore-case = true;
     };
@@ -100,6 +103,7 @@ in
     # GitHub Actions
     # ----------------------------------------------------------------------------------------------
     actionlint = {
+      enable = true;
       package = actionlint;
     };
 
@@ -141,6 +145,7 @@ in
     };
 
     dprint = {
+      enable = true;
       package = pkgs.dprint;
       entry = "${lib.getExe config.hooks.dprint.package} fmt";
       args = [
@@ -151,6 +156,7 @@ in
     };
 
     markdownlint-cli2 = {
+      enable = true;
       package = pkgs.markdownlint-cli2;
       entry = configEntry config.hooks.markdownlint-cli2 [ ];
       args = [
@@ -160,6 +166,13 @@ in
       files = "\\.md$";
       settings.configPath = "${../../.markdownlint-cli2.jsonc}";
     };
+
+    # ----------------------------------------------------------------------------------------------
+    # Nix
+    # ----------------------------------------------------------------------------------------------
+    deadnix.enable = true;
+    nixfmt.enable = true;
+    statix.enable = true;
 
     # ----------------------------------------------------------------------------------------------
     # Nushell
@@ -254,5 +267,10 @@ in
         no-editorconfig = true;
       };
     };
+
+    # ----------------------------------------------------------------------------------------------
+    # YAML
+    # ----------------------------------------------------------------------------------------------
+    check-yaml.enable = true;
   };
 }

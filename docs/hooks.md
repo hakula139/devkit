@@ -14,40 +14,40 @@ nix develop -c run-hooks
 
 ## Enable hooks
 
-Only `check-added-large-files`, `check-merge-conflicts`, `end-of-file-fixer`, and `trim-trailing-whitespace` are enabled by default. Enable other hooks with `hooks.<name>.enable = true;`.
+Turn a hook on or off with `hooks.<name>.enable`.
 
 The shared hook configurations cover:
 
-| Group                   | Hook                       | Checks                                           | Config                                      |
-| ----------------------- | -------------------------- | ------------------------------------------------ | ------------------------------------------- |
-| General                 | `check-added-large-files`  | File sizes                                       |                                             |
-|                         | `check-merge-conflicts`    | Conflict markers                                 |                                             |
-|                         | `cspell`                   | Spelling                                         | `cspell.json`                               |
-|                         | `editorconfig-checker`     | EditorConfig properties                          | `.editorconfig`                             |
-|                         | `end-of-file-fixer`        | Final newlines                                   |                                             |
-|                         | `lychee`                   | Links                                            | `lychee.toml`                               |
-|                         | `sort-file-contents`       | The order of `.cspell/words.txt`                 |                                             |
-|                         | `trim-trailing-whitespace` | Trailing whitespace                              |                                             |
-| GitHub Actions          | `actionlint`               | Workflows                                        | `.github/actionlint.yaml`                   |
-| JavaScript / TypeScript | `eslint`                   | Lint                                             | `eslint.config.js`                          |
-|                         | `tsc`                      | Types                                            | `tsconfig.json`                             |
-| Markdown                | `doctoc`                   | Tables of contents                               |                                             |
-|                         | `dprint`                   | Formatting                                       |                                             |
-|                         | `markdownlint-cli2`        | Lint                                             | Shared defaults, `.markdownlint-cli2.jsonc` |
-| Nix                     | `deadnix`                  | Unused code                                      |                                             |
-|                         | `nixfmt`                   | Formatting                                       |                                             |
-|                         | `statix`                   | Lint                                             |                                             |
-| Nushell                 | `nu-check`                 | Syntax                                           |                                             |
-| Python                  | `mypy`                     | Types                                            | `[tool.mypy]` in `pyproject.toml`           |
-|                         | `ruff`                     | Lint                                             | Ruff configuration                          |
-|                         | `ruff-format`              | Formatting                                       | Ruff configuration                          |
-| Rust                    | `clippy`                   | Lint                                             | `Cargo.toml` `[lints]`, `clippy.toml`       |
-|                         | `rustfmt`                  | Formatting                                       | `rustfmt.toml`                              |
-| Shell                   | `shellcheck`               | Lint                                             |                                             |
-|                         | `shfmt`                    | Formatting                                       |                                             |
-| TOML                    | `taplo`                    | Formatting                                       | Shared defaults, `.taplo.toml`              |
-| Web formats             | `prettier`                 | Formatting of JavaScript, TypeScript, JSON, YAML | Shared defaults, `.prettierrc.json`         |
-| YAML                    | `check-yaml`               | Syntax                                           |                                             |
+| Group                   | Hook                       | Default | Checks                                           | Config                                      |
+| ----------------------- | -------------------------- | ------- | ------------------------------------------------ | ------------------------------------------- |
+| General                 | `check-added-large-files`  | ✓       | Large files being committed                      |                                             |
+|                         | `check-merge-conflicts`    | ✓       | Conflict markers                                 |                                             |
+|                         | `cspell`                   | ✓       | Spelling                                         | `cspell.json`                               |
+|                         | `editorconfig-checker`     | ✓       | EditorConfig properties                          | `.editorconfig`                             |
+|                         | `end-of-file-fixer`        | ✓       | Final newlines                                   |                                             |
+|                         | `lychee`                   |         | Broken external and relative links               | `lychee.toml`                               |
+|                         | `sort-file-contents`       | ✓       | The order of `.cspell/words.txt`                 |                                             |
+|                         | `trim-trailing-whitespace` | ✓       | Trailing whitespace                              |                                             |
+| GitHub Actions          | `actionlint`               | ✓       | Workflow syntax, expressions, and action inputs  | `.github/actionlint.yaml`                   |
+| JavaScript / TypeScript | `eslint`                   |         | Lint                                             | `eslint.config.js`                          |
+|                         | `tsc`                      |         | Types                                            | `tsconfig.json`                             |
+| Markdown                | `doctoc`                   |         | Generated tables of contents                     |                                             |
+|                         | `dprint`                   | ✓       | Formatting                                       |                                             |
+|                         | `markdownlint-cli2`        | ✓       | Lint                                             | Shared defaults, `.markdownlint-cli2.jsonc` |
+| Nix                     | `deadnix`                  | ✓       | Unused code                                      |                                             |
+|                         | `nixfmt`                   | ✓       | Formatting                                       |                                             |
+|                         | `statix`                   | ✓       | Lint                                             |                                             |
+| Nushell                 | `nu-check`                 |         | Syntax                                           |                                             |
+| Python                  | `mypy`                     |         | Types                                            | `[tool.mypy]` in `pyproject.toml`           |
+|                         | `ruff`                     |         | Lint                                             | Ruff configuration                          |
+|                         | `ruff-format`              |         | Formatting                                       | Ruff configuration                          |
+| Rust                    | `clippy`                   |         | Lint                                             | `Cargo.toml` `[lints]`, `clippy.toml`       |
+|                         | `rustfmt`                  |         | Formatting                                       | `rustfmt.toml`                              |
+| Shell                   | `shellcheck`               |         | Lint                                             |                                             |
+|                         | `shfmt`                    |         | Formatting                                       |                                             |
+| TOML                    | `taplo`                    |         | Formatting                                       | Shared defaults, `.taplo.toml`              |
+| Web formats             | `prettier`                 |         | Formatting of JavaScript, TypeScript, JSON, YAML | Shared defaults, `.prettierrc.json`         |
+| YAML                    | `check-yaml`               | ✓       | Syntax                                           |                                             |
 
 devkit's [baseline](../nix/hooks/baseline.nix) sets each hook's defaults, and git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines its settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
 

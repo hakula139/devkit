@@ -116,9 +116,11 @@ pkgs.mkShell {
 
         # Refresh shims even with unchanged config, preserving core.hooksPath.
         # Empty stage arguments would make prek install pre-commit by default.
+        # The shared shims skip the hooks in a worktree whose branch has no config.
         ${lib.optionalString (hookTypes != [ ]) ''
           ${lib.getExe hooksRun.config.package} install \
             --config ${lib.escapeShellArg hooksRun.config.configPath} \
+            --allow-missing-config \
             ${lib.escapeShellArgs (
               lib.concatMap (type: [
                 "--hook-type"

@@ -20,25 +20,25 @@ The shared hook configurations cover:
 
 | Group                   | Hook                       | Default | Checks                                           | Config                                      |
 | ----------------------- | -------------------------- | ------- | ------------------------------------------------ | ------------------------------------------- |
-| General                 | `check-added-large-files`  | ✓       | File sizes                                       |                                             |
+| General                 | `check-added-large-files`  | ✓       | Large files being committed                      |                                             |
 |                         | `check-merge-conflicts`    | ✓       | Conflict markers                                 |                                             |
 |                         | `check-yaml`               | ✓       | YAML syntax                                      |                                             |
 |                         | `cspell`                   | ✓       | Spelling                                         | `cspell.json`                               |
 |                         | `editorconfig-checker`     | ✓       | EditorConfig properties                          | `.editorconfig`                             |
 |                         | `end-of-file-fixer`        | ✓       | Final newlines                                   |                                             |
-|                         | `lychee`                   |         | Links                                            | `lychee.toml`                               |
+|                         | `lychee`                   |         | Broken external and relative links               | `lychee.toml`                               |
 |                         | `sort-file-contents`       | ✓       | The order of `.cspell/words.txt`                 |                                             |
 |                         | `trim-trailing-whitespace` | ✓       | Trailing whitespace                              |                                             |
-| GitHub Actions          | `actionlint`               | ✓       | Workflows                                        | `.github/actionlint.yaml`                   |
+| GitHub Actions          | `actionlint`               | ✓       | Workflow syntax, expressions, and action inputs  | `.github/actionlint.yaml`                   |
 | JavaScript / TypeScript | `eslint`                   |         | Lint                                             | `eslint.config.js`                          |
 |                         | `tsc`                      |         | Types                                            | `tsconfig.json`                             |
-| Markdown                | `doctoc`                   |         | Tables of contents                               |                                             |
+| Markdown                | `doctoc`                   |         | Generated tables of contents                     |                                             |
 |                         | `dprint`                   | ✓       | Formatting                                       |                                             |
 |                         | `markdownlint-cli2`        | ✓       | Lint                                             | Shared defaults, `.markdownlint-cli2.jsonc` |
 | Nix                     | `deadnix`                  | ✓       | Unused code                                      |                                             |
 |                         | `nixfmt`                   | ✓       | Formatting                                       |                                             |
 |                         | `statix`                   | ✓       | Lint                                             |                                             |
-| Nushell                 | `nu-check`                 |         | Syntax                                           |                                             |
+| Nushell                 | `nu-check`                 |         | Nushell syntax                                   |                                             |
 | Python                  | `mypy`                     |         | Types                                            | `[tool.mypy]` in `pyproject.toml`           |
 |                         | `ruff`                     |         | Lint                                             | Ruff configuration                          |
 |                         | `ruff-format`              |         | Formatting                                       | Ruff configuration                          |

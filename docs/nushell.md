@@ -51,13 +51,13 @@ Both builders take `flags`, which maps each attribute name to the application op
 flags = {
   config = ./config.json;
   count = 3;
+  disabled = false;
   mode = "fast mode";
   tag = [
     "one"
     "two value"
   ];
   verbose = true;
-  disabled = false;
 };
 ```
 

@@ -6,12 +6,15 @@ def --wrapped main [
   --count: int # Count to print
   --mode: string # Mode to print
 ] {
-  print ({
-    baked: $baked
-    config: (open $config)
-    count: $count
-    environment: $env.DEVKIT_ECHO_ARGS_TEST_VALUE
-    mode: $mode
-    rest: $rest
-  } | to nuon)
+  print (
+    {
+      baked: $baked
+      config: (open $config)
+      count: $count
+      environment: $env.DEVKIT_ECHO_ARGS_TEST_VALUE
+      mode: $mode
+      rest: $rest
+    }
+    | to nuon
+  )
 }

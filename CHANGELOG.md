@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## Unreleased
 
+### Added
+
+- _(ci)_ `nix.yml` takes a `sparse-checkout` input, passed to `actions/checkout`, so a repository with a large payload checks out only the paths it needs. Supplied patterns use non-cone mode, which allows negative exclusions. ([#NN](https://github.com/hakula139/devkit/pull/NN))
+
 ### Changed
 
 - _(hooks)_ Prettier's baseline `files` covers CSS, so a repository that enables the hook also formats `.css` files. ([#78](https://github.com/hakula139/devkit/pull/78))

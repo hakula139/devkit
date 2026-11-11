@@ -29,9 +29,13 @@ in
 
   skillSource =
     skill:
-    lib.fileset.toSource {
-      root = skill;
-      fileset = lib.fileset.fileFilter packagedFile skill;
+    lib.sources.cleanSourceWith {
+      src = lib.fileset.toSource {
+        root = skill;
+        fileset = lib.fileset.fileFilter packagedFile skill;
+      };
+      # Matches baseline hooks' `(^|/)fixtures/` exclusion.
+      filter = path: type: !(type == "directory" && baseNameOf path == "fixtures");
     };
 
   skillLinks =

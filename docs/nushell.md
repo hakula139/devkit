@@ -21,7 +21,7 @@ packages.default = dk.mkNuApplication {
 
 - Reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`.
 - Packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`.
-- Copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes from the skill.
+- Copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes and every `fixtures/` directory from the skill.
 - Sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
 
 ## Package a single file

@@ -69,7 +69,7 @@ Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still 
 
 A repository whose checkout carries a large payload passes `sparse-checkout` with patterns for `actions/checkout`. Supplied patterns use non-cone mode, so a negative pattern excludes a path, such as `/*` followed by `!/payload/`. A Git-backed flake reads tracked source files, and a full local evaluation copies them into the world-readable Nix store. A repository that must keep the payload out of the store also excludes it from its local checkout.
 
-A repository whose dev shell initializes a submodule in a `shellHook` passes `submodules: true` and drops that workaround, since the checkout runs before the dev shell.
+Pass `submodules: true` to check out first-level submodules before entering the dev shell in CI.
 
 ### Cache builds
 

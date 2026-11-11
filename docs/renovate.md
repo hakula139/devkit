@@ -1,5 +1,7 @@
 # Renovate preset
 
+## Use the preset
+
 Extend the preset from `.github/renovate.json`:
 
 ```json
@@ -13,6 +15,8 @@ Extend the preset from `.github/renovate.json`:
 - `github>hakula139/devkit#v3` picks up preset changes only on a devkit release.
 - `github>hakula139/devkit#v1.2.3` picks up preset changes only when you bump the reference.
 
+## Merge updates
+
 The preset's merge policy requires squash merging:
 
 - Daily lock maintenance, flake input and rust-toolchain updates, and minor and patch cargo and npm updates automerge with squash.
@@ -20,7 +24,9 @@ The preset's merge policy requires squash merging:
 
 ## Refresh Nix dependency hashes
 
-A published package that fetches its dependencies through a fixed-output derivation, such as `fetchPnpmDeps`, keeps its `checks.package`, since that check is what catches a stale hash. Opt in to `nix-update.yml` to refresh the hash on Renovate's pull requests:
+A published package that fetches its dependencies through a fixed-output derivation, such as `fetchPnpmDeps`, needs its hash refreshed on every Renovate lockfile update. Opt in to `nix-update.yml` to refresh the hash on Renovate's pull requests.
+
+### Configure the refresh job
 
 1. Install the `hakula-release-bot` App on the repository with contents write access, and make its organization secrets `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` available to it. A repository that already updates its Homebrew formula with this App needs no new setup.
 
@@ -44,13 +50,17 @@ A published package that fetches its dependencies through a fixed-output derivat
 
    The preset leaves out this address: setting it for every repository would accept a bot-authored commit on any opted-out branch and widen automerge, which is a Major preset change.
 
+### Understand refresh behavior
+
 Pass `package: <attribute>` when the package is not the flake's `default`.
 
 The job runs only for a same-repository pull request that `renovate[bot]` authored and triggered, from a `renovate/` branch, when it is opened, updated, or reopened. The gate matches the Mend-hosted `renovate[bot]` account and Renovate's default `renovate/` branch prefix. It checks out the event's head commit without persisted credentials, sets up Nix without a Cachix token, and runs `nix-update --flake --version=skip <package>`. A run without a diff pushes nothing, and a run that writes untracked files fails.
 
 The App token is created after the Nix steps, is scoped to the repository with only `contents: write`, and so never reaches Nix code from the pull request. The push uses `--force-with-lease` on the exact checked-out commit, so a run that started before Renovate pushed again cannot overwrite the newer head.
 
-The App's push starts an ordinary `pull_request` run, since an App token, unlike `GITHUB_TOKEN`, triggers workflows. That run skips the hash job because its actor is the App, so the refresh does not loop, and its `CI Result` gates the new head. `gitIgnoredAuthors` keeps Renovate updating the branch.
+The App's push starts an ordinary `pull_request` run, since an App token, unlike `GITHUB_TOKEN`, triggers workflows. That run skips the hash job because its actor is the App, so the refresh does not loop, and its `CI Result` gates the new head.
+
+## Update devkit major references
 
 A devkit major update opens a separate `devkit` PR that updates these major-tag references:
 

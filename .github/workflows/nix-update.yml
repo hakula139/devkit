@@ -32,6 +32,7 @@ jobs:
     timeout-minutes: 30
     outputs:
       changed: ${{ steps.update.outputs.changed }}
+      digest: ${{ steps.update.outputs.digest }}
 
     steps:
       - name: Checkout
@@ -55,9 +56,20 @@ jobs:
             --version=skip \
             "$PACKAGE"
 
+          if [[ -n "$(git diff --cached --name-only)" ]]; then
+            echo '::error::nix-update staged changes'
+            exit 1
+          fi
+
           if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
             echo '::error::nix-update wrote files outside the tracked tree'
             git status --short
+            exit 1
+          fi
+
+          if [[ -n "$(git diff --summary)" ]]; then
+            echo '::error::nix-update created, deleted, renamed, or changed the mode of a file'
+            git diff --summary
             exit 1
           fi
 
@@ -67,19 +79,35 @@ jobs:
           fi
           echo 'changed=true' >> "$GITHUB_OUTPUT"
 
-          patch="$RUNNER_TEMP/hash.patch"
-          git diff --binary --no-ext-diff --no-textconv > "$patch"
+          check_path() {
+            local path=$1
+            local mode
 
-          while IFS= read -r -d '' path; do
             if ! git ls-files --error-unmatch -- "$path" > /dev/null 2>&1; then
               echo "::error::$path is not tracked"
-              exit 1
+              return 1
             fi
-            if [[ "$path" == .github/workflows/* ]]; then
-              echo "::error::$path is a workflow file"
-              exit 1
+
+            if [[ "$path" == .github/workflows/* || "$path" == .git/* ]]; then
+              echo "::error::$path is outside the package tree"
+              return 1
             fi
+
+            mode=$(git ls-files --stage -- "$path" | cut -d' ' -f1)
+            if [[ "$mode" != 100644 && "$mode" != 100755 ]]; then
+              echo "::error::$path is not a regular file"
+              return 1
+            fi
+          }
+
+          while IFS= read -r -d '' path; do
+            check_path "$path" || exit 1
           done < <(git diff --name-only -z)
+
+          patch="$RUNNER_TEMP/hash.patch"
+          git diff --binary --no-ext-diff --no-textconv > "$patch"
+          digest=$(sha256sum "$patch" | cut -d' ' -f1)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Upload patch
         if: ${{ steps.update.outputs.changed == 'true' }}
@@ -112,30 +140,68 @@ jobs:
           name: hash-patch
           path: ${{ runner.temp }}
 
-      - name: Apply patch
+      - name: Verify patch
+        env:
+          DIGEST: ${{ needs.update.outputs.digest }}
+        run: |
+          set -euo pipefail
+          echo "$DIGEST  $RUNNER_TEMP/hash.patch" | sha256sum --check --strict
+
+      - name: Validate patch
         run: |
           set -euo pipefail
 
           patch="$RUNNER_TEMP/hash.patch"
           git apply --check --binary "$patch"
-          git apply --binary "$patch"
+
+          if [[ -n "$(git apply --summary "$patch")" ]]; then
+            echo '::error::the patch creates, deletes, renames, or changes the mode of a file'
+            git apply --summary "$patch"
+            exit 1
+          fi
+
+          check_path() {
+            local path=$1
+            local mode
+
+            if ! git ls-files --error-unmatch -- "$path" > /dev/null 2>&1; then
+              echo "::error::$path is not tracked"
+              return 1
+            fi
+
+            if [[ "$path" == .github/workflows/* || "$path" == .git/* ]]; then
+              echo "::error::$path is outside the package tree"
+              return 1
+            fi
+
+            mode=$(git ls-files --stage -- "$path" | cut -d' ' -f1)
+            if [[ "$mode" != 100644 && "$mode" != 100755 ]]; then
+              echo "::error::$path is not a regular file"
+              return 1
+            fi
+          }
+
+          while IFS=$'\t' read -r -d '' _added _deleted path; do
+            check_path "$path" || exit 1
+          done < <(git apply --numstat -z "$patch")
+
+      - name: Apply patch
+        run: |
+          set -euo pipefail
+
+          git apply --binary "$RUNNER_TEMP/hash.patch"
+
+          if [[ -n "$(git diff --summary)" ]]; then
+            echo '::error::the applied patch changed a file mode'
+            git diff --summary
+            exit 1
+          fi
 
           if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
             echo '::error::the patch added a file outside the tracked tree'
             git status --short
             exit 1
           fi
-
-          while IFS= read -r -d '' path; do
-            if ! git ls-files --error-unmatch -- "$path" > /dev/null 2>&1; then
-              echo "::error::$path is not tracked"
-              exit 1
-            fi
-            if [[ "$path" == .github/workflows/* ]]; then
-              echo "::error::$path is a workflow file"
-              exit 1
-            fi
-          done < <(git diff --name-only -z)
 
           git add --update
 

@@ -26,6 +26,7 @@ nixfmt
 nixos
 nixpkgs
 notitle
+numstat
 nuon
 passthru
 pipefail

@@ -48,10 +48,48 @@ def "test passes baked flags to main after the script and keeps the guard" [] {
   let rejected = (^echo-args $"--help;^touch ($marker)" | complete)
 
   assert equal $result.exit_code 0
-  assert equal ($result.stdout | from nuon) {baked: true rest: ["a"]}
+  assert equal ($result.stdout | from nuon) {
+    baked: true
+    config: {
+      service: {
+        endpoint: "https://example.com/api"
+        retries: 2
+      }
+    }
+    count: 3
+    environment: "wrapper"
+    mode: "fast"
+    rest: ["a"]
+  }
   assert equal $rejected.exit_code 1
   assert str contains $rejected.stderr "would parse this argument as code"
   assert not ($marker | path exists)
+}
+
+def "test combines wrapper args with caller options and typed values" [] {
+  $env.DEVKIT_ECHO_ARGS_TEST_VALUE = "caller"
+
+  let result = (
+    ^echo-args "alpha" "beta value"
+      --count 5
+      --mode "caller"
+    | complete
+  )
+
+  assert equal $result.exit_code 0
+  assert equal ($result.stdout | from nuon) {
+    baked: true
+    config: {
+      service: {
+        endpoint: "https://example.com/api"
+        retries: 2
+      }
+    }
+    count: 5
+    environment: "wrapper"
+    mode: "caller"
+    rest: ["alpha" "beta value"]
+  }
 }
 
 # `checks.nu-tooling` expects this failure, which shows that the runner reports one.

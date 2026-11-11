@@ -28,6 +28,7 @@ nixpkgs
 notitle
 nuon
 passthru
+pipefail
 pkgs
 pname
 postprocessors

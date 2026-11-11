@@ -1,0 +1,107 @@
+name: Nix Update
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: Flake attribute path of the package whose dependency hashes to refresh
+        type: string
+        default: default
+    secrets:
+      APP_ID:
+        description: Client ID of the App that pushes the refresh commit
+        required: true
+      APP_PRIVATE_KEY:
+        description: Private key of the App that pushes the refresh commit
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  nix-update:
+    name: Refresh Nix Hashes
+    # A fork cannot read the caller's secrets, and the actor and author checks keep the push
+    # path limited to the dependency-only branches Renovate opens in the same repository.
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor == 'renovate[bot]' &&
+      github.event.pull_request.user.login == 'renovate[bot]' &&
+      startsWith(github.event.pull_request.head.ref, 'renovate/') &&
+      contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Set up Nix
+        uses: $/.github/actions/setup-nix
+
+      - name: Update hashes
+        id: update
+        env:
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          set -euo pipefail
+
+          nix run nixpkgs#nix-update -- \
+            --flake \
+            --version=skip \
+            "$PACKAGE"
+
+          if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+            echo '::error::nix-update wrote files outside the tracked tree'
+            git status --short
+            exit 1
+          fi
+
+          if git diff --quiet; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      # Created after the Nix steps so the pull request's code never sees the token.
+      - name: Create App token
+        id: app-token
+        if: ${{ steps.update.outputs.changed == 'true' }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Commit and push
+        if: ${{ steps.update.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TOKEN: ${{ steps.app-token.outputs.token }}
+          SLUG: ${{ steps.app-token.outputs.app-slug }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          bot="${SLUG}[bot]"
+          user_id=$(gh api "users/${bot}" --jq .id)
+          email="${user_id}+${bot}@users.noreply.github.com"
+
+          git add --update
+          git \
+            -c "user.name=$bot" \
+            -c "user.email=$email" \
+            commit -m 'chore(deps): refresh Nix dependency hashes'
+
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
+          git \
+            -c "http.https://github.com/.extraheader=$auth" \
+            push \
+              --force-with-lease="refs/heads/$BRANCH:$HEAD_SHA" \
+              origin \
+              "HEAD:refs/heads/$BRANCH"

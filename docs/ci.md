@@ -42,6 +42,8 @@ Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still 
 
 A repository whose checkout carries a large payload passes `sparse-checkout` with patterns for `actions/checkout`. Supplied patterns use non-cone mode, so a negative pattern excludes a path, such as `/*` followed by `!/payload/`. A Git-backed flake reads tracked source files, and a full local evaluation copies them into the world-readable Nix store. A repository that must keep the payload out of the store therefore excludes it from its local checkout too, not only in CI.
 
+Pass `submodules: true` to check out first-level submodules instead of initializing them in a `shellHook`.
+
 `nix.yml` runs `nix flake check` on each leg, which builds only the `checks` outputs, so expose the package as a check to have CI build it:
 
 ```nix
@@ -71,6 +73,7 @@ A check belongs in `nix flake check` only when it runs offline, on dependencies 
 | `msrv`            | `rust.yml` | `false`                            | Adds the `MSRV Check` job                             |
 | `all_features`    | `rust.yml` | `false`                            | Passes `--all-features` to Cargo                      |
 | `sparse-checkout` | `nix.yml`  | empty                              | Passes sparse-checkout patterns to `actions/checkout` |
+| `submodules`      | `nix.yml`  | `false`                            | Checks out first-level submodules                     |
 
 | Secret              | Workflows | Required | Purpose                             |
 | ------------------- | --------- | -------- | ----------------------------------- |

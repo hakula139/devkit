@@ -63,13 +63,10 @@ let
   # ------------------------------------------------------------------------------------------------
   # Pre-commit hooks
   # ------------------------------------------------------------------------------------------------
-  actionlint = pkgs.callPackage ./packages/actionlint.nix { };
-
   preCommit = import ./hooks {
     inherit
       pkgs
       git-hooks-nix
-      actionlint
       nodeTool
       nu-check
       ruff

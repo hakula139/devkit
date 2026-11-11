@@ -5,7 +5,6 @@
 {
   pkgs,
   git-hooks-nix,
-  actionlint,
   nodeTool,
   nu-check,
   ruff,
@@ -30,7 +29,6 @@ let
     inherit
       pkgs
       src
-      actionlint
       configEntry
       nodeTool
       nu-check

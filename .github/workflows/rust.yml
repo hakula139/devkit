@@ -51,7 +51,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          # Supplied patterns use non-cone semantics, which allows negative exclusions.
           sparse-checkout: ${{ inputs.sparse-checkout }}
           sparse-checkout-cone-mode: ${{ inputs.sparse-checkout == '' }}
           submodules: ${{ inputs.submodules }}
@@ -108,7 +107,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          # Supplied patterns use non-cone semantics, which allows negative exclusions.
           sparse-checkout: ${{ inputs.sparse-checkout }}
           sparse-checkout-cone-mode: ${{ inputs.sparse-checkout == '' }}
           submodules: ${{ inputs.submodules }}

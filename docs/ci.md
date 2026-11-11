@@ -29,7 +29,6 @@ jobs:
 
   result:
     name: CI Result
-    # A skipped required check passes, so the gate must run after failures too.
     if: ${{ !cancelled() }}
     needs: [nix]
     runs-on: ubuntu-latest
@@ -42,7 +41,7 @@ jobs:
         uses: hakula139/devkit/.github/actions/ci-result@v3
 ```
 
-The [branch ruleset](github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
+The [branch ruleset](github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked. `CI Result` runs after a failed job as well, since a skipped required check passes.
 
 ## Configure reusable workflows
 

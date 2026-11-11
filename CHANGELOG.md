@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - _(ci)_ The reusable workflows take `sparse-checkout` and `submodules` inputs, passed to `actions/checkout`, so a repository with a large payload checks out only the paths it needs and a repository whose dev shell needs submodules checks them out. Supplied patterns use non-cone mode, which allows negative exclusions. ([#81](https://github.com/hakula139/devkit/pull/81))
+- _(nushell)_ `mkNuApplication` and `writeNuApplication` take `flags`, turning each attribute into the application option `--<name>` and its value: `true` passes a bare switch, a list repeats the option in list order, and `false` or `null` passes nothing. Generated arguments precede raw `makeWrapperArgs` and the caller's arguments. `docs/nushell.md` describes the value forms. ([#88](https://github.com/hakula139/devkit/pull/88))
 
 ### Changed
 

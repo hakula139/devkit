@@ -55,7 +55,9 @@ taplo
 tera
 testlib
 testpaths
+textconv
 toplevel
+unmatch
 venv
 wakatime
 worktree

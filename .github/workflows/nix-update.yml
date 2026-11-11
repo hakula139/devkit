@@ -19,10 +19,8 @@ permissions:
   contents: read
 
 jobs:
-  nix-update:
+  update:
     name: Refresh Nix Hashes
-    # A fork cannot read the caller's secrets, and the actor and author checks keep the push
-    # path limited to the dependency-only branches Renovate opens in the same repository.
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -32,6 +30,8 @@ jobs:
       contains(fromJSON('["opened", "synchronize", "reopened"]'), github.event.action)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
 
     steps:
       - name: Checkout
@@ -63,28 +63,94 @@ jobs:
 
           if git diff --quiet; then
             echo 'changed=false' >> "$GITHUB_OUTPUT"
-          else
-            echo 'changed=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+
+          patch="$RUNNER_TEMP/hash.patch"
+          git diff --binary --no-ext-diff --no-textconv > "$patch"
+
+          while IFS= read -r -d '' path; do
+            if ! git ls-files --error-unmatch -- "$path" > /dev/null 2>&1; then
+              echo "::error::$path is not tracked"
+              exit 1
+            fi
+            if [[ "$path" == .github/workflows/* ]]; then
+              echo "::error::$path is a workflow file"
+              exit 1
+            fi
+          done < <(git diff --name-only -z)
+
+      - name: Upload patch
+        if: ${{ steps.update.outputs.changed == 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: hash-patch
+          path: ${{ runner.temp }}/hash.patch
+          if-no-files-found: error
+          retention-days: 1
+
+  push:
+    name: Push Hash Commit
+    # A fresh runner keeps the update job's Nix processes and any hooks they leave away from
+    # the App token.
+    needs: update
+    if: ${{ needs.update.outputs.changed == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Download patch
+        uses: actions/download-artifact@v8
+        with:
+          name: hash-patch
+          path: ${{ runner.temp }}
+
+      - name: Apply patch
+        run: |
+          set -euo pipefail
+
+          patch="$RUNNER_TEMP/hash.patch"
+          git apply --check --binary "$patch"
+          git apply --binary "$patch"
+
+          if [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+            echo '::error::the patch added a file outside the tracked tree'
+            git status --short
+            exit 1
           fi
 
-      # Created after the Nix steps so the pull request's code never sees the token.
+          while IFS= read -r -d '' path; do
+            if ! git ls-files --error-unmatch -- "$path" > /dev/null 2>&1; then
+              echo "::error::$path is not tracked"
+              exit 1
+            fi
+            if [[ "$path" == .github/workflows/* ]]; then
+              echo "::error::$path is a workflow file"
+              exit 1
+            fi
+          done < <(git diff --name-only -z)
+
+          git add --update
+
       - name: Create App token
         id: app-token
-        if: ${{ steps.update.outputs.changed == 'true' }}
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-contents: write
 
-      - name: Commit and push
-        if: ${{ steps.update.outputs.changed == 'true' }}
+      - name: Commit
         env:
           GH_TOKEN: ${{ github.token }}
-          TOKEN: ${{ steps.app-token.outputs.token }}
           SLUG: ${{ steps.app-token.outputs.app-slug }}
-          BRANCH: ${{ github.event.pull_request.head.ref }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
 
@@ -92,15 +158,21 @@ jobs:
           user_id=$(gh api "users/${bot}" --jq .id)
           email="${user_id}+${bot}@users.noreply.github.com"
 
-          git add --update
           git \
             -c "user.name=$bot" \
             -c "user.email=$email" \
             commit -m 'chore(deps): refresh Nix dependency hashes'
 
-          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
+      - name: Push
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          gh auth setup-git
           git \
-            -c "http.https://github.com/.extraheader=$auth" \
             push \
               --force-with-lease="refs/heads/$BRANCH:$HEAD_SHA" \
               origin \

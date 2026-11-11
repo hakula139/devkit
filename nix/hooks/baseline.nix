@@ -260,7 +260,7 @@ in
     # ----------------------------------------------------------------------------------------------
     # Markdown stays out of Prettier, which drops the blank line before nested items.
     prettier = {
-      files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|json|jsonc|ya?ml)$";
+      files = "\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|css|json|jsonc|ya?ml)$";
       excludes = [
         "(^|/)pnpm-lock\\.yaml$"
       ];

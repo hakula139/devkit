@@ -19,6 +19,7 @@ pkgs.runCommand "dprint-markdown"
   ''
     cp ${./fixtures/input.md} formatted.md
     chmod +w formatted.md
+    export DPRINT_CACHE_DIR="$TMPDIR/dprint-cache"
     dprint fmt --config=${dprintConfig} formatted.md
     diff -u ${./fixtures/expected.md} formatted.md
     touch "$out"

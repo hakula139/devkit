@@ -1,5 +1,9 @@
 # CI workflow and gate
 
+## Set up CI
+
+A repository's `ci.yml` calls the shared workflows and gates them with `CI Result`:
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI
@@ -25,7 +29,6 @@ jobs:
 
   result:
     name: CI Result
-    # A skipped required check passes, so the gate must run after failures too.
     if: ${{ !cancelled() }}
     needs: [nix]
     runs-on: ubuntu-latest
@@ -38,7 +41,40 @@ jobs:
         uses: hakula139/devkit/.github/actions/ci-result@v3
 ```
 
+The [branch ruleset](github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked. `CI Result` runs after a failed job as well, since a skipped required check passes.
+
+## Configure reusable workflows
+
+The reusable workflows share these inputs and secrets.
+
+| Input             | Workflows                            | Default                                          | Effect                                                |
+| ----------------- | ------------------------------------ | ------------------------------------------------ | ----------------------------------------------------- |
+| `coverage`        | `python.yml`, `node.yml`, `rust.yml` | `true`                                           | Uploads test coverage to Codecov                      |
+| `macos`           | All                                  | `true` in `nix.yml` and `rust.yml`, else `false` | Adds the macOS leg                                    |
+| `msrv`            | `rust.yml`                           | `false`                                          | Adds the `MSRV Check` job                             |
+| `all_features`    | `rust.yml`                           | `false`                                          | Passes `--all-features` to Cargo                      |
+| `sparse-checkout` | All                                  | empty                                            | Passes sparse-checkout patterns to `actions/checkout` |
+| `submodules`      | All                                  | `false`                                          | Checks out first-level submodules                     |
+
+| Secret              | Workflows | Required | Purpose              |
+| ------------------- | --------- | -------- | -------------------- |
+| `CACHIX_AUTH_TOKEN` | All       | No       | Uploads to the cache |
+
+### Choose platforms
+
 Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
+
+### Check out source
+
+A repository whose checkout carries a large payload passes `sparse-checkout` with patterns for `actions/checkout`. Supplied patterns use non-cone mode, so a negative pattern excludes a path, such as `/*` followed by `!/payload/`. A Git-backed flake reads tracked source files, and a full local evaluation copies them into the world-readable Nix store. A repository that must keep the payload out of the store also excludes it from its local checkout.
+
+Pass `submodules: true` to check out first-level submodules before entering the dev shell in CI.
+
+### Cache builds
+
+Every run reads the public `hakula` Cachix cache. With `CACHIX_AUTH_TOKEN`, uploads happen only from the default branch.
+
+## Run Nix checks
 
 `nix.yml` runs `nix flake check` on each leg, which builds only the `checks` outputs, so expose the package as a check to have CI build it:
 
@@ -48,32 +84,21 @@ checks.package = self.packages.${system}.default;
 
 The Linux leg then runs `nix develop -c run-hooks`, and the macOS leg enters the dev shell to build the darwin hook tools, so `devShells.default` must include the [`preCommit` shell](hooks.md#set-up-the-dev-shell).
 
-The [branch ruleset](github.md#apply-the-branch-ruleset) requires `CI Result`, so add every new check job to its `needs`. The gate skips any job that is still running, so a job missing from `needs` that finishes after the gate starts is never checked.
+## Add project jobs
 
-Every run reads the public `hakula` Cachix cache. With a `CACHIX_AUTH_TOKEN` secret, `nix.yml` and the language workflows push builds to it from the default branch.
+Builds, packaging, and other project-specific steps go in the repository's own jobs. A job runs its commands in the default dev shell unless it needs another toolchain, and it follows these conventions:
 
-## Language jobs
-
-`nix.yml` runs the hooks, so a language job runs only what no hook covers. Call `python.yml`, `node.yml`, or `rust.yml` for tests, coverage, and the Rust MSRV, and list each job in `CI Result`'s `needs`. Builds, packaging, and other project-specific steps go in the repository's own jobs.
-
-A repository's own job runs its commands in the default dev shell unless it needs another toolchain. Its id names what it checks, its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix, and a blank line separates its settings from its `steps`.
+- Its id names what it checks.
+- Its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix.
+- A blank line separates its settings from its `steps`.
 
 Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a native Windows job to `CI Result`'s `needs`.
 
 A check belongs in `nix flake check` only when it runs offline, on dependencies that Nix supplies without a hash to maintain, and without a build cache. The sandbox has no network, a fixed-output hash breaks on every Renovate lockfile update, and a sandbox build compiles every dependency again. `dk.nuTests` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job.
 
-| Input          | Workflows  | Default                            | Effect                           |
-| -------------- | ---------- | ---------------------------------- | -------------------------------- |
-| `coverage`     | All        | `true`                             | Uploads test coverage to Codecov |
-| `macos`        | All        | `true` in `rust.yml`, else `false` | Adds the macOS leg               |
-| `msrv`         | `rust.yml` | `false`                            | Adds the `MSRV Check` job        |
-| `all_features` | `rust.yml` | `false`                            | Passes `--all-features` to Cargo |
+## Language jobs
 
-| Secret              | Workflows | Required | Purpose                             |
-| ------------------- | --------- | -------- | ----------------------------------- |
-| `CACHIX_AUTH_TOKEN` | All       | No       | Pushes builds to the `hakula` cache |
-
-The Codecov upload authenticates with OIDC, so the calling job grants `id-token: write`, even with `coverage: false`.
+`nix.yml` runs the hooks, so a language job runs only what no hook covers. Call `python.yml`, `node.yml`, or `rust.yml` for tests, coverage, and the Rust MSRV, and list each job in `CI Result`'s `needs`. The Codecov upload authenticates with OIDC, so the calling job grants `id-token: write`, even with `coverage: false`.
 
 ### Python
 

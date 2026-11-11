@@ -12,7 +12,7 @@
     }
   ],
   "dictionaries": ["project-words"],
-  "ignorePaths": ["flake.lock"],
+  "ignorePaths": [".git", "flake.lock"],
   "overrides": [
     {
       "filename": ".github/settings/labels.json",

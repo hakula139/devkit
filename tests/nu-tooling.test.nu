@@ -70,9 +70,9 @@ def "test combines wrapper args with caller options and typed values" [] {
   $env.DEVKIT_ECHO_ARGS_TEST_VALUE = "caller"
 
   let result = (
-    ^echo-args alpha "beta value"
+    ^echo-args "alpha" "beta value"
       --count 5
-      --mode caller
+      --mode "caller"
     | complete
   )
 

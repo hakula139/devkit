@@ -14,6 +14,7 @@ in
   name,
   text,
   runtimeInputs ? [ ],
+  flags ? { },
   makeWrapperArgs ? [ ],
   meta ? { },
 }:
@@ -23,6 +24,7 @@ nuWrapper.package {
   inherit
     name
     runtimeInputs
+    flags
     makeWrapperArgs
     meta
     ;

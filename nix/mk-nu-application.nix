@@ -14,6 +14,7 @@
   entry ? pname,
   skills ? [ ],
   runtimeInputs ? [ ],
+  flags ? { },
   meta ? { },
 }:
 
@@ -48,7 +49,7 @@ pkgs.stdenvNoCC.mkDerivation {
   + nuWrapper.command {
     bin = "$out/bin/${entry}";
     script = "$out/share/${pname}/${entry}";
-    inherit runtimeInputs;
+    inherit runtimeInputs flags;
   };
 
   meta = {

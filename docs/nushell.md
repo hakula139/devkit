@@ -35,14 +35,46 @@ packages.my-command = dk.writeNuApplication {
   runtimeInputs = [
     pkgs.git
   ];
-  makeWrapperArgs = [
-    "--add-flag"
-    "--verbose"
-  ];
+  flags = {
+    verbose = true;
+  };
 };
 ```
 
-It installs `text` as `bin/<name>`, the name `--help` shows, with `runtimeInputs` on its `PATH`. It appends `makeWrapperArgs` to its `makeShellWrapper` call, so an argument added with `--add-flag` reaches `main` ahead of the caller's arguments. It sets `meta.mainProgram` to `name` and merges any `meta` argument over it.
+It installs `text` as `bin/<name>`, the name `--help` shows, with `runtimeInputs` on its `PATH`. It sets `meta.mainProgram` to `name` and merges any `meta` argument over it.
+
+## Pass application flags
+
+Both builders take `flags`, which maps each attribute name to the application option `--<name>`:
+
+```nix
+flags = {
+  config = ./config.json;
+  count = 3;
+  disabled = false;
+  mode = "fast mode";
+  tag = [
+    "one"
+    "two value"
+  ];
+  verbose = true;
+};
+```
+
+This passes `--config <path> --count 3 --mode "fast mode" --tag one --tag "two value" --verbose`. A string, integer, path, or derivation passes its string form as the option's value, `true` passes the option alone, and `false` or `null` passes nothing. A list passes the option once per item in list order, and attributes are passed in sorted order. A value stays one argument even when it contains spaces.
+
+The generated arguments reach `main` ahead of the caller's arguments, so a caller can override a generated value by passing the option again. A generated switch stays on unless the script takes an off switch, since a caller can only add arguments. `writeNuApplication` also takes `makeWrapperArgs`, which follows the generated flags in its `makeShellWrapper` call. Use it for wrapper operations such as `--set`, or for a raw argument that `flags` cannot generate:
+
+```nix
+makeWrapperArgs = [
+  "--set"
+  "MY_TOOL_HOME"
+  "/var/lib/my-tool"
+
+  "--add-flag"
+  "--legacy"
+];
+```
 
 ## Pass code-like arguments
 
@@ -52,7 +84,7 @@ The `mkNuApplication` and `writeNuApplication` wrappers exit 1 before running th
 - A bare redirection, such as `o>` or `e>>`
 - An argument starting with `...$`
 
-Pass such an operand in another form, such as an absolute path. Arguments that `makeWrapperArgs` adds bypass this check.
+Pass such an operand in another form, such as an absolute path. Arguments that `flags` or `makeWrapperArgs` add bypass this check.
 
 ## Link skills from Home Manager
 

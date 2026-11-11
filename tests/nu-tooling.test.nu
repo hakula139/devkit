@@ -41,7 +41,7 @@ def "test passes a flag value with Nushell syntax through as a string" [] {
   assert not ($marker | path exists)
 }
 
-def "test passes baked flags to main after the script and keeps the guard" [] {
+def "test passes wrapper flags to main after the script and keeps the guard" [] {
   let marker = ($env.TMPDIR | path join "marker")
 
   let result = (^echo-args "a" | complete)
@@ -58,8 +58,9 @@ def "test passes baked flags to main after the script and keeps the guard" [] {
     }
     count: 3
     environment: "wrapper"
-    mode: "fast"
-    rest: ["a"]
+    mode: "fast mode"
+    rest: ["--label" "first" "--tag" "one" "--tag" "two value" "--raw" "a"]
+    source: "echo-args.nu"
   }
   assert equal $rejected.exit_code 1
   assert str contains $rejected.stderr "would parse this argument as code"
@@ -88,7 +89,8 @@ def "test combines wrapper args with caller options and typed values" [] {
     count: 5
     environment: "wrapper"
     mode: "caller"
-    rest: ["alpha" "beta value"]
+    rest: ["--label" "first" "--tag" "one" "--tag" "two value" "--raw" "alpha" "beta value"]
+    source: "echo-args.nu"
   }
 }
 

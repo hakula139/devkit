@@ -11,6 +11,14 @@ on:
         description: Also run the macOS leg
         type: boolean
         default: false
+      sparse-checkout:
+        description: Sparse-checkout patterns passed to actions/checkout, which uses non-cone mode when supplied
+        type: string
+        default: ''
+      submodules:
+        description: Check out submodules
+        type: boolean
+        default: false
     secrets:
       CACHIX_AUTH_TOKEN:
         description: Upload token for the `hakula` Cachix cache
@@ -34,6 +42,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Supplied patterns use non-cone semantics, which allows negative exclusions.
+          sparse-checkout: ${{ inputs.sparse-checkout }}
+          sparse-checkout-cone-mode: ${{ inputs.sparse-checkout == '' }}
+          submodules: ${{ inputs.submodules }}
 
       - name: Set up Nix
         uses: $/.github/actions/setup-nix

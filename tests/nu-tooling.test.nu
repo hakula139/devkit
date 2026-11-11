@@ -59,7 +59,8 @@ def "test passes wrapper flags to main after the script and keeps the guard" [] 
     count: 3
     environment: "wrapper"
     mode: "fast mode"
-    rest: ["--tag" "one" "--tag" "two value" "--raw" "a"]
+    rest: ["--label" "first" "--tag" "one" "--tag" "two value" "--raw" "a"]
+    source: "echo-args.nu"
   }
   assert equal $rejected.exit_code 1
   assert str contains $rejected.stderr "would parse this argument as code"
@@ -88,7 +89,8 @@ def "test combines wrapper args with caller options and typed values" [] {
     count: 5
     environment: "wrapper"
     mode: "caller"
-    rest: ["--tag" "one" "--tag" "two value" "--raw" "alpha" "beta value"]
+    rest: ["--label" "first" "--tag" "one" "--tag" "two value" "--raw" "alpha" "beta value"]
+    source: "echo-args.nu"
   }
 }
 

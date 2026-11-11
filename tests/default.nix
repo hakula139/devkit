@@ -25,8 +25,10 @@ let
       config = echo-args-config;
       count = 3;
       disabled = false;
+      label = "first";
       mode = "fast mode";
       optional = null;
+      source = ./echo-args.nu;
       tag = [
         "one"
         "two value"

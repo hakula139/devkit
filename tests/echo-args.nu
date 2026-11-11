@@ -5,6 +5,7 @@ def --wrapped main [
   --config: path # JSON configuration to print
   --count: int # Count to print
   --mode: string # Mode to print
+  --source: path # File to print the basename of
 ] {
   print (
     {
@@ -14,6 +15,7 @@ def --wrapped main [
       environment: $env.DEVKIT_ECHO_ARGS_TEST_VALUE
       mode: $mode
       rest: $rest
+      source: ($source | path basename)
     }
     | to nuon
   )

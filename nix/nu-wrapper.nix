@@ -17,19 +17,34 @@ let
       bin,
       script,
       runtimeInputs ? [ ],
+      flags ? { },
       makeWrapperArgs ? [ ],
     }:
     let
       pathArgs = lib.optionalString (
         runtimeInputs != [ ]
       ) "--prefix PATH : ${lib.makeBinPath runtimeInputs}";
+      flagArgs =
+        lib.concatMap
+          (arg: [
+            "--add-flag"
+            arg
+          ])
+          (
+            lib.cli.toCommandLine (name: {
+              option = "--${name}";
+              sep = null;
+              explicitBool = false;
+              formatArg = toString;
+            }) flags
+          );
     in
     ''
       makeShellWrapper ${lib.getExe nushell} ${bin} \
         --run ${lib.escapeShellArg (builtins.readFile ./nu-wrapper.sh)} \
         --add-flags "--no-config-file ${script}" \
         ${pathArgs} \
-        ${lib.escapeShellArgs makeWrapperArgs}
+        ${lib.escapeShellArgs (flagArgs ++ makeWrapperArgs)}
     '';
 in
 {
@@ -41,6 +56,7 @@ in
       name,
       script,
       runtimeInputs ? [ ],
+      flags ? { },
       makeWrapperArgs ? [ ],
       meta ? { },
     }:
@@ -56,6 +72,11 @@ in
       }
       (command {
         bin = "$out/bin/${name}";
-        inherit script runtimeInputs makeWrapperArgs;
+        inherit
+          script
+          runtimeInputs
+          flags
+          makeWrapperArgs
+          ;
       });
 }

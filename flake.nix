@@ -155,13 +155,12 @@
         # ------------------------------------------------------------------------------------------
         # Checks
         # ------------------------------------------------------------------------------------------
-        checks = self.packages.${system} // {
-          nu-tooling = import ./tests { inherit pkgs dk; };
-          skill-links = import ./tests/skill-links.nix {
-            inherit pkgs;
+        checks =
+          self.packages.${system}
+          // import ./tests {
+            inherit pkgs dk;
             inherit (self.lib) skillSource;
           };
-        };
 
         # ------------------------------------------------------------------------------------------
         # Formatter

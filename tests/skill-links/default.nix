@@ -8,7 +8,7 @@
 }:
 
 let
-  source = skillSource ./skill-links/skill;
+  source = skillSource ./skill;
 in
 pkgs.runCommand "skill-links" { } ''
   test -f ${source}/SKILL.md

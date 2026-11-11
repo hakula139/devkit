@@ -102,6 +102,8 @@ The shared `.editorconfig` sets four generic rules for every file, so a reposito
 
 Markdown is exempt from the trailing-whitespace rule, since two trailing spaces make a hard line break and `trim-trailing-whitespace` keeps them too through `--markdown-linebreak-ext=md`.
 
+`editorconfig-checker` also applies the rules to binary payloads that its default excludes do not cover, such as age files, which rarely end in a newline or use LF. Exclude them through `hooks.editorconfig-checker.excludes`, for example `"\\.age$"`.
+
 Indentation and line length stay language-specific. Add a section for each language the repository uses and match it to that language's formatter, since Makefile recipes, Go, Prettier, Python, and Rust disagree on indentation. No hook formats Nushell, so the `[*.nu]` section sets its indentation for the checker alone, and the `[*.{sh,zsh}]` section sets shell indentation along with `binary_next_line` and `switch_case_indent`.
 
 ### Type-check Python

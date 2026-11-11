@@ -100,6 +100,8 @@ The shared `.editorconfig` sets four generic rules for every file, so a reposito
 - Final newline: `insert_final_newline = true`
 - Trailing whitespace: `trim_trailing_whitespace = true`
 
+Keep `.editorconfig` checked in. EditorConfig has no include mechanism, so a project adds its sections to the same file, and editors read it outside the dev shell. The generated `.pre-commit-config.yaml` is different, since only the hook runner reads it.
+
 Markdown is exempt from the trailing-whitespace rule, since two trailing spaces make a hard line break and `trim-trailing-whitespace` keeps them too through `--markdown-linebreak-ext=md`.
 
 `editorconfig-checker` also applies the rules to binary payloads that its default excludes do not cover, such as age files, which rarely end in a newline or use LF. Exclude them through `hooks.editorconfig-checker.excludes`, for example `"\\.age$"`.

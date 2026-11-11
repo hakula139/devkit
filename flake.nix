@@ -157,6 +157,10 @@
         # ------------------------------------------------------------------------------------------
         checks = self.packages.${system} // {
           nu-tooling = import ./tests { inherit pkgs dk; };
+          skill-links = import ./tests/skill-links.nix {
+            inherit pkgs;
+            inherit (self.lib) skillSource;
+          };
         };
 
         # ------------------------------------------------------------------------------------------

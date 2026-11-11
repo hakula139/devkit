@@ -25,6 +25,7 @@ mypy
 nixfmt
 nixos
 nixpkgs
+nosystem
 notitle
 nuon
 passthru

@@ -13,6 +13,7 @@ endfor
 endmacro
 envrc
 fetchpatch
+fetchurl
 fileset
 hakula
 intraword

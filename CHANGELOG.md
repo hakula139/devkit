@@ -4,20 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [3.2.0] - 2026-11-11
 
 ### Added
 
-- _(ci)_ The reusable workflows take `sparse-checkout` and `submodules` inputs, passed to `actions/checkout`, so a repository with a large payload checks out only the paths it needs and a repository whose dev shell needs submodules checks them out. Supplied patterns use non-cone mode, which allows negative exclusions. ([#81](https://github.com/hakula139/devkit/pull/81))
+- _(ci)_ `nix.yml` and the language workflows take optional `sparse-checkout` and `submodules` inputs, passed to `actions/checkout`, so a repository with a large payload checks out only the paths it needs and a repository whose dev shell needs submodules checks them out. A non-empty `sparse-checkout` uses non-cone mode, so a negative pattern such as `!/payload/` excludes a path, while the empty default keeps the previous full checkout. `submodules` defaults to `false`, which leaves submodules uninitialized, and `true` checks out first-level submodules only. ([#81](https://github.com/hakula139/devkit/pull/81))
 - _(nushell)_ `mkNuApplication` and `writeNuApplication` take `flags`, turning each attribute into the application option `--<name>` and its value: `true` passes a bare switch, a list repeats the option in list order, and `false` or `null` passes nothing. Generated arguments precede raw `makeWrapperArgs` and the caller's arguments. `docs/nushell.md` describes the value forms. ([#88](https://github.com/hakula139/devkit/pull/88))
 
 ### Changed
 
+- _(hooks)_ The shared `.editorconfig` sets UTF-8 encoding, LF line endings, a final newline, and no trailing whitespace for every file, so a repository that copies it verbatim gets checker coverage whatever file types its tree holds. `editorconfig-checker` now fails on CRLF line endings, a detected non-UTF-8 encoding, a missing final newline, and trailing whitespace outside Markdown, which keeps its two-space hard breaks. Exclude binary payloads such as age files through `hooks.editorconfig-checker.excludes`. ([#89](https://github.com/hakula139/devkit/pull/89))
 - _(hooks)_ Prettier's baseline `files` covers CSS, so a repository that enables the hook also formats `.css` files. ([#78](https://github.com/hakula139/devkit/pull/78))
 
 ### Fixed
 
-- _(hooks)_ Entering the dev shell replaces an existing Git hook with prek's shim instead of leaving prek in migration mode, so commits and pushes no longer fail in a clone whose hooks another tool installed. ([#77](https://github.com/hakula139/devkit/pull/77))
+- _(hooks)_ Entering the dev shell replaces an existing Git hook with prek's shim instead of leaving prek in migration mode, so commits and pushes no longer fail in a clone whose hooks another tool installed. A clone already in migration mode recovers on its next dev shell entry. ([#77](https://github.com/hakula139/devkit/pull/77))
+- _(nushell)_ A packaged skill no longer includes `fixtures` directories, so golden-file fixtures kept beside a skill's scripts stay out of `share/skills/<name>/`. ([#86](https://github.com/hakula139/devkit/pull/86))
+
+[3.2.0]: https://github.com/hakula139/devkit/compare/v3.1.0...v3.2.0
 
 ## [3.1.0] - 2026-11-10
 

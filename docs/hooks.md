@@ -4,7 +4,7 @@
 
 `preCommit` returns a dev shell. Add it to the `inputsFrom` of the repository's `pkgs.mkShell`. The shell's own `packages` and `nativeBuildInputs` take precedence over hook packages on `PATH`.
 
-Entering the dev shell from a Git checkout installs the hooks. The configuration path must be absent or a symlink into the Nix store.
+Entering the dev shell from a Git checkout installs the hooks, replacing an existing hook with prek's shim, so a clone whose hooks another tool installed stops failing. The configuration path must be absent or a symlink into the Nix store. A symlinked hook is followed, so prek overwrites the link's target instead of the link itself.
 
 The hook installation reports on stderr, so `nix develop -c <cmd>` writes only the command's output to stdout. A repository's own `shellHook` must keep stdout clean too.
 

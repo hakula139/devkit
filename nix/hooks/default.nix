@@ -121,6 +121,7 @@ pkgs.mkShell {
         # Empty stage arguments would make prek install pre-commit by default.
         ${lib.optionalString (hookTypes != [ ]) ''
           ${lib.getExe hooksRun.config.package} install \
+            --overwrite \
             --config ${lib.escapeShellArg hooksRun.config.configPath} \
             ${lib.escapeShellArgs (
               lib.concatMap (type: [

@@ -17,7 +17,7 @@ Extend the preset from `.github/renovate.json`:
 
 ## Refresh Nix dependency hashes
 
-A published package that fetches its dependencies through a fixed-output derivation, such as `fetchPnpmDeps`, needs its hash refreshed on every Renovate lockfile update. Opt in to `nix-update.yml`: same-repository Renovate pull requests get a hash commit only when the hash changed, and the new head runs ordinary CI.
+A published package that fetches its dependencies through a fixed-output derivation, such as `fetchPnpmDeps`, needs its hash refreshed on every Renovate lockfile update. Opt in to `nix-update.yml`: same-repository Renovate pull requests get a refresh commit whenever `nix-update` produces a tracked diff, and the new head runs ordinary CI.
 
 ### Configure the refresh job
 

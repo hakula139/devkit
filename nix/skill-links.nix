@@ -13,10 +13,10 @@ let
     ".testlib.nu"
   ];
 
-  packagedName = name: !lib.any (suffix: lib.hasSuffix suffix name) skippedSuffixes;
+  packagedFile = file: !lib.any (suffix: lib.hasSuffix suffix file.name) skippedSuffixes;
 in
 {
-  packagedFile = file: packagedName file.name;
+  inherit packagedFile;
 
   skillDirectoriesOption = {
     type = lib.types.listOf lib.types.str;
@@ -27,24 +27,15 @@ in
     description = "Home-relative directories that each receive a link to the skill directory.";
   };
 
-  # Prune `fixtures` directories directly: filtering their files leaves the empty directories in
-  # the store. Matches baseline hooks' `(^|/)fixtures/` exclusion.
   skillSource =
     skill:
-    let
-      rootPrefix = "${toString skill}/";
-
-      packagedPath =
-        path: type:
-        let
-          relativePath = lib.removePrefix rootPrefix (toString path);
-        in
-        packagedName (baseNameOf path)
-        && !(type == "directory" && lib.elem "fixtures" (lib.splitString "/" relativePath));
-    in
     lib.sources.cleanSourceWith {
-      src = skill;
-      filter = packagedPath;
+      src = lib.fileset.toSource {
+        root = skill;
+        fileset = lib.fileset.fileFilter packagedFile skill;
+      };
+      # Matches baseline hooks' `(^|/)fixtures/` exclusion.
+      filter = path: type: !(type == "directory" && baseNameOf path == "fixtures");
     };
 
   skillLinks =

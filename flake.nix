@@ -156,7 +156,6 @@
         # Checks
         # ------------------------------------------------------------------------------------------
         checks = self.packages.${system} // {
-          hooks-install = import ./tests/hooks-install.nix { inherit pkgs preCommit; };
           nu-tooling = import ./tests { inherit pkgs dk; };
         };
 

@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - _(hooks)_ Prettier's baseline `files` covers CSS, so a repository that enables the hook also formats `.css` files. ([#78](https://github.com/hakula139/devkit/pull/78))
 
+### Fixed
+
+- _(hooks)_ Entering the dev shell replaces an existing Git hook with prek's shim instead of leaving prek in migration mode, so commits and pushes no longer fail in a clone whose hooks another tool installed. ([#77](https://github.com/hakula139/devkit/pull/77))
+
 ## [3.1.0] - 2026-11-10
 
 ### Added

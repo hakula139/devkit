@@ -1,7 +1,7 @@
 # Print the arguments and wrapper environment as NUON.
-def main [
-  ...rest: string # Arguments to print
-  --baked # Set by the wrapper's makeWrapperArgs
+def --wrapped main [
+  ...rest: string # Arguments to print, including undeclared options
+  --baked # Passed by the wrapper's flags
   --config: path # JSON configuration to print
   --count: int # Count to print
   --mode: string # Mode to print

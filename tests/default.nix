@@ -20,28 +20,25 @@ let
   echo-args = dk.writeNuApplication {
     name = "echo-args";
     text = builtins.readFile ./echo-args.nu;
+    flags = {
+      baked = true;
+      config = echo-args-config;
+      count = 3;
+      disabled = false;
+      mode = "fast mode";
+      optional = null;
+      tag = [
+        "one"
+        "two value"
+      ];
+    };
     makeWrapperArgs = [
       "--set"
       "DEVKIT_ECHO_ARGS_TEST_VALUE"
       "wrapper"
 
       "--add-flag"
-      "--baked"
-
-      "--add-flag"
-      "--config"
-      "--add-flag"
-      "${echo-args-config}"
-
-      "--add-flag"
-      "--count"
-      "--add-flag"
-      "3"
-
-      "--add-flag"
-      "--mode"
-      "--add-flag"
-      "fast"
+      "--raw"
     ];
   };
 in

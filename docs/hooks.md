@@ -91,9 +91,18 @@ Add a `cspell.json` that names a project dictionary. `sort-file-contents` keeps 
 
 doctoc fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. In marked files, use inline links in headings so doctoc generates anchors matching GitHub.
 
-### Check Nushell files
+### Check EditorConfig properties
 
-No hook formats Nushell, so `editorconfig-checker` checks its indentation against a `[*.nu]` section in `.editorconfig`.
+The shared `.editorconfig` sets four generic rules for every file, so a repository that copies the file verbatim gets checker coverage whatever file types its tree holds:
+
+- Encoding: `charset = utf-8`
+- Line endings: `end_of_line = lf`
+- Final newline: `insert_final_newline = true`
+- Trailing whitespace: `trim_trailing_whitespace = true`
+
+Markdown is exempt from the trailing-whitespace rule, since two trailing spaces make a hard line break and `trim-trailing-whitespace` keeps them too through `--markdown-linebreak-ext=md`.
+
+Indentation and line length stay language-specific. Add a section for each language the repository uses and match it to that language's formatter, since Makefile recipes, Go, Prettier, Python, and Rust disagree on indentation. No hook formats Nushell, so the `[*.nu]` section sets its indentation for the checker alone, and the `[*.{sh,zsh}]` section sets shell indentation along with `binary_next_line` and `switch_case_indent`.
 
 ### Type-check Python
 

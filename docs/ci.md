@@ -96,7 +96,7 @@ Tool flags live in the tool's configuration, so CI runs the command a contributo
 
 A check belongs in `nix flake check` only when it runs offline, on dependencies that Nix supplies without a hash to maintain, and without a build cache. The sandbox has no network, a fixed-output hash breaks on every Renovate lockfile update, and a sandbox build compiles every dependency again. `dk.nuTests` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job.
 
-A published package whose fixed-output hash Renovate maintains stays in `checks`, since the check is what catches a stale hash. Such a repository [refreshes the hash on Renovate pull requests](renovate.md#refresh-nix-dependency-hashes).
+A published package whose fixed-output hash Renovate maintains stays in `checks`, since the check catches a stale hash, and [refreshes the hash on Renovate pull requests](renovate.md#refresh-nix-dependency-hashes).
 
 ## Language jobs
 

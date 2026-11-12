@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.1] - 2026-11-12
+
+### Fixed
+
+- _(cspell)_ This repository's cspell configuration excludes `.git`, keeping Git internals out of spelling results. ([#94](https://github.com/hakula139/devkit/pull/94))
+- _(hooks)_ dprint preserves relative indentation and blank lines in fenced code blocks, keeps inline display math in its paragraph, and leaves HTML unchanged while continuing to normalize other Markdown. ([#95](https://github.com/hakula139/devkit/pull/95))
+
+[3.2.1]: https://github.com/hakula139/devkit/compare/v3.2.0...v3.2.1
+
 ## [3.2.0] - 2026-11-11
 
 ### Added

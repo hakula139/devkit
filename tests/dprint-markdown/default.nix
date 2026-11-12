@@ -13,6 +13,7 @@ let
   dprint-plugin-markdown =
     pkgs.callPackage (lib.path.append repo.root "nix/packages/dprint-plugin-markdown.nix")
       { };
+
   dprintConfig = import (lib.path.append repo.root "nix/hooks/dprint-config.nix") {
     inherit pkgs dprint-plugin-markdown;
   };

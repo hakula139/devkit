@@ -60,6 +60,10 @@
         else
           nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.${name};
 
+      repo = {
+        root = ./.;
+      };
+
       skillHelpers = import ./nix/skill-links.nix { inherit lib; };
     in
     # ----------------------------------------------------------------------------------------------
@@ -158,7 +162,7 @@
         checks =
           self.packages.${system}
           // import ./tests {
-            inherit pkgs dk;
+            inherit pkgs dk repo;
             inherit (self.lib) skillSource;
           };
 

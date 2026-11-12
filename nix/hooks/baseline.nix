@@ -19,19 +19,12 @@ let
   # Patched packages
   # ------------------------------------------------------------------------------------------------
   actionlint = pkgs.callPackage ../packages/actionlint.nix { };
+  dprint-plugin-markdown = pkgs.callPackage ../packages/dprint-plugin-markdown.nix { };
 
   # ------------------------------------------------------------------------------------------------
   # Formatter configuration
   # ------------------------------------------------------------------------------------------------
-  dprintConfig = pkgs.writers.writeJSON "dprint.json" {
-    markdown = {
-      emphasisKind = "underscores";
-      strongKind = "asterisks";
-    };
-
-    # Language plugins would also rewrite fenced examples inside Markdown.
-    plugins = [ "${pkgs.dprint-plugins.dprint-plugin-markdown}/plugin.wasm" ];
-  };
+  dprintConfig = import ./dprint-config.nix { inherit pkgs dprint-plugin-markdown; };
 
   # A project config stays checkout-relative, since Prettier resolves `overrides` globs from the
   # config file's directory.

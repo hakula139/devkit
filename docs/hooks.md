@@ -91,6 +91,10 @@ Add a `cspell.json` that names a project dictionary. `sort-file-contents` keeps 
 
 doctoc fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. In marked files, use inline links in headings so doctoc generates anchors matching GitHub.
 
+### Format Markdown
+
+dprint preserves relative indentation and blank lines in fenced code blocks and skips HTML formatting.
+
 ### Check EditorConfig properties
 
 The shared `.editorconfig` sets four generic rules for every file, so a repository that copies the file verbatim gets checker coverage whatever file types its tree holds:

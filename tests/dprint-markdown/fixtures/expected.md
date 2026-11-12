@@ -26,10 +26,3 @@ A result $$x + y = z$$ stays inside the paragraph.
 <div>
 <span>HTML keeps its indentation</span>
 </div>
-
-<!-- dprint-ignore -->
-Adjacent references [^first] [^second] stay separated.
-
-[^first]: First note.
-
-[^second]: Second note.

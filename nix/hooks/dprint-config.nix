@@ -9,8 +9,8 @@
 
 pkgs.writers.writeJSON "dprint.json" {
   markdown = {
-    emphasisKind = "underscores";
-    strongKind = "asterisks";
+    "emphasisKind" = "underscores";
+    "strongKind" = "asterisks";
     "codeBlock.preserveIndentation" = true;
     "codeBlock.preserveBlankLines" = true;
     "html.skipFormat" = true;

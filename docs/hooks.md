@@ -93,12 +93,7 @@ doctoc fills a table of contents between `<!-- START doctoc -->` and `<!-- END d
 
 ### Format Markdown
 
-dprint preserves relative indentation and blank lines in fenced code blocks and skips HTML formatting. The current plugin collapses the space between adjacent footnote references, so preserve it with an HTML `dprint-ignore` directive on their paragraph:
-
-```md
-<!-- dprint-ignore -->
-Adjacent references [^first] [^second] stay separated.
-```
+dprint preserves relative indentation and blank lines in fenced code blocks and skips HTML formatting.
 
 ### Check EditorConfig properties
 

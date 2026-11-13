@@ -51,7 +51,9 @@ Apply [the main ruleset](../.github/settings/rulesets/main.json) to a repository
 nix run github:hakula139/devkit/v3#github -- ruleset OWNER/REPO
 ```
 
-The helper replaces the repository's ruleset with the same `name` as the template, or creates one when none exists, so rerunning it picks up template changes.
+The helper replaces the repository's ruleset with the same `name` as the template, or creates one when none exists, so rerunning it picks up template changes. Use it for full template convergence.
+
+For a required-check-only migration, fetch the live ruleset with `gh api repos/OWNER/REPO/rulesets/RULESET_ID > ruleset.json`, modify only its required checks, PUT the preserved ruleset back with `gh api --method PUT repos/OWNER/REPO/rulesets/RULESET_ID --input ruleset.json`, and read it back with `gh api repos/OWNER/REPO/rulesets/RULESET_ID` to verify the update.
 
 To require checks that another app reports, list them after the repository as `CONTEXT@APP-ID`, taking the ID from `gh api apps/<slug> --jq .id`. For example, Codecov reports `codecov/patch` as app `254`:
 

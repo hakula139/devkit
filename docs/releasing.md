@@ -99,6 +99,8 @@ publish:
   steps:
     - name: Checkout
       uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - name: Download build artifacts
       uses: actions/download-artifact@v8

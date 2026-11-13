@@ -66,6 +66,8 @@ Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still 
 
 ### Check out source
 
+The shared checkouts set `persist-credentials: false`, so a step after the checkout gets no repository Git credential from it. A repository-owned job that performs an authenticated Git operation itself enables `persist-credentials` on its checkout and grants only the token permissions that operation needs. The major-tag job in devkit's `tag.yml` is the current exception, because its force push updates the moving major tag.
+
 A repository whose checkout carries a large payload passes `sparse-checkout` with patterns for `actions/checkout`. Supplied patterns use non-cone mode, so a negative pattern excludes a path, such as `/*` followed by `!/payload/`. A Git-backed flake reads tracked source files, and a full local evaluation copies them into the world-readable Nix store. A repository that must keep the payload out of the store also excludes it from its local checkout.
 
 Pass `submodules: true` to check out first-level submodules before entering the dev shell in CI.

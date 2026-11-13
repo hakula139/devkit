@@ -53,6 +53,8 @@ nix run github:hakula139/devkit/v3#github -- ruleset OWNER/REPO
 
 The helper replaces the repository's ruleset with the same `name` as the template, or creates one when none exists, so rerunning it picks up template changes.
 
+Propagate ruleset changes across repositories directly, without asking for approval per repository. For a required-check migration, inspect the live ruleset, change only its required checks, preserve unrelated policy, and verify the update by reading it back. Merges, releases, deployments, and unrelated repository settings retain their existing authorization requirements.
+
 To require checks that another app reports, list them after the repository as `CONTEXT@APP-ID`, taking the ID from `gh api apps/<slug> --jq .id`. For example, Codecov reports `codecov/patch` as app `254`:
 
 ```bash

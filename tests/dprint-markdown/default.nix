@@ -4,17 +4,12 @@
 
 {
   pkgs,
-  repo,
 }:
 
 let
-  inherit (pkgs) lib;
+  dprint-plugin-markdown = pkgs.callPackage ../../nix/packages/dprint-plugin-markdown.nix { };
 
-  dprint-plugin-markdown =
-    pkgs.callPackage (lib.path.append repo.root "nix/packages/dprint-plugin-markdown.nix")
-      { };
-
-  dprintConfig = import (lib.path.append repo.root "nix/hooks/dprint-config.nix") {
+  dprintConfig = import ../../nix/hooks/dprint-config.nix {
     inherit pkgs dprint-plugin-markdown;
   };
 in

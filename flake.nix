@@ -150,7 +150,8 @@
           packages = [
             dk.nushell
             dk.nu-test
-          ];
+          ]
+          ++ builtins.attrValues dk.nodeToolchain;
           inputsFrom = [
             preCommit
           ];

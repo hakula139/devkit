@@ -27,6 +27,7 @@ nixfmt
 nixos
 nixpkgs
 notitle
+npmjs
 nuon
 passthru
 pkgs

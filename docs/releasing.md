@@ -113,7 +113,7 @@ nix run .#changelog -- v1.2.3
 
 After the tagged commit passes CI, `tag.yml` publishes `@hakula139/pnpm-plugin-devkit` with provenance before creating the GitHub Release and advancing the moving major tag. Stable versions use npm's `latest` tag, and prereleases use `next`.
 
-Before the first automated npm publication, create the public package and configure its npm trusted publisher for the `hakula139/devkit` repository and `tag.yml` workflow. The workflow uses GitHub OIDC and needs no npm token secret. Verify the registry version and packed plugin after publication as well as the GitHub Release and major tag. If a later step fails after npm accepts the version, keep that immutable version and inspect the existing publication before retrying.
+After the first npm publication creates the package, configure its trusted publisher for the `hakula139/devkit` repository and `tag.yml` workflow so subsequent releases authenticate with GitHub OIDC without an npm token secret. Verify the registry version and packed plugin after publication as well as the GitHub Release and major tag. If a later step fails after npm accepts the version, keep that immutable version and inspect the existing publication before retrying.
 
 ### Choose the version
 

@@ -105,7 +105,7 @@ publish:
 
 ## Release devkit
 
-devkit's packages carry no version, so skip the version bump and draft the changelog with:
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog, with no separate devkit release-version field to bump. Draft the changelog with:
 
 ```bash
 nix run .#changelog -- v1.2.3

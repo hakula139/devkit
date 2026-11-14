@@ -42,14 +42,7 @@ jobs:
 
       # A tag checkout is on no branch, which pnpm's git checks reject.
       - name: Publish package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
-          PNPM_CONFIG_NPMRC_AUTH_FILE: ${{ runner.temp }}/npm-bootstrap.npmrc
         run: |
-          trap 'rm -f "$PNPM_CONFIG_NPMRC_AUTH_FILE"' EXIT
-          printf '%s\n' "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" \
-            > "$PNPM_CONFIG_NPMRC_AUTH_FILE"
-
           tag=latest
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then
             tag=next

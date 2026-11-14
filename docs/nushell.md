@@ -63,7 +63,7 @@ flags = {
 
 This passes `--config <path> --count 3 --mode "fast mode" --tag one --tag "two value" --verbose`. A string, integer, path, or derivation passes its string form as the option's value, `true` passes the option alone, and `false` or `null` passes nothing. A list passes the option once per item in list order, and attributes are passed in sorted order. A value stays one argument even when it contains spaces.
 
-The generated arguments reach `main` ahead of the caller's arguments, so a caller can override a generated value by passing the option again. A generated switch stays on unless the script takes an off switch, since a caller can only add arguments. `writeNuApplication` also takes `makeWrapperArgs`, which follows the generated flags in its `makeShellWrapper` call. Use it for wrapper operations such as `--set`, or for a raw argument that `flags` cannot generate:
+The generated arguments reach `main` ahead of the caller's arguments, so a caller can override a generated value by passing the option again, including disabling a generated switch with `--verbose=false`. `writeNuApplication` also takes `makeWrapperArgs`, which follows the generated flags in its `makeShellWrapper` call. Use it for wrapper operations such as `--set`, or for a raw argument that `flags` cannot generate:
 
 ```nix
 makeWrapperArgs = [

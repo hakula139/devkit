@@ -7,7 +7,7 @@
 }:
 
 pkgs.actionlint.overrideAttrs (old: {
-  # Unmerged upstream PRs. Drop each patch once a release contains it.
+  # Unreleased upstream fixes. Drop each patch once a release contains it.
   patches = (old.patches or [ ]) ++ [
     # https://github.com/rhysd/actionlint/pull/654
     (pkgs.fetchpatch {
@@ -18,6 +18,11 @@ pkgs.actionlint.overrideAttrs (old: {
     (pkgs.fetchpatch {
       url = "https://github.com/rhysd/actionlint/commit/8ff976ea0b8a87eef436c1b789fef94af462dfa7.patch";
       hash = "sha256-UHS0/jUhWsIYXOpRXiIikDjixJ4B6oSfTiVGS/O64rU=";
+    })
+    # https://github.com/rhysd/actionlint/issues/650
+    (pkgs.fetchpatch {
+      url = "https://github.com/rhysd/actionlint/commit/fd33e9f582a01a02885c93ae3775e1190cf63653.patch";
+      hash = "sha256-PbdXDn6tG4Ii2xXDauJ0b3+tWqTIcv0J8keUWdAxWmU=";
     })
   ];
 })

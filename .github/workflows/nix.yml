@@ -26,7 +26,6 @@ jobs:
   nix:
     name: Nix (${{ matrix.os }})
     runs-on: ${{ matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
-    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -55,8 +54,14 @@ jobs:
 
       - name: Run hooks
         if: ${{ !cancelled() && matrix.os == 'Linux' }}
-        run: nix develop -c run-hooks
+        run: |
+          nix develop \
+            --print-build-logs \
+            -c run-hooks
 
       - name: Build dev shell
         if: ${{ !cancelled() && matrix.os == 'macOS' }}
-        run: nix develop -c true
+        run: |
+          nix develop \
+            --print-build-logs \
+            -c true

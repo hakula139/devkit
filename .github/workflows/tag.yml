@@ -52,12 +52,11 @@ jobs:
           nix develop -c pnpm publish \
             --provenance \
             --no-git-checks \
-            --tag "$tag" \
-            --publish-wait-timeout 600000
+            --tag "$tag"
 
   publish:
     name: Publish GitHub Release
-    needs: npm
+    needs: tagged-ci
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -75,7 +74,7 @@ jobs:
   major-tag:
     name: Move the Major Tag
     if: ${{ !contains(github.ref_name, '-') }}
-    needs: publish
+    needs: [npm, publish]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

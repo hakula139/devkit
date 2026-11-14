@@ -6,13 +6,24 @@
 
 set -euo pipefail
 
-notes=$(parse-changelog CHANGELOG.md "${GITHUB_REF_NAME#v}")
-
 options=(
   --verify-tag
   --title "$GITHUB_REF_NAME"
-  --notes "$notes"
 )
+case "$NOTES_SOURCE" in
+  changelog)
+    notes=$(parse-changelog CHANGELOG.md "${GITHUB_REF_NAME#v}")
+    options+=(--notes "$notes")
+    ;;
+  tag)
+    options+=(--notes-from-tag)
+    ;;
+  *)
+    echo "::error::Unknown release notes source '$NOTES_SOURCE'. Use 'changelog' or 'tag'."
+    exit 1
+    ;;
+esac
+
 if [[ "$GITHUB_REF_NAME" == *-* ]]; then
   options+=(--prerelease)
 fi

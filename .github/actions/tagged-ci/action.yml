@@ -1,5 +1,10 @@
 name: Tagged CI
-description: Wait for a push or dispatched `ci.yml` run to pass on the tagged commit
+description: Wait for a push or dispatched workflow run to pass on the tagged commit
+
+inputs:
+  workflow:
+    description: CI workflow filename
+    default: ci.yml
 
 runs:
   using: composite
@@ -8,4 +13,5 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
+        WORKFLOW: ${{ inputs.workflow }}
       run: bash "$GITHUB_ACTION_PATH/tagged-ci.sh"

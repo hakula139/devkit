@@ -53,7 +53,7 @@ The command uses the repository's `cliff.toml` when present and otherwise uses d
 
 ### Recover a release
 
-Releases that use `tagged-ci` require a passing push or dispatched run of `ci.yml` on the tagged commit. Rerun the failed CI jobs or dispatch a run on the tag:
+Releases that use `tagged-ci` require a passing push or dispatched run of the selected workflow on the tagged commit. The workflow defaults to `ci.yml`. Rerun the failed CI jobs or dispatch a run on the tag:
 
 ```bash
 gh workflow run ci.yml --ref v1.2.3
@@ -61,13 +61,15 @@ gh workflow run ci.yml --ref v1.2.3
 
 Rerun the failed release jobs once CI passes.
 
+If the action's `workflow` input selects another workflow, use that filename in the dispatch command.
+
 To restore a deleted cache pin, rebuild the tagged package on each target system, push its output to `hakula`, and pin it as `<repository>-<tag>-<system>`.
 
 ### Write your own release workflow
 
 A repository that `release.yml` doesn't fit composes its own `tag.yml` from devkit's pieces:
 
-- A `tagged-ci` job running the `tagged-ci` action, which needs only `actions: read`.
+- A `tagged-ci` job running the `tagged-ci` action, which needs only `actions: read`. Its optional `workflow` input selects the CI workflow filename and defaults to `ci.yml`. Push and dispatched runs count on any branch when their commit matches the tag.
 - The repository's own version check before the wait, so a mismatch fails fast. It adds a checkout and `contents: read`, as in [`release.yml`](../.github/workflows/release.yml).
 - A `nix-cache` job calling `nix-cache.yml` after `tagged-ci`, if the package builds on both systems.
 - A publish job that needs every earlier job, including `nix-cache` when present:
@@ -102,6 +104,10 @@ publish:
 ```
 
 `assets` takes newline-separated globs relative to the repository root, and the step fails when a named file is missing or a glob matches nothing. Name each file explicitly, since a glob that matches only some archives publishes a partial set.
+
+`publish-release` defaults its `notes-source` input to `changelog`, using the tag's `CHANGELOG.md` section. Set `notes-source: tag` to use `gh release create --notes-from-tag`, which reads the annotated tag's message and uses the commit message for a lightweight tag. This mode needs no changelog file.
+
+Check out the triggering tag before publishing tag notes, as the example's checkout step does. A checkout by commit SHA must also make that tag available locally, since `gh` reads its annotation from the local repository.
 
 ## Release devkit
 

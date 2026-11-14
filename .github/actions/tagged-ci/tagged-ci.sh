@@ -8,14 +8,14 @@ set -euo pipefail
 
 while true; do
   if ! verdict=$(
-    gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&per_page=100" \
+    gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$WORKFLOW/runs?head_sha=$GITHUB_SHA&per_page=100" \
       --paginate \
       --slurp \
       | jq \
         -r \
         -f "$GITHUB_ACTION_PATH/tagged-ci.jq"
   ); then
-    echo "::error::Could not read the runs of .github/workflows/ci.yml, which tagged-ci waits for."
+    echo "::error::Could not read the runs of .github/workflows/$WORKFLOW, which tagged-ci waits for."
     exit 1
   fi
 
@@ -29,7 +29,7 @@ while true; do
       ;;
     *)
       echo "::error::No push or dispatched CI run passed on $GITHUB_SHA." \
-        "Rerun the failed CI jobs, or run 'gh workflow run ci.yml --ref $GITHUB_REF_NAME'," \
+        "Rerun the failed CI jobs, or run 'gh workflow run $WORKFLOW --ref $GITHUB_REF_NAME'," \
         "then rerun this job."
       exit 1
       ;;

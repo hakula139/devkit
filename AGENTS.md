@@ -33,6 +33,8 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── cliff.toml                  # Shared git-cliff release-note template
 ├── default.json                # Renovate preset
 ├── flake.nix                   # Exported library, script packages, checks, and dev shell
+├── package.json                # Published pnpm configuration plugin manifest
+├── pnpmfile.mjs                # Shared pnpm configuration defaults
 └── README.md                   # Project overview and documentation index
 ```
 

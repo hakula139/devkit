@@ -168,7 +168,19 @@ Declare pnpm in `package.json` with `devEngines`, matching the toolchain's major
 }
 ```
 
-Leave out a `packageManager` field, which would make pnpm download and run that exact version instead. npm refuses to run in a project whose `devEngines` names pnpm, so publish with `pnpm publish`, which runs npm's OIDC trusted publishing, and run npm-only commands from outside the checkout.
+Leave out a `packageManager` field, which would make pnpm download and run that exact version instead. npm refuses to run in a project whose `devEngines` names pnpm, so publish with `pnpm publish`, which supports OIDC trusted publishing, and run npm-only commands from outside the checkout.
+
+### Share pnpm defaults
+
+Install devkit's configuration plugin with pnpm 12.9 or later:
+
+```bash
+pnpm add --config @hakula139/pnpm-plugin-devkit
+```
+
+Commit the resulting `configDependencies` entry in `pnpm-workspace.yaml` and its integrity in `pnpm-lock.yaml`. pnpm loads the plugin before installing regular dependencies, so direct installs, lockfile-pinned hooks, and CI use the same defaults.
+
+The plugin defaults `minimumReleaseAgeExclude` to `['@hakula139/*']`, allowing packages in that scope to install immediately while retaining pnpm's default 24-hour release-age policy for third-party packages. An explicit repository setting, including an empty exclusion list, takes precedence. The plugin leaves other pnpm settings unchanged.
 
 ### Declare uv
 

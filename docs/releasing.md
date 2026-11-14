@@ -105,11 +105,15 @@ publish:
 
 ## Release devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog, with no separate devkit release-version field to bump. Draft the changelog with:
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog. The release workflow derives the npm plugin's version from the tag, replacing the manifest's `0.0.0` placeholder on the runner, so there is no release-version field to bump. Draft the changelog with:
 
 ```bash
 nix run .#changelog -- v1.2.3
 ```
+
+After the tagged commit passes CI, `tag.yml` publishes `@hakula139/pnpm-plugin-devkit` with provenance before creating the GitHub Release and advancing the moving major tag. Stable versions use npm's `latest` tag, and prereleases use `next`.
+
+Before the first automated npm publication, create the public package and configure its npm trusted publisher for the `hakula139/devkit` repository and `tag.yml` workflow. The workflow uses GitHub OIDC and needs no npm token secret. Verify the registry version and packed plugin after publication as well as the GitHub Release and major tag. If a later step fails after npm accepts the version, keep that immutable version and inspect the existing publication before retrying.
 
 ### Choose the version
 

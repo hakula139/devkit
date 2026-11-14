@@ -15,27 +15,6 @@ devkit holds the development tooling that Hakula's repositories share by referen
 | The Renovate preset                                                                       | [Renovate preset](docs/renovate.md)    |
 | A repository setting, the branch ruleset, or a label                                      | [GitHub conventions](docs/github.md)   |
 
-## Layout
-
-```text
-.
-├── .cspell/                    # Project spelling dictionary
-├── .github/                    # Composite actions, workflows, and GitHub configuration
-├── docs/                       # Adoption guides and shared tooling reference
-├── nix/                        # Nix library, hooks, builders, and private package overrides
-├── scripts/                    # Repository administration helpers
-├── src/                        # Exported Nushell executable sources
-├── tests/                      # The check aggregator and one directory per check
-├── .markdownlint-cli2.jsonc    # The shared markdownlint-cli2 rules
-├── .prettierrc.json            # The shared Prettier style, whose `overrides` must use basenames
-├── .taplo.toml                 # The shared Taplo formatting
-├── CHANGELOG.md                # Release notes, one section per tag
-├── cliff.toml                  # The shared git-cliff config that drafts each release section
-├── default.json                # The Renovate preset consumers extend
-├── flake.nix                   # The exported `lib`, script packages, checks, and dev shell
-└── README.md                   # Project overview and documentation index
-```
-
 ## Conventions
 
 - Run the pre-commit hooks on every commit. In each new checkout or worktree, run `nix develop -c true` once to install them. Never bypass the hooks with `--no-verify` or `PREK_ALLOW_NO_CONFIG`.
@@ -51,10 +30,6 @@ devkit holds the development tooling that Hakula's repositories share by referen
 nix flake check --all-systems
 nix develop -c run-hooks
 ```
-
-## Documentation maintenance
-
-`docs/` serves both contributors and adopters.
 
 ## Code review
 

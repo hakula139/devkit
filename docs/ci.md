@@ -66,7 +66,7 @@ Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still 
 
 ### Check out source
 
-The shared checkouts set `persist-credentials: false`, so a step after the checkout gets no repository Git credential from it. A repository-owned job that performs an authenticated Git operation itself enables `persist-credentials` on its checkout and grants only the token permissions that operation needs. The major-tag job in devkit's `tag.yml` is the current exception, because its force push updates the moving major tag.
+Shared checkouts set `persist-credentials: false`, so later steps need their own credentials for authenticated Git operations.
 
 A repository whose checkout carries a large payload passes `sparse-checkout` with patterns for `actions/checkout`. Supplied patterns use non-cone mode, so a negative pattern excludes a path, such as `/*` followed by `!/payload/`. A Git-backed flake reads tracked source files, and a full local evaluation copies them into the world-readable Nix store. A repository that must keep the payload out of the store also excludes it from its local checkout.
 
@@ -92,7 +92,6 @@ Builds, packaging, and other project-specific steps go in the repository's own j
 
 - Its id names what it checks.
 - Its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix.
-- A blank line separates its settings from its `steps`.
 
 Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a native Windows job to `CI Result`'s `needs`.
 
@@ -158,7 +157,7 @@ export default defineConfig({
 });
 ```
 
-A repository with a `build` script adds a job running `nix develop -c pnpm build`, with a dry-run publish or pack step for a published package. For a static site, that job is `site` (`Site Check`) with a `Build site` step, and it uploads the output with `actions/upload-artifact@v7` only when a later job downloads it. Build options belong in the site's configuration or its `build` script.
+A repository with a `build` script adds a job running `nix develop -c pnpm build`, with a dry-run publish or pack step for a published package. Upload the output only when a later job consumes it.
 
 ### Rust
 

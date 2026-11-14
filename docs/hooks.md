@@ -81,6 +81,8 @@ preCommit = dk.preCommit {
 
 Prettier, Taplo, and markdownlint-cli2 use devkit's shared [Prettier style](../.prettierrc.json), [Taplo formatting](../.taplo.toml), and [markdownlint rules](../.markdownlint-cli2.jsonc). A `.prettierrc.json` or `.taplo.toml` at the source root replaces the shared file once the dev shell is re-entered, and a project `.markdownlint-cli2.jsonc` overrides individual shared rules.
 
+Use basenames in the shared Prettier configuration's `overrides`, since Prettier resolves those globs from the configuration's Nix store directory.
+
 Set `hooks.<name>.settings.configPath` to point markdownlint-cli2, Prettier, Ruff, or Taplo at another file, or to `""` to let the tool find its own. A `.markdownlint-cli2.jsonc` that loads relative `customRules` or `markdownItPlugins` needs `configPath = ".markdownlint-cli2.jsonc"`, which drops the shared rules.
 
 ### Add a spelling dictionary
@@ -97,20 +99,9 @@ dprint preserves relative indentation and blank lines in fenced code blocks and 
 
 ### Check EditorConfig properties
 
-The shared `.editorconfig` sets four generic rules for every file, so a repository that copies the file verbatim gets checker coverage whatever file types its tree holds:
+Keep a copy of the shared `.editorconfig` checked in, then add language-specific sections that match the repository's formatters. EditorConfig has no include mechanism, and editors use this file outside the dev shell. Nushell indentation is checked through this file because no hook formats Nushell.
 
-- Encoding: `charset = utf-8`
-- Line endings: `end_of_line = lf`
-- Final newline: `insert_final_newline = true`
-- Trailing whitespace: `trim_trailing_whitespace = true`
-
-Keep `.editorconfig` checked in. EditorConfig has no include mechanism, so a project adds its sections to the same file, and editors read it outside the dev shell. The generated `.pre-commit-config.yaml` is different, since only the hook runner reads it.
-
-Markdown is exempt from the trailing-whitespace rule, since two trailing spaces make a hard line break and `trim-trailing-whitespace` keeps them too through `--markdown-linebreak-ext=md`.
-
-`editorconfig-checker` also applies the rules to binary payloads that its default excludes do not cover, such as age files, which rarely end in a newline or use LF. Exclude them through `hooks.editorconfig-checker.excludes`, for example `"\\.age$"`.
-
-Indentation and line length stay language-specific. Add a section for each language the repository uses and match it to that language's formatter, since Makefile recipes, Go, Prettier, Python, and Rust disagree on indentation. No hook formats Nushell, so the `[*.nu]` section sets its indentation for the checker alone, and the `[*.{sh,zsh}]` section sets shell indentation along with `binary_next_line` and `switch_case_indent`.
+The Markdown override preserves two-space hard line breaks. Exclude binary payloads that the checker treats as text through `hooks.editorconfig-checker.excludes`.
 
 ### Type-check Python
 

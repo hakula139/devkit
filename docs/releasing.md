@@ -59,24 +59,9 @@ Releases that use `tagged-ci` require a passing push or dispatched run of `ci.ym
 gh workflow run ci.yml --ref v1.2.3
 ```
 
-Rerun the failed release jobs once CI passes. Other workflows must satisfy their own validation gates before publication.
+Rerun the failed release jobs once CI passes.
 
-To restore a deleted pin:
-
-1. Check out the tag on each system it pins (`x86_64-linux` and `aarch64-darwin`).
-
-2. Build the package:
-
-   ```bash
-   nix build .#default.out --no-link --print-out-paths
-   ```
-
-3. Push the output and pin it:
-
-   ```bash
-   cachix push hakula <path>
-   cachix pin hakula <repository>-<tag>-<system> <path>
-   ```
+To restore a deleted cache pin, rebuild the tagged package on each target system, push its output to `hakula`, and pin it as `<repository>-<tag>-<system>`.
 
 ### Write your own release workflow
 
@@ -120,7 +105,7 @@ publish:
 
 ## Release devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), skipping the version bump because devkit's packages carry no version, and draft the changelog with:
+devkit's packages carry no version, so skip the version bump and draft the changelog with:
 
 ```bash
 nix run .#changelog -- v1.2.3

@@ -20,19 +20,19 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ```text
 .
 ├── .cspell/                    # Project spelling dictionary
-├── .github/                    # Composite actions, workflows, and GitHub configuration
+├── .github/                    # Actions, workflows, and GitHub configuration
 ├── docs/                       # Adoption guides and shared tooling reference
 ├── nix/                        # Nix library, hooks, builders, and private package overrides
 ├── scripts/                    # Repository administration helpers
 ├── src/                        # Exported Nushell executable sources
-├── tests/                      # The check aggregator and one directory per check
-├── .markdownlint-cli2.jsonc    # The shared markdownlint-cli2 rules
-├── .prettierrc.json            # The shared Prettier style, whose `overrides` must use basenames
-├── .taplo.toml                 # The shared Taplo formatting
+├── tests/                      # Check aggregator and one directory per check
+├── .markdownlint-cli2.jsonc    # Shared markdownlint-cli2 rules
+├── .prettierrc.json            # Shared Prettier style
+├── .taplo.toml                 # Shared Taplo formatting
 ├── CHANGELOG.md                # Release notes, one section per tag
-├── cliff.toml                  # The shared git-cliff config that drafts each release section
-├── default.json                # The Renovate preset consumers extend
-├── flake.nix                   # The exported `lib`, script packages, checks, and dev shell
+├── cliff.toml                  # Shared git-cliff release-note template
+├── default.json                # Renovate preset
+├── flake.nix                   # Exported library, script packages, checks, and dev shell
 └── README.md                   # Project overview and documentation index
 ```
 
@@ -51,10 +51,6 @@ devkit holds the development tooling that Hakula's repositories share by referen
 nix flake check --all-systems
 nix develop -c run-hooks
 ```
-
-## Documentation maintenance
-
-`docs/` serves both contributors and adopters.
 
 ## Code review
 

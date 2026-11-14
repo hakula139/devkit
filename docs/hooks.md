@@ -95,7 +95,7 @@ doctoc fills a table of contents between `<!-- START doctoc -->` and `<!-- END d
 
 ### Format Markdown
 
-dprint preserves relative indentation and blank lines in fenced code blocks and skips HTML formatting.
+dprint preserves relative indentation and blank lines in fenced code blocks and skips HTML formatting. The hook checks the Markdown files selected by prek, including tracked files matched by Git ignore rules.
 
 ### Check EditorConfig properties
 

@@ -148,7 +148,7 @@ in
       entry = "${lib.getExe config.hooks.dprint.package} fmt";
       args = [
         "--config=${dprintConfig}"
-        "--allow-no-files"
+        "--no-gitignore"
       ];
       files = "\\.md$";
     };

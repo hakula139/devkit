@@ -52,7 +52,8 @@ jobs:
           nix develop -c pnpm publish \
             --provenance \
             --no-git-checks \
-            --tag "$tag"
+            --tag "$tag" \
+            --publish-wait-timeout 600000
 
   publish:
     name: Publish GitHub Release

@@ -103,6 +103,27 @@ publish:
 
 `assets` takes newline-separated globs relative to the repository root, and the step fails when a named file is missing or a glob matches nothing. Name each file explicitly, since a glob that matches only some archives publishes a partial set.
 
+### Notify a Homebrew tap
+
+After the provider release includes `homebrew.yml`, a release workflow can notify a tap under the same owner. The tap repository must have an `update.yml` workflow on `main` that accepts `formula` and `tag` inputs. Supply its repository name as `tap-repository`, and pass a GitHub App's `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets explicitly. The app must be installed on the tap with Actions write access.
+
+The caller controls when notification runs. Require a tag and make the job depend on successful publication, including any other publication jobs the repository needs:
+
+```yaml
+homebrew:
+  needs: publish
+  if: github.ref_type == 'tag'
+  uses: hakula139/devkit/.github/workflows/homebrew.yml@v3
+  with:
+    formula: my-tool
+    tap-repository: homebrew-tap
+  secrets:
+    RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
+    RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+```
+
+The workflow sends the caller's tag unchanged, including prerelease suffixes.
+
 ## Release devkit
 
 Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog. The release workflow derives the npm plugin's version from the tag, replacing the manifest's `0.0.0` placeholder on the runner, so there is no release-version field to bump. Draft the changelog with:

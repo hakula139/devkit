@@ -38,7 +38,6 @@ jobs:
   rust:
     name: Rust Check (${{ matrix.os }})
     runs-on: ${{ matrix.os == 'macOS' && 'macos-latest' || 'ubuntu-latest' }}
-    timeout-minutes: 30
     permissions:
       contents: read
       id-token: write
@@ -60,6 +59,12 @@ jobs:
         uses: $/.github/actions/setup-nix
         with:
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Build dev shell
+        run: |
+          nix develop \
+            --print-build-logs \
+            -c true
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -102,7 +107,6 @@ jobs:
     name: MSRV Check
     if: ${{ inputs.msrv }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -117,6 +121,12 @@ jobs:
         uses: $/.github/actions/setup-nix
         with:
           cachix_auth_token: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Build dev shell
+        run: |
+          nix develop .#msrv \
+            --print-build-logs \
+            -c true
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2

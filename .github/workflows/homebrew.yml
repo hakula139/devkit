@@ -1,0 +1,57 @@
+name: Notify Homebrew Tap
+
+on:
+  workflow_call:
+    inputs:
+      formula:
+        description: Formula to update
+        type: string
+        required: true
+      tap-repository:
+        description: Tap repository name under the caller's owner
+        type: string
+        required: true
+    secrets:
+      RELEASE_APP_ID:
+        required: true
+      RELEASE_APP_PRIVATE_KEY:
+        required: true
+
+permissions: {}
+
+jobs:
+  notify:
+    name: Notify Homebrew Tap
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ inputs.tap-repository }}
+          permission-actions: write
+
+      - name: Notify tap workflow
+        uses: actions/github-script@v9
+        env:
+          FORMULA: ${{ inputs.formula }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          TAP_REPOSITORY: ${{ inputs.tap-repository }}
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: process.env.TAP_REPOSITORY,
+              workflow_id: 'update.yml',
+              ref: 'main',
+              inputs: {
+                formula: process.env.FORMULA,
+                tag: process.env.RELEASE_TAG,
+              },
+            });

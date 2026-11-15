@@ -105,7 +105,7 @@ publish:
 
 ### Notify a Homebrew tap
 
-After the provider release includes `homebrew.yml`, a release workflow can notify a tap under the same owner. The tap repository must have an `update.yml` workflow on `main` that accepts `formula` and `tag` inputs. Supply its repository name as `tap-repository`, and pass a GitHub App's `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets explicitly. The app must be installed on the tap with Actions write access.
+A release workflow can notify a tap under the same owner. The tap repository must have an `update.yml` workflow on `main` that accepts `formula` and `tag` inputs. Supply its repository name as `tap-repository`, and pass a GitHub App's `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets explicitly. The app must be installed on the tap with Actions write access.
 
 The caller controls when notification runs. Require a tag and make the job depend on successful publication, including any other publication jobs the repository needs:
 

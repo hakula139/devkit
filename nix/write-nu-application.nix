@@ -21,12 +21,12 @@ in
 
 # Nushell names `main` after the script file in `--help`.
 nuWrapper.package {
+  inherit name;
+  script = "${pkgs.writeTextDir name text}/${name}";
   inherit
-    name
     runtimeInputs
     flags
     makeWrapperArgs
     meta
     ;
-  script = "${pkgs.writeTextDir name text}/${name}";
 }

@@ -17,9 +17,9 @@ let
   lockedTool =
     runtimeInputs: runner: prepare: command:
     pkgs.writeShellApplication {
-      inherit runtimeInputs;
       name = command;
       text = "exec ${runner} ${command} \"$@\"";
+      inherit runtimeInputs;
       passthru.prepare = pkgs.writeShellApplication (prepare // { inherit runtimeInputs; });
     };
 

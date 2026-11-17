@@ -53,10 +53,6 @@ let
 in
 pkgs.writeShellApplication {
   name = "run-hooks";
-  runtimeInputs = [
-    hooksRun.config.package
-    hooksRun.config.gitPackage
-  ];
   text = ''
     cd "$(git rev-parse --show-toplevel)"
     ${lib.concatMapStringsSep "\n" lib.getExe prepares}
@@ -74,4 +70,8 @@ pkgs.writeShellApplication {
     done
     exit "$status"
   '';
+  runtimeInputs = [
+    hooksRun.config.package
+    hooksRun.config.gitPackage
+  ];
 }

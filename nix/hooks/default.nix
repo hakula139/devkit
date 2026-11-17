@@ -48,12 +48,12 @@ let
 
   hooksRun = gitHooksRun {
     inherit src;
-    package = pkgs.prek;
     imports = [
       configPathOptions
       baseline
       { inherit hooks excludes; }
     ];
+    package = pkgs.prek;
   };
 
   hookType =

@@ -9,6 +9,7 @@
 
 let
   inherit (pkgs) lib;
+  esc = lib.escapeShellArg;
 
   # The build command that installs `bin` to run `script`, for a builder that has
   # `makeShellWrapper` in its `nativeBuildInputs`.
@@ -21,9 +22,14 @@ let
       makeWrapperArgs ? [ ],
     }:
     let
-      pathArgs = lib.optionalString (
-        runtimeInputs != [ ]
-      ) "--prefix PATH : ${lib.makeBinPath runtimeInputs}";
+      target = if lib.hasPrefix "/" script then esc script else ''"$out/"${esc script}'';
+
+      pathArgs = lib.optionals (runtimeInputs != [ ]) [
+        "--prefix"
+        "PATH"
+        ":"
+        (lib.makeBinPath runtimeInputs)
+      ];
 
       flagArgs =
         lib.concatMap
@@ -41,10 +47,11 @@ let
           );
     in
     ''
-      makeShellWrapper ${lib.getExe nushell} ${bin} \
-        --run ${lib.escapeShellArg (builtins.readFile ./nu-wrapper.sh)} \
-        --add-flags "--no-config-file ${script}" \
-        ${pathArgs} \
+      makeShellWrapper ${esc (lib.getExe nushell)} "$out/"${esc bin} \
+        --run ${esc (builtins.readFile ./nu-wrapper.sh)} \
+        ${lib.escapeShellArgs pathArgs} \
+        --add-flag --no-config-file \
+        --add-flag ${target} \
         ${lib.escapeShellArgs (flagArgs ++ makeWrapperArgs)}
     '';
 in
@@ -64,7 +71,7 @@ in
     pkgs.runCommand name
       {
         nativeBuildInputs = [
-          pkgs.makeShellWrapper
+          pkgs.buildPackages.makeShellWrapper
         ];
         meta = {
           mainProgram = name;
@@ -72,7 +79,7 @@ in
         // meta;
       }
       (command {
-        bin = "$out/bin/${name}";
+        bin = "bin/${name}";
         inherit
           script
           runtimeInputs

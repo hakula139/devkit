@@ -87,25 +87,31 @@ def "main ruleset" [
     }
   )
 
-  mut endpoint = $"repos/($repo)/rulesets"
+  let rulesets = $"repos/($repo)/rulesets"
   let id = (
-    ^gh api $endpoint
+    ^gh api $rulesets
       --paginate
-      --jq $".[] | select\(.name == ($ruleset.name | to json)\) | .id"
-    | str trim
+      --jq $"first\(.[] | select\(.name == ($ruleset.name | to json)\) | .id\)"
+    | lines
+    | first
   )
-
-  mut method = "POST"
-  if $id != "" {
-    $endpoint = $"($endpoint)/($id)"
-    $method = "PUT"
+  let target = if $id == null {
+    {
+      endpoint: $rulesets
+      method: "POST"
+    }
+  } else {
+    {
+      endpoint: $"($rulesets)/($id)"
+      method: "PUT"
+    }
   }
 
   (
     $ruleset
     | to json
-    | ^gh api $endpoint
-      --method $method
+    | ^gh api $target.endpoint
+      --method $target.method
       --input -
   )
 }

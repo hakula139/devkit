@@ -8,7 +8,7 @@ on:
         type: boolean
         default: true
       sparse-checkout:
-        description: Sparse-checkout patterns passed to actions/checkout, which uses non-cone mode when supplied
+        description: Non-cone sparse-checkout patterns passed to actions/checkout
         type: string
         default: ''
       submodules:

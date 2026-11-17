@@ -43,17 +43,40 @@ let
       "--raw"
     ];
   };
+
+  echo-app = dk.mkNuApplication {
+    pname = "echo-app";
+    version = "0.1.0";
+    src = ./app;
+    skills = [
+      ./skill
+    ];
+    flags = {
+      mode = "app mode";
+    };
+    meta.description = "Packaged echo-app test application";
+  };
+
+  emptyTestsRejected =
+    !(builtins.tryEval (
+      dk.nuTests {
+        src = ./app;
+      }
+    )).success;
 in
+assert emptyTestsRejected;
 pkgs.testers.testBuildFailure' {
   drv = dk.nuTests {
     src = ./.;
     runtimeInputs = [
       dk.nu-check
+      dk.nu-test
+      echo-app
       echo-args
     ];
   };
   expectedBuilderLogEntries = [
     "FAIL ./nu-tooling.test.nu: test fails on purpose"
-    "6 passed, 1 failed"
+    "11 passed, 1 failed"
   ];
 }

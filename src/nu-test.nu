@@ -21,14 +21,22 @@ def install-stubs [source: string, dir: string]: nothing -> nothing {
   mkdir $dir
   for stub in (
     ls $source
+    | where type in ["file" "symlink"]
     | where name ends-with ".stub.nu"
     | get name
+    | where ($it | path expand | path type) != "dir"
   ) {
-    let target = ($dir | path join ($stub | path basename | str replace ".stub.nu" ""))
-    let script = (
-      open --raw $stub
-      | str replace --regex '^#!.*\n?' ""
+    let name = (
+      $stub
+      | path basename
+      | str replace --regex '\.stub\.nu$' ""
     )
+    let target = ($dir | path join $name)
+    let raw = (
+      open --raw $stub
+      | into string
+    )
+    let script = ($raw | str replace --regex '^#![^\r\n]*(\r?\n)?' "")
     $"#!($nu.current-exe) --no-config-file\n($script)"
     | save $target
     ^chmod +x $target
@@ -51,45 +59,55 @@ def plan-file [file: string]: nothing -> record {
   let stubs = ($scratch | path join "stubs")
   let query = "scope commands | where name starts-with 'test ' | get name | to json"
   let found = (nu-run $path $query $scratch $stubs)
-  let jobs = if $found.exit_code != 0 {
-    [(load-failure $file $found)]
-  } else {
-    install-stubs ($path | path dirname) $stubs
-    let names = try {
-      $found.stdout
-      | from json
-    }
-    if ($names | describe | str starts-with "list") {
-      $names
-      | each {|name|
-        if ($name =~ '^test [A-Za-z0-9 ,.:-]+$') {
-          {
-            file: $file
-            name: $name
-            path: $path
-            scratch: $scratch
-            stubs: $stubs
-          }
-        } else {
-          let message = "A test name may hold only letters, digits, spaces, and `,.:-`."
-          {
-            file: $file
-            name: $name
-            run: {
+  let jobs = try {
+    if $found.exit_code != 0 {
+      [(load-failure $file $found)]
+    } else {
+      install-stubs ($path | path dirname) $stubs
+      let names = try {
+        $found.stdout
+        | from json
+      }
+      if ($names | describe | str starts-with "list") {
+        $names
+        | each {|name|
+          if ($name =~ '^test [A-Za-z0-9,.:-]+( [A-Za-z0-9,.:-]+)*$') {
+            {
+              file: $file
+              name: $name
+              path: $path
+              scratch: $scratch
+              stubs: $stubs
+            }
+          } else {
+            let message = (
+              "A test name may hold only letters, digits, and `,.:-`, separated by single spaces."
+            )
+            [(load-failure $file {
               exit_code: 1
               stdout: ""
-              stderr: $message
-            }
+              stderr: $"($name): ($message)"
+            })]
           }
         }
+        | flatten
+      } else {
+        let message = "A test file must not print to stdout or exit while it loads."
+        [(load-failure $file ($found | update stderr { $in + $message }))]
       }
-    } else {
-      let message = "A test file must not print to stdout or exit while it loads."
-      [(load-failure $file ($found | update stderr { $in + $message }))]
     }
+  } catch {|err|
+    [(load-failure $file {
+      exit_code: 1
+      stdout: ""
+      stderr: $err.msg
+    })]
   }
 
-  {scratch: $scratch, jobs: $jobs}
+  {
+    scratch: $scratch
+    jobs: $jobs
+  }
 }
 
 # Run `job` in a fresh `TMPDIR` under its file's scratch, or return any discovery failure.

@@ -20,7 +20,12 @@ def position [text: string, offset: int]: nothing -> string {
 
 def diagnostics [target: string, text: string]: nothing -> list<string> {
   let result = (
-    ^$nu.current-exe --ide-check $MAX_ERRORS $target
+    (
+      ^$nu.current-exe
+        --no-config-file
+        --ide-check $MAX_ERRORS
+        -- $target
+    )
     | complete
   )
   if $result.exit_code != 0 {

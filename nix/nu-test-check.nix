@@ -26,16 +26,19 @@ let
 
   testPaths = map (test: lib.path.removePrefix src test) tests;
 in
-pkgs.runCommand "nu-tests"
-  {
-    nativeBuildInputs = [
-      nushell
-      nu-test
-    ]
-    ++ runtimeInputs;
-  }
-  ''
-    cd ${source}
-    nu-test ${lib.escapeShellArgs testPaths}
-    touch "$out"
-  ''
+if tests == [ ] then
+  throw "dk.nuTests: no `.test.nu` files found under ${toString src}"
+else
+  pkgs.runCommand "nu-tests"
+    {
+      nativeBuildInputs = [
+        nushell
+        nu-test
+      ]
+      ++ runtimeInputs;
+    }
+    ''
+      cd ${source}
+      nu-test ${lib.escapeShellArgs testPaths}
+      touch "$out"
+    ''

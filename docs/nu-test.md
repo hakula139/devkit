@@ -4,7 +4,7 @@
 
 ## Write a test
 
-A test is a command named `test <behavior>` in a `.test.nu` file, using assertions from `std/assert`. A test name may contain only letters, digits, spaces, and `,.:-`.
+A test is a command named `test <behavior>` in a `.test.nu` file, using assertions from `std/assert`. A test name may contain only letters, digits, and `,.:-`, with single spaces between words and no trailing space.
 
 - **One process per test.** The runner collects test names from the files and runs the tests in parallel, each in its own `nu` process, so a test that modifies its environment or exits cannot affect the others.
 - **Load failures are tests.** A file that fails to parse or whose test names cannot be read reports a `(load)` entry with its output and counts as a failure. A file that prints to stdout or exits while loading cannot report its test names, so it also fails.
@@ -23,7 +23,7 @@ checks.tests = dk.nuTests {
 };
 ```
 
-- The check copies every directory containing a test file and runs those files from the `src` root with `dk.nushell` and `runtimeInputs` on `PATH`.
+- The check copies every directory containing a `.test.nu` file (including the whole `src` tree when a test sits at its root), fails evaluation if `src` contains none, and runs those files from the `src` root with `dk.nushell` and `runtimeInputs` on `PATH`.
 - Run `chmod u+w` on any file copied by a test before writing to it.
 - A test that sources a path outside its copied directory fails in the sandbox.
 

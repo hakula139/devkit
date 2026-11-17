@@ -21,7 +21,11 @@
 let
   inherit (pkgs) lib;
   inherit (import ./skill-links.nix { inherit lib; }) packagedFile skillSource;
+  esc = lib.escapeShellArg;
   nuWrapper = import ./nu-wrapper.nix { inherit pkgs nushell; };
+
+  appDir = "share/${pname}";
+  entryScript = "${appDir}/${entry}";
 
   source = lib.fileset.toSource {
     root = src;
@@ -30,25 +34,25 @@ let
 in
 pkgs.stdenvNoCC.mkDerivation {
   inherit pname version;
-  src = source;
   nativeBuildInputs = [
-    pkgs.makeShellWrapper
+    pkgs.buildPackages.makeShellWrapper
   ];
-  dontBuild = true;
 
-  # Nushell names `main` after the script file in `--help`.
-  installPhase = ''
-    mkdir -p $out/share/${pname}
-    cp -r . $out/share/${pname}
-    mv $out/share/${pname}/${entry}.nu $out/share/${pname}/${entry}
+  buildCommand = ''
+    mkdir -p "$out/"${esc appDir}
+    cp -r --no-preserve=mode ${esc source}/. "$out/"${esc appDir}
+    # Nushell names `main` after the script file in `--help`.
+    mv "$out/"${esc "${entryScript}.nu"} "$out/"${esc entryScript}
+  ''
+  + lib.optionalString (skills != [ ]) ''
+    mkdir -p "$out/share/skills"
   ''
   + lib.concatMapStrings (skill: ''
-    mkdir -p $out/share/skills
-    cp -r ${skillSource skill} $out/share/skills/${baseNameOf skill}
+    cp -r ${esc (skillSource skill)} "$out/"${esc "share/skills/${baseNameOf skill}"}
   '') skills
   + nuWrapper.command {
-    bin = "$out/bin/${entry}";
-    script = "$out/share/${pname}/${entry}";
+    bin = "bin/${entry}";
+    script = entryScript;
     inherit runtimeInputs flags;
   };
 

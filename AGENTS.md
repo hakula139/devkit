@@ -4,16 +4,17 @@ devkit holds the development tooling that Hakula's repositories share by referen
 
 ## Read before you edit
 
-| When the change touches                                                                   | Read                                   |
-| ----------------------------------------------------------------------------------------- | -------------------------------------- |
-| `mkLib`, `lib.systems`, or `lib.eachSystem`                                               | [Nix flake](docs/flake.md)             |
-| The pre-commit baseline or the dev shell                                                  | [Hooks](docs/hooks.md)                 |
-| `mkNuApplication`, `writeNuApplication`, `dk.nushell`, or the skill helpers               | [Nushell tooling](docs/nushell.md)     |
-| `nu-test`, `nu-check`, or `nuTests`                                                       | [Nushell test runner](docs/nu-test.md) |
-| `nix.yml`, a language workflow, `ci-result`, or the language job convention               | [CI workflow and gate](docs/ci.md)     |
-| An action, a reusable workflow, the git-cliff config, a release, or a versioning decision | [Releasing](docs/releasing.md)         |
-| The Renovate preset                                                                       | [Renovate preset](docs/renovate.md)    |
-| A repository setting, the branch ruleset, or a label                                      | [GitHub conventions](docs/github.md)   |
+| When the change touches                                                             | Read                                   |
+| ----------------------------------------------------------------------------------- | -------------------------------------- |
+| `mkLib`, `lib.systems`, or `lib.eachSystem`                                         | [Nix flake](docs/flake.md)             |
+| The pre-commit baseline or the dev shell                                            | [Hooks](docs/hooks.md)                 |
+| `mkNuApplication`, `writeNuApplication`, `dk.nushell`, or the skill helpers         | [Nushell tooling](docs/nushell.md)     |
+| `nu-test`, `nu-check`, or `nuTests`                                                 | [Nushell test runner](docs/nu-test.md) |
+| `nix.yml`, a language workflow, `ci-result`, or the language job convention         | [CI workflow and gate](docs/ci.md)     |
+| An action, a reusable workflow, the git-cliff config, or consumer release workflows | [Releasing](docs/releasing.md)         |
+| A devkit release or versioning decision                                             | [Releasing devkit](RELEASING.md)       |
+| The Renovate preset                                                                 | [Renovate preset](docs/renovate.md)    |
+| A repository setting, the branch ruleset, or a label                                | [GitHub conventions](docs/github.md)   |
 
 ## Layout
 
@@ -35,7 +36,8 @@ devkit holds the development tooling that Hakula's repositories share by referen
 ├── flake.nix                   # Exported library, script packages, checks, and dev shell
 ├── package.json                # Published pnpm configuration plugin manifest
 ├── pnpmfile.mjs                # Shared pnpm configuration defaults
-└── README.md                   # Project overview and documentation index
+├── README.md                   # Project overview and documentation index
+└── RELEASING.md                # Maintainer release policy
 ```
 
 ## Conventions
@@ -56,4 +58,4 @@ nix develop -c run-hooks
 
 ## Code review
 
-Review the change and its affected callers against the docs, checking in particular that it keeps the contract in [Release devkit](docs/releasing.md#release-devkit).
+Review the change and its affected callers against the docs, checking in particular that it keeps the contract in [Choose the version](RELEASING.md#choose-the-version).

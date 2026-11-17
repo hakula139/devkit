@@ -8,7 +8,10 @@ set -euo pipefail
 
 while true; do
   if ! verdict=$(
-    gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&per_page=100" \
+    gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs" \
+      --method GET \
+      --raw-field "head_sha=$GITHUB_SHA" \
+      --raw-field per_page=100 \
       --paginate \
       --slurp \
       | jq \

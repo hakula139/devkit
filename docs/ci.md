@@ -103,7 +103,7 @@ A published package whose fixed-output hash Renovate maintains is an exception, 
 
 `nix.yml` runs the hooks, so a language job runs only what no hook covers. Call `python.yml`, `node.yml`, or `rust.yml` for tests, coverage, and the Rust MSRV, and list each job in `CI Result`'s `needs`. The Codecov upload authenticates with OIDC, so the calling job grants `id-token: write`, even with `coverage: false`.
 
-Nix and language jobs use GitHub's default 360-minute job timeout to allow native cold builds. Their first dev-shell entry prints builder logs. Rust builds its default or MSRV dev shell before restoring the Cargo cache, so toolchain discovery does not hide a cold build inside the cache action.
+Nix and language jobs use GitHub's default 360-minute job timeout to allow native cold builds, and their dev-shell entries print builder logs until the shell is built. Rust builds its default or MSRV dev shell before restoring the Cargo cache, so toolchain discovery does not hide a cold build inside the cache action.
 
 ### Python
 

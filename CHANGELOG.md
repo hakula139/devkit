@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.1] - 2026-11-17
+
+### Fixed
+
+- _(nushell)_ `nu-test` reports consecutive or trailing spaces in `test <behavior>` names and non-UTF-8 stubs as `(load)` failures, strips only the trailing `.stub.nu` suffix, skips directory stubs, and removes scratch directories when planning fails. `nu-check` uses `--no-config-file` and `--` before target paths so leading-dash filenames check as operands. `dk.nuTests` rejects a `src` with no `.test.nu` files at evaluation. ([#120](https://github.com/hakula139/devkit/pull/120))
+- _(nushell)_ `mkNuApplication` and `writeNuApplication` use `pkgs.buildPackages.makeShellWrapper` for cross and static package sets, shell-escape wrapper paths, and prepend `runtimeInputs` to `PATH` before `--add-flag` options. ([#120](https://github.com/hakula139/devkit/pull/120))
+
+[3.4.1]: https://github.com/hakula139/devkit/compare/v3.4.0...v3.4.1
+
 ## [3.4.0] - 2026-11-15
 
 ### Added

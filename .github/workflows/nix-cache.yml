@@ -10,9 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-  CACHIX_NAME: hakula
-
 jobs:
   pin:
     name: Pin (${{ matrix.system }})
@@ -39,14 +36,9 @@ jobs:
       - name: Build and pin package
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          SYSTEM: ${{ matrix.system }}
-        run: |
-          pin="${GITHUB_REPOSITORY#*/}-${GITHUB_REF_NAME}-${SYSTEM}"
-          store_path=$(
-            nix build .#default.out \
-              --no-link \
-              --print-out-paths \
-              --print-build-logs
-          )
-          cachix push "$CACHIX_NAME" "$store_path"
-          cachix pin "$CACHIX_NAME" "$pin" "$store_path" --keep-revisions 1
+        uses: $/.github/actions/cachix-pin
+        with:
+          pins: >-
+            {"${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.system }}":
+            ".#default.out"}
+          keep-revisions: 1

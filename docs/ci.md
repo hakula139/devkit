@@ -76,6 +76,20 @@ Pass `submodules: true` to check out first-level submodules before entering the 
 
 Every run reads the public `hakula` Cachix cache. With `CACHIX_AUTH_TOKEN`, uploads happen only from the default branch.
 
+### Pin store paths
+
+A job that built on the default branch pins a store path so that garbage collection keeps it in `hakula`. The `cachix-pin` action builds each flake output, pushes its output, and pins it, and the job authenticates through the `cachix_auth_token` of `setup-nix`:
+
+```yaml
+- name: Pin critical store paths
+  if: github.ref == 'refs/heads/main'
+  uses: hakula139/devkit/.github/actions/cachix-pin@v3
+  with:
+    pins: ${{ toJSON(matrix.config.cachix_pins) }}
+```
+
+`pins` is a JSON object that maps each pin name to its flake output, such as `{"kiln-main-x86_64-linux": ".#kiln"}`. Each pin keeps its latest two revisions, and `keep-revisions` overrides that count. Pins run in sequence, so a job pinning an older checkout's build guards the step itself. `nix-cache.yml` pins `.#default` through this action.
+
 ## Run Nix checks
 
 `nix.yml` runs `nix flake check` on each leg, which builds only the `checks` outputs, so expose the package as a check to have CI build it:

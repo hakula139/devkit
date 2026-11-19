@@ -15,6 +15,8 @@ jobs:
     name: Pin (${{ matrix.system }})
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 40
+    env:
+      PIN_NAME: ${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.system }}
     strategy:
       fail-fast: false
       matrix:
@@ -34,11 +36,9 @@ jobs:
         uses: $/.github/actions/setup-nix
 
       - name: Build and pin package
+        uses: $/.github/actions/cachix-pin
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        uses: $/.github/actions/cachix-pin
         with:
-          pins: >-
-            {"${{ github.event.repository.name }}-${{ github.ref_name }}-${{ matrix.system }}":
-            ".#default.out"}
+          pins: '{"${{ env.PIN_NAME }}": ".#default.out"}'
           keep-revisions: 1

@@ -1,0 +1,20 @@
+name: Pin Cachix store paths
+description: Build flake outputs, push them to the `hakula` Cachix cache, and pin each one
+
+inputs:
+  pins:
+    description: JSON object that maps each pin name to the flake output it pins
+    required: true
+  keep-revisions:
+    description: Number of revisions to keep per pin
+    default: '2'
+
+runs:
+  using: composite
+  steps:
+    - name: Pin store paths
+      shell: bash
+      env:
+        PINS: ${{ inputs.pins }}
+        KEEP_REVISIONS: ${{ inputs.keep-revisions }}
+      run: bash "$GITHUB_ACTION_PATH/cachix-pin.sh"

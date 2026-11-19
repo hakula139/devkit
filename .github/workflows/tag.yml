@@ -22,38 +22,6 @@ jobs:
       - name: Wait for CI on the tagged commit
         uses: $/.github/actions/tagged-ci
 
-  npm:
-    name: Publish npm Package
-    needs: tagged-ci
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Set up Nix
-        uses: $/.github/actions/setup-nix
-
-      # A tag checkout is on no branch, which pnpm's git checks reject.
-      - name: Publish package
-        run: |
-          tag=latest
-          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
-            tag=next
-          fi
-
-          nix develop -c pnpm version "${GITHUB_REF_NAME#v}" --no-git-tag-version
-          nix develop -c pnpm publish \
-            --provenance \
-            --no-git-checks \
-            --tag "$tag"
-
   publish:
     name: Publish GitHub Release
     needs: tagged-ci
@@ -74,7 +42,7 @@ jobs:
   major-tag:
     name: Move the Major Tag
     if: ${{ !contains(github.ref_name, '-') }}
-    needs: [npm, publish]
+    needs: publish
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

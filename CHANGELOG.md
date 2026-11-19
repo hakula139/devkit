@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-11-19
+
+### Added
+
+- _(ci)_ `cachix-pin` action builds flake outputs, pushes them to the `hakula` Cachix cache, and pins each one under a name. Callers pin named store paths without hand-writing the `nix build`, `cachix push`, and `cachix pin` loop. Each pin keeps two revisions by default. ([#124](https://github.com/hakula139/devkit/pull/124))
+
+[3.5.0]: https://github.com/hakula139/devkit/compare/v3.4.1...v3.5.0
+
 ## [3.4.1] - 2026-11-17
 
 ### Fixed

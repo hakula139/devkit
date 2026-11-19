@@ -1,14 +1,14 @@
 # Releasing devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog. The release workflow derives the npm plugin's version from the tag, replacing the manifest's `0.0.0` placeholder on the runner, so there is no release-version field to bump. Draft the changelog with:
+Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog. There is no release-version field to bump. Draft the changelog with:
 
 ```bash
 nix run .#changelog -- v3.4.1
 ```
 
-After the tagged commit passes CI, `tag.yml` publishes `@hakula139/pnpm-plugin-devkit` with provenance via GitHub OIDC, needing no npm token secret, and creates the GitHub Release in parallel. For stable releases, the moving major tag advances after both jobs succeed. npm may make the package available after the publish job finishes. Stable versions use npm's `latest` tag, and prereleases use `next`.
+After the tagged commit passes CI, `tag.yml` creates the GitHub Release and, for stable releases, advances the moving major tag.
 
-Verify the registry version, packed plugin, GitHub Release, and major tag after publication. If a later step fails after npm accepts the version, keep that immutable version and inspect the existing publication before retrying.
+Verify the GitHub Release and major tag after publication. If the release job fails after creating the Release, inspect it before retrying.
 
 ## Choose the version
 
@@ -16,7 +16,7 @@ Consumers follow the major tag without a PR, so classify each change by its effe
 
 - **Major:** An existing caller's configuration stops working or must change.
 
-  - Removing, renaming, or newly requiring an input, secret, argument, attribute, or flake output.
+  - Removing, renaming, or newly requiring an input, secret, argument, attribute, flake output.
   - Raising the [minimum nixpkgs release](docs/flake.md).
   - Raising the major version of `nodeToolchain`'s Node.js or pnpm, which fails consumers' [`devEngines`](docs/hooks.md#declare-pnpm) ranges.
   - An action or reusable workflow change that can fail a caller's run other than through hook findings.

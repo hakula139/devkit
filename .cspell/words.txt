@@ -31,7 +31,6 @@ nuon
 passthru
 pkgs
 pname
-pnpmfile
 postprocessors
 prek
 pypi

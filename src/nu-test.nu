@@ -4,8 +4,11 @@
 # Nushell Test Runner
 # ==================================================================================================
 
+# Nushell does not export its `NU_LIB_DIRS` list to a child, so each child gets it as a string, which
+# a test's own `nu` and `nu-check` processes inherit too.
 def nu-run [file: string, body: string, tmp: string, stubs: string]: nothing -> record {
-  with-env {TMPDIR: $tmp, NU_TEST_STUBS: $stubs} {
+  let lib_dirs = ($env.NU_LIB_DIRS | str join (char esep))
+  with-env {TMPDIR: $tmp, NU_TEST_STUBS: $stubs, NU_LIB_DIRS: $lib_dirs} {
     (
       ^$nu.current-exe
         --no-config-file

@@ -14,6 +14,7 @@ in
   name,
   text,
   runtimeInputs ? [ ],
+  libDirs ? [ ],
   flags ? { },
   makeWrapperArgs ? [ ],
   meta ? { },
@@ -25,6 +26,7 @@ nuWrapper.package {
   script = "${pkgs.writeTextDir name text}/${name}";
   inherit
     runtimeInputs
+    libDirs
     flags
     makeWrapperArgs
     meta

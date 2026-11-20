@@ -7,7 +7,7 @@
 }:
 
 {
-  configPathOptions =
+  hookOptions =
     { hookModule, ... }:
     {
       options.hooks =
@@ -34,7 +34,18 @@
                 };
               };
             }
-          );
+          )
+        // {
+          nu-check = lib.mkOption {
+            type = lib.types.submodule {
+              options.settings.libDirs = lib.mkOption {
+                type = lib.types.listOf lib.types.path;
+                default = [ ];
+                description = "Module directories added to `NU_LIB_DIRS` when checking Nushell files.";
+              };
+            };
+          };
+        };
     };
 
   configEntry =
@@ -47,4 +58,18 @@
         hook.settings.configPath
       ]
     );
+
+  nuCheckEntry =
+    hook:
+    let
+      exe = lib.getExe hook.package;
+    in
+    if hook.settings.libDirs == [ ] then
+      exe
+    else
+      lib.escapeShellArgs [
+        "env"
+        "NU_LIB_DIRS=${lib.concatMapStringsSep ":" (dir: "${dir}") hook.settings.libDirs}"
+        exe
+      ];
 }

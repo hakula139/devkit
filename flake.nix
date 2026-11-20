@@ -119,7 +119,13 @@
               enable = true;
               settings.flags = "--offline";
             };
-            nu-check.enable = true;
+            nu-check = {
+              enable = true;
+              settings.libDirs = [
+                ./tests/nu-tooling/lib-dirs/libs
+                ./tests/nu-tooling/lib-dirs/extra
+              ];
+            };
             prettier.enable = true;
             shellcheck.enable = true;
             shfmt.enable = true;

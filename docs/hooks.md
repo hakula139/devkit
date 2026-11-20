@@ -103,6 +103,10 @@ Keep a copy of the shared `.editorconfig` checked in, then add language-specific
 
 The Markdown override preserves two-space hard line breaks. Exclude binary payloads that the checker treats as text through `hooks.editorconfig-checker.excludes`.
 
+### Check Nushell files
+
+Set `hooks.nu-check.settings.libDirs` to any module directories that scripts `use` by name, as [Share modules](nushell.md#share-modules) describes.
+
 ### Type-check Python
 
 mypy checks the `files` that `[tool.mypy]` names, whichever files changed.

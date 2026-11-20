@@ -10,12 +10,13 @@ A test is a command named `test <behavior>` in a `.test.nu` file, using assertio
 - **Load failures are tests.** A file that fails to parse or whose test names cannot be read reports a `(load)` entry with its output and counts as a failure. A file that prints to stdout or exits while loading cannot report its test names, so it also fails.
 - **Stubs.** A `<name>.stub.nu` file beside a test file is installed as an executable `<name>` in the directory given by `NU_TEST_STUBS`. A test calls a stub through `$env.NU_TEST_STUBS | path join <name>` or by prepending that directory to `PATH`.
 - **Shared helpers.** A `<name>.testlib.nu` file beside the test files holds builders that several of them `use`. `nuTests` copies it with the test files, and `mkNuApplication` excludes it from the package.
+- **Module directories.** Each test's `nu` process gets the runner's `NU_LIB_DIRS`, so a test `use`s a module by name. Nushell exports that list to an external command only as a string, so a test that runs `nu` or `nu-check` passes `$env.NU_LIB_DIRS | str join (char esep)` through `with-env`.
 - **Scratch space.** `TMPDIR` points to a fresh empty directory for each test, and the runner removes these directories after the run, even if the file fails to load.
 - **Exit codes.** The runner prints one `PASS` or `FAIL` line per test and a `passed, failed` summary, then exits nonzero if any test fails or no tests run.
 
 ## Run the check
 
-`nuTests` takes `src` and an optional `runtimeInputs` list. After [setting up the flake](flake.md), add it to the per-system output attribute set:
+`nuTests` takes `src`, an optional `runtimeInputs` list, and an optional `libDirs` list of module directories that tests `use` by name, which [Nushell tooling](nushell.md#share-modules) describes. After [setting up the flake](flake.md), add it to the per-system output attribute set:
 
 ```nix
 checks.tests = dk.nuTests {

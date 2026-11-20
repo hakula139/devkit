@@ -23,7 +23,7 @@ let
   # ------------------------------------------------------------------------------------------------
   # Hook modules
   # ------------------------------------------------------------------------------------------------
-  inherit (import ./options.nix { inherit lib; }) configEntry configPathOptions;
+  inherit (import ./options.nix { inherit lib; }) configEntry hookOptions nuCheckEntry;
 
   baseline = import ./baseline.nix {
     inherit
@@ -32,6 +32,7 @@ let
       configEntry
       nodeTool
       nu-check
+      nuCheckEntry
       ruff
       uvTool
       ;
@@ -49,7 +50,7 @@ let
   hooksRun = gitHooksRun {
     inherit src;
     imports = [
-      configPathOptions
+      hookOptions
       baseline
       { inherit hooks excludes; }
     ];

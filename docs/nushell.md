@@ -43,6 +43,41 @@ packages.my-command = dk.writeNuApplication {
 
 It installs `text` as `bin/<name>`, the name `--help` shows, with `runtimeInputs` on its `PATH`. It sets `meta.mainProgram` to `name` and merges any `meta` argument over it.
 
+## Share modules
+
+Both builders take `libDirs`, a list of directories (paths or derivations) outside the application's own files that hold modules it `use`s by name:
+
+```nix
+dk.writeNuApplication {
+  name = "my-command";
+  text = builtins.readFile ./my-command.nu; # `use config-file.nu`
+  libDirs = [
+    ../lib/nu
+  ];
+};
+```
+
+The wrapper passes the directories to Nushell as one `--include-path`, so `use config-file.nu` resolves at parse time to `<dir>/config-file.nu` in the first directory that holds it, and the script text stays as checked in. `libDirs` copies each directory into the store whole, so pass `lib.fileset.toSource` to leave out test files. `mkNuApplication` resolves relative imports such as `use ./helper.nu` against the entry file in `src`.
+
+Nushell resolves a name that is not relative to the file from `NU_LIB_DIRS`, a `:`-separated list. Set it to the same directories as absolute paths in the dev shell, which `nu`, `nu-check`, and `nu-test` all read, so a script runs and checks from the checkout:
+
+```nix
+devShells.default = pkgs.mkShell {
+  NU_LIB_DIRS = "${toString ./lib/nu}";
+};
+```
+
+Pass `libDirs` to [`nuTests`](nu-test.md#run-the-check) too, which sets `NU_LIB_DIRS` in the check. The `nu-check` pre-commit hook runs outside the dev shell, so set its `settings.libDirs` to the same directories:
+
+```nix
+nu-check = {
+  enable = true;
+  settings.libDirs = [
+    ./lib/nu
+  ];
+};
+```
+
 ## Pass application flags
 
 Both builders take `flags`, which maps each attribute name to the application option `--<name>`:

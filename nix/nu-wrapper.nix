@@ -18,6 +18,7 @@ let
       bin,
       script,
       runtimeInputs ? [ ],
+      libDirs ? [ ],
       flags ? { },
       makeWrapperArgs ? [ ],
     }:
@@ -29,6 +30,14 @@ let
         "PATH"
         ":"
         (lib.makeBinPath runtimeInputs)
+      ];
+
+      # Nushell takes one `--include-path`, a `:`-separated list, so repeating it keeps only the last.
+      includeArgs = lib.optionals (libDirs != [ ]) [
+        "--add-flag"
+        "--include-path"
+        "--add-flag"
+        (lib.concatMapStringsSep ":" (dir: "${dir}") libDirs)
       ];
 
       flagArgs =
@@ -51,6 +60,7 @@ let
         --run ${esc (builtins.readFile ./nu-wrapper.sh)} \
         ${lib.escapeShellArgs pathArgs} \
         --add-flag --no-config-file \
+        ${lib.escapeShellArgs includeArgs} \
         --add-flag ${target} \
         ${lib.escapeShellArgs (flagArgs ++ makeWrapperArgs)}
     '';
@@ -64,6 +74,7 @@ in
       name,
       script,
       runtimeInputs ? [ ],
+      libDirs ? [ ],
       flags ? { },
       makeWrapperArgs ? [ ],
       meta ? { },
@@ -83,6 +94,7 @@ in
         inherit
           script
           runtimeInputs
+          libDirs
           flags
           makeWrapperArgs
           ;

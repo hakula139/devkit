@@ -11,6 +11,7 @@
 {
   src,
   runtimeInputs ? [ ],
+  libDirs ? [ ],
 }:
 
 let
@@ -36,6 +37,10 @@ else
         nu-test
       ]
       ++ runtimeInputs;
+
+      env = lib.optionalAttrs (libDirs != [ ]) {
+        NU_LIB_DIRS = lib.concatMapStringsSep ":" (dir: "${dir}") libDirs;
+      };
     }
     ''
       cd ${source}

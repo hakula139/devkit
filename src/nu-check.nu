@@ -18,11 +18,13 @@ def position [text: string, offset: int]: nothing -> string {
   $"($lines | length):(($lines | last | str length) + 1)"
 }
 
+# Nushell does not export `NU_LIB_DIRS` to a child, so the child gets its directories as an option.
 def diagnostics [target: string, text: string]: nothing -> list<string> {
   let result = (
     (
       ^$nu.current-exe
         --no-config-file
+        --include-path ($env.NU_LIB_DIRS | str join (char esep))
         --ide-check $MAX_ERRORS
         -- $target
     )

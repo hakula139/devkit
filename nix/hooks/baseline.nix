@@ -8,6 +8,7 @@
   configEntry,
   nodeTool,
   nu-check,
+  nuCheckEntry,
   ruff,
   uvTool,
 }:
@@ -177,7 +178,7 @@ in
     # ----------------------------------------------------------------------------------------------
     nu-check = {
       package = nu-check;
-      entry = lib.getExe config.hooks.nu-check.package;
+      entry = nuCheckEntry config.hooks.nu-check;
     };
 
     # ----------------------------------------------------------------------------------------------

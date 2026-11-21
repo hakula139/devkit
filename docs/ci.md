@@ -82,7 +82,7 @@ To preserve a flake output through Cachix garbage collection, pin it from a chec
     pins: '{"my-tool-main-x86_64-linux": ".#default"}'
 ```
 
-If builds can finish out of order, check the current branch head before pinning so an older run cannot replace a newer pin. See the [`cachix-pin` inputs][cachix-pin inputs].
+If builds can finish out of order, check the current branch head before pinning so an older run cannot replace a newer pin. See the [`cachix-pin` inputs][cachix-pin].
 
 ## Run Nix checks
 
@@ -92,7 +92,7 @@ To build a package in CI with `nix flake check`, expose it as a check.
 checks.package = self.packages.${system}.default;
 ```
 
-Include the [`preCommit` shell][preCommit shell] in `devShells.default` so the Linux job can run the hooks.
+Include the [`preCommit` shell][pre-commit] in `devShells.default` so the Linux job can run the hooks.
 
 ## Add project jobs
 
@@ -105,7 +105,7 @@ Keep tool flags in the tool's configuration so contributors and CI can use the s
 
 A check belongs in `nix flake check` only when it runs offline, uses dependencies that Nix supplies without a hash to maintain, and needs no build cache. A language build in the sandbox starts without its usual build cache, and if Renovate changes the fetched dependencies, their fixed-output hash needs updating. `dk.nuTests` meets these conditions for the [Nushell tests], so Nushell needs no language job.
 
-Keep a published package in `checks` when Renovate maintains its fixed-output hash. The check catches stale hashes, so [refresh the hash on the Renovate pull request][refresh fixed-output hashes] before merging.
+Keep a published package in `checks` when Renovate maintains its fixed-output hash. The check catches stale hashes, so [refresh the hash on the Renovate pull request][renovate-hash] before merging.
 
 ## Language jobs
 
@@ -218,7 +218,7 @@ codecov:
 
 ## Deploy a Cloudflare Worker
 
-A root Worker with a `deploy` package script can call [`workers-deploy.yml`][workers-deploy workflow] on a default-branch push or manual dispatch. Keep Worker-specific Wrangler flags in that script.
+A root Worker with a `deploy` package script can call [`workers-deploy.yml`][workers-deploy] on a default-branch push or manual dispatch. Keep Worker-specific Wrangler flags in that script.
 
 ```yaml
 deploy:
@@ -230,7 +230,7 @@ deploy:
     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 ```
 
-For a project with its own build or deployment policy, prepare the job before calling the [`workers` action][workers action].
+For a project with its own build or deployment policy, prepare the job before calling the [`workers` action][workers-action].
 
 1. Check out `${{ github.sha }}` and set up Nix, which the action uses to supply its own Nushell.
 2. Run `nix develop -c pnpm install --frozen-lockfile` from the repository root, then download the artifact built for that commit if the job deploys one.
@@ -279,10 +279,10 @@ Use the `preview-url` and `deployment-url` outputs for PR links. Grant the corre
 [Rust]: ../.github/workflows/rust.yml
 [Project job]: #add-project-jobs
 [CI Result]: ../.github/actions/ci-result/action.yml
-[cachix-pin inputs]: ../.github/actions/cachix-pin/action.yml
-[preCommit shell]: hooks.md#set-up-the-dev-shell
+[cachix-pin]: ../.github/actions/cachix-pin/action.yml
+[pre-commit]: hooks.md#set-up-the-dev-shell
 [Nushell tests]: nu-test.md
-[refresh fixed-output hashes]: renovate.md#refresh-nix-dependency-hashes
+[renovate-hash]: renovate.md#refresh-nix-dependency-hashes
 [uv interpreter]: hooks.md#declare-uv
-[workers-deploy workflow]: ../.github/workflows/workers-deploy.yml
-[workers action]: ../.github/actions/workers/action.yml
+[workers-deploy]: ../.github/workflows/workers-deploy.yml
+[workers-action]: ../.github/actions/workers/action.yml

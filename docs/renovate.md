@@ -19,7 +19,7 @@ Extend the [shared preset](../default.json) in the consumer's `.github/renovate.
 
 ## Refresh Nix dependency hashes
 
-Refresh fixed-output dependency hashes when an update changes the locked dependencies. For a package using `fetchPnpmDeps`, disable automerge for those updates in the consumer's `.github/renovate.json`.
+When an update changes the locked dependencies, refresh the corresponding fixed-output hashes. If the package uses `fetchPnpmDeps`, disable automerge for those updates in the consumer's `.github/renovate.json` so you can refresh the hash before merging.
 
 ```json
 {
@@ -28,13 +28,13 @@ Refresh fixed-output dependency hashes when an update changes the locked depende
 }
 ```
 
-Run `nix-update` from the flake root on the Renovate branch, substituting the package's attribute name for `default` if needed.
+Run `nix-update` from the flake root on the Renovate branch, replacing `default` with the package's attribute name if needed.
 
 ```bash
 nix run nixpkgs#nix-update -- --flake --version=skip default
 ```
 
-Review the diff, then commit the refreshed hash and merge the pull request promptly. The commit makes Renovate treat the branch as edited, so it stops updating that branch.
+Review the diff and commit the refreshed hash. Merge the pull request promptly because Renovate stops updating the branch once it sees your commit.
 
 ## Update devkit major references
 

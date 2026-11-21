@@ -9,9 +9,9 @@ devkit = {
 };
 ```
 
-Keep devkit's `nixpkgs-unstable` input independent of a stable `nixpkgs`. For Nushell, Ruff, and uv, [`mkLib`](../flake.nix) selects a newer tool from that fallback input only when the consumer's version falls below its minimum.
+Keep devkit's `nixpkgs-unstable` input independent of a stable `nixpkgs` so [`mkLib`](../flake.nix) can select a newer Nushell, Ruff, or uv only when the consumer's version falls below its minimum.
 
-Use `devkit.lib.eachSystem` with `devkit.lib.systems` to define per-system outputs. Omit an output on systems where it cannot build. Inside the callback, bind `dk = devkit.lib.mkLib pkgs` once to get helpers built for that system's package set.
+Use `devkit.lib.eachSystem` with `devkit.lib.systems` to define per-system outputs, omitting an output on systems where it cannot build. Inside the callback, bind `dk = devkit.lib.mkLib pkgs` once to get helpers built for that system's package set.
 
 ```nix
 outputs =

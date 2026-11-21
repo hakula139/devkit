@@ -2,7 +2,7 @@
 
 ## Set up CI
 
-Use this `ci.yml` to call the shared Nix checks and gate them with `CI Result`.
+This `ci.yml` runs the shared Nix checks and reports their outcome through `CI Result`.
 
 ```yaml
 # .github/workflows/ci.yml
@@ -41,10 +41,10 @@ jobs:
         uses: hakula139/devkit/.github/actions/ci-result@v3
 ```
 
-Keep these two properties when extending the gate required by the [branch ruleset](github.md#apply-the-branch-ruleset).
+When adding checks, keep both of these settings on the gate required by the [branch ruleset](github.md#apply-the-branch-ruleset).
 
-- List every check job in its `needs`. The gate can miss a failed check if that job is still running.
-- Keep `if: ${{ !cancelled() }}` on the gate. Otherwise GitHub can skip it after an upstream failure and count the required check as passing.
+- List every check job in its `needs` so the gate waits for each result. A job still running when the gate starts can fail after the gate has passed.
+- Keep `if: ${{ !cancelled() }}` on the gate, since GitHub can otherwise skip it after an upstream failure and count the required check as passing.
 
 ## Configure reusable workflows
 
@@ -58,21 +58,21 @@ Keep these two properties when extending the gate required by the [branch rulese
 
 ### Choose platforms
 
-The Nix and Rust workflows run on Linux and macOS by default. Python and Node run on Linux and accept `macos: true`. Even with `macos: false`, the Linux Nix job evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
+The Nix and Rust workflows run on Linux and macOS by default, while Python and Node run on Linux unless you enable `macos: true`. Even with `macos: false`, the Linux Nix job evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
 
 ### Check out source
 
-Use `sparse-checkout` to keep a large tracked payload out of CI's Nix store. Use the same exclusions in local checkouts where the payload must stay out of the world-readable store. Patterns use non-cone mode, so `/*` followed by `!/payload/` excludes that directory.
+Use `sparse-checkout` to keep a large tracked payload out of CI's Nix store, and apply the same exclusions in local checkouts where the payload must stay out of the world-readable store. Patterns use non-cone mode, so `/*` followed by `!/payload/` excludes that directory.
 
 Pass `submodules: true` if the build needs first-level submodules. Shared checkouts discard Git credentials, so later steps that perform authenticated Git operations must supply their own.
 
 ### Cache builds
 
-All Nix and language jobs can read the public `hakula` Cachix cache. Pass `CACHIX_AUTH_TOKEN` to publish builds from the default branch.
+All Nix and language jobs can read the public `hakula` Cachix cache. To publish builds from the default branch, pass `CACHIX_AUTH_TOKEN`.
 
 ### Pin store paths
 
-Pin a flake output that should survive Cachix garbage collection. The action needs a checkout containing the output and an authenticated Cachix client. Pass `CACHIX_AUTH_TOKEN` to `setup-nix` as `cachix_auth_token` earlier in the job.
+To preserve a flake output through Cachix garbage collection, pin it from a checkout that contains it. Authenticate the Cachix client earlier in the job by passing `CACHIX_AUTH_TOKEN` to `setup-nix` as `cachix_auth_token`.
 
 ```yaml
 - name: Pin critical store paths
@@ -86,7 +86,7 @@ If builds can finish out of order, check the current branch head before pinning 
 
 ## Run Nix checks
 
-Expose a package as a check to have `nix flake check` build it on CI.
+To build a package in CI with `nix flake check`, expose it as a check.
 
 ```nix
 checks.package = self.packages.${system}.default;
@@ -96,22 +96,22 @@ Include the [`preCommit` shell](hooks.md#set-up-the-dev-shell) in `devShells.def
 
 ## Add project jobs
 
-Builds, packaging, and other project-specific steps go in the repository's own jobs. A job runs its commands in the default dev shell unless it needs another toolchain, and it follows these conventions:
+Keep builds, packaging, and other project-specific steps in the repository's own jobs. Run them in the default dev shell unless they need another toolchain, and name each job for the check it performs.
 
-- Its id names what it checks.
-- Its `name` is that subject followed by `Check`, with `(${{ matrix.os }})` after it for an OS matrix.
+- Use the subject of the check as the job ID.
+- For the displayed `name`, follow the subject with `Check` and append `(${{ matrix.os }})` for an OS matrix.
 
-Tool flags live in the tool's configuration, so CI runs the command a contributor runs, while `--locked` and `--frozen-lockfile` stay on the command. A project that supports Windows, whose runners cannot run Nix, adds a native Windows job to `CI Result`'s `needs`.
+Keep tool flags in the tool's configuration so contributors and CI can use the same command, with `--locked` and `--frozen-lockfile` on the command line. If the project supports Windows, add a native Windows job to `CI Result`'s `needs` because those runners cannot run Nix.
 
-A check belongs in `nix flake check` only when it runs offline, on dependencies that Nix supplies without a hash to maintain, and without a build cache. The sandbox has no network, a fixed-output hash breaks on every Renovate lockfile update, and a sandbox build compiles every dependency again. `dk.nuTests` meets these for the [Nushell tests](nu-test.md), so Nushell needs no language job.
+A check belongs in `nix flake check` only when it runs offline, uses dependencies that Nix supplies without a hash to maintain, and needs no build cache. A language build in the sandbox starts without its usual build cache, and if Renovate changes the fetched dependencies, their fixed-output hash needs updating. `dk.nuTests` meets these conditions for the [Nushell tests](nu-test.md), so Nushell needs no language job.
 
-A published package whose fixed-output hash Renovate maintains is an exception, since the check catches a stale hash. Keep it in `checks`, and [refresh the hash on the Renovate pull request](renovate.md#refresh-nix-dependency-hashes) before merging.
+Keep a published package in `checks` when Renovate maintains its fixed-output hash. The check catches stale hashes, so [refresh the hash on the Renovate pull request](renovate.md#refresh-nix-dependency-hashes) before merging.
 
 ## Language jobs
 
-Use a language job for checks the Nix job does not already cover, and list it in `CI Result`'s `needs`. The calling job must grant `id-token: write` for Codecov OIDC even with `coverage: false`, since the reusable workflow declares that permission on the job. Use the same call pattern for Node and Rust.
+Use a language job for checks that the Nix job does not already cover, and list it in `CI Result`'s `needs`. The calling job must grant `id-token: write` for Codecov OIDC even with `coverage: false`, because the reusable workflow declares that permission on the job. Use the same call pattern for Node and Rust.
 
-Keep the default GitHub job timeout for native cold builds and pass `--print-build-logs` on first entry to a dev shell so progress stays visible. Build the Rust dev shell before restoring the Cargo cache so toolchain discovery cannot hide build progress.
+Give native cold builds the full default GitHub job timeout and pass `--print-build-logs` the first time a job enters a dev shell. For Rust, build the shell before restoring the Cargo cache so progress stays visible during toolchain discovery.
 
 ### Python
 
@@ -125,7 +125,7 @@ python:
     CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
 
-Configure the [uv interpreter](hooks.md#declare-uv) and pytest in `pyproject.toml`. To upload coverage, add `pytest-cov` to the `dev` group and name the measured package in `source`. A bare `--cov` can miss modules no test imports and include unrelated packages on `PYTHONPATH`.
+Configure the [uv interpreter](hooks.md#declare-uv) and pytest in `pyproject.toml`. To upload coverage, add `pytest-cov` to the `dev` group and name the measured package in `source`, because a bare `--cov` can miss modules that no test imports and include unrelated packages on `PYTHONPATH`.
 
 ```toml
 [tool.coverage.run]
@@ -138,11 +138,11 @@ strict = true
 testpaths = ["tests"]
 ```
 
-Add `pythonpath = ["src"]` only for a `src` layout that uv does not install as a package. A Nix package that runs the tests through `pytestCheckHook` lists `pytest-cov-stub` in `nativeCheckInputs`, so the `--cov` flags don't fail its build. A PyPI package adds a job running `nix develop -c uv build` when no Nix check builds it.
+Add `pythonpath = ["src"]` only for a `src` layout that uv does not install as a package. When a Nix package runs the tests through `pytestCheckHook`, list `pytest-cov-stub` in `nativeCheckInputs` so the `--cov` flags don't fail its build. For a PyPI package that no Nix check builds, add a job running `nix develop -c uv build`.
 
 ### Node
 
-Define the `test` script in `package.json`. To upload Vitest coverage, add `@vitest/coverage-v8` to `devDependencies` and enable the `lcov` reporter in `vitest.config.ts`.
+Define the `test` script in `package.json` and, if you upload Vitest coverage, add `@vitest/coverage-v8` to `devDependencies` and enable the `lcov` reporter in `vitest.config.ts`.
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -157,25 +157,25 @@ export default defineConfig({
 });
 ```
 
-A repository with a `build` script adds a job running `nix develop -c pnpm build`, with a dry-run publish or pack step for a published package. Upload the output only when a later job consumes it.
+If the repository has a `build` script, add a job that runs `nix develop -c pnpm build`. For a published package, include a dry-run publish or pack step. Upload the output only if a later job consumes it.
 
 ### Rust
 
-On Cargo 1.97 or later, `.cargo/config.toml` denies warnings in rustc, clippy, and rustdoc without invalidating the build cache:
+On Cargo 1.97 or later, set the warning policy in `.cargo/config.toml` so rustc, clippy, and rustdoc can deny warnings without invalidating the build cache.
 
 ```toml
 [build]
 warnings = "deny"
 ```
 
-`cargo llvm-cov` needs LLVM's tools in the toolchain that `rust-toolchain.toml` pins:
+For `cargo llvm-cov`, add LLVM's tools to the toolchain pinned in `rust-toolchain.toml`.
 
 ```toml
 [toolchain]
 components = ["clippy", "llvm-tools-preview", "rustfmt"]
 ```
 
-The default dev shell adds `cargo-llvm-cov`, and the `msrv` dev shell builds rust-overlay's toolchain at the workspace's `rust-version`, so the MSRV has one home:
+Add `cargo-llvm-cov` to the default dev shell. For the `msrv` shell, derive the rust-overlay toolchain from the workspace's `rust-version` so you only need to maintain the MSRV in one place.
 
 ```nix
 let
@@ -202,13 +202,13 @@ in
 }
 ```
 
-`cargo llvm-cov` skips doc tests, so with coverage the job also runs `cargo test --locked --doc`, which fails without a library target. A workspace without one passes `coverage: false`.
+Because `cargo llvm-cov` skips doc tests, the coverage job runs them separately with `cargo test --locked --doc`. Pass `coverage: false` for a workspace without a library target, where that command would fail.
 
 ### Coverage
 
-A repository without Codecov passes `coverage: false` and drops the coverage settings. A Codecov outage leaves `CI Result` passing, since Codecov's own status checks gate coverage, and a fork pull request, which gets no OIDC token, uploads without one.
+If the repository does not use Codecov, pass `coverage: false` and omit the coverage settings. Codecov gates coverage through its own status checks, so an outage leaves `CI Result` passing. Pull requests from forks upload without an OIDC token because they do not receive one.
 
-Path filters go in `codecov.yml` `ignore`. Each matrix leg uploads its own report, so `codecov.yml` holds Codecov's status until every upload arrives, two for `rust.yml` with its macOS leg:
+Put path filters in `codecov.yml` under `ignore`. Since each matrix leg uploads its own report, configure `codecov.yml` to hold the status check until all reports arrive. With the macOS leg enabled, `rust.yml` sends two reports.
 
 ```yaml
 codecov:
@@ -232,8 +232,8 @@ deploy:
 
 For a project with its own build or deployment policy, prepare the job before calling the [`workers` action](../.github/actions/workers/action.yml).
 
-1. Check out `${{ github.sha }}` and set up Nix. The action supplies its own Nushell.
-2. Run `nix develop -c pnpm install --frozen-lockfile` from the repository root. If the job deploys a build artifact, download the artifact built for that commit.
+1. Check out `${{ github.sha }}` and set up Nix, which the action uses to supply its own Nushell.
+2. Run `nix develop -c pnpm install --frozen-lockfile` from the repository root, then download the artifact built for that commit if the job deploys one.
 3. Set `CLOUDFLARE_API_TOKEN` on the Workers step, plus `CLOUDFLARE_ACCOUNT_ID` if Wrangler's configuration omits it.
 
 ```yaml
@@ -247,16 +247,16 @@ For a project with its own build or deployment policy, prepare the job before ca
     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 ```
 
-Restrict branch jobs to the branches allowed to deploy. Use one concurrency group with `queue: max` per Worker and environment. After entering the queue, the action checks that the branch still points to the event commit, applies any configured remote D1 migrations, then runs the package's `deploy` script with the selected Wrangler environment.
+Restrict branch jobs to the branches allowed to deploy and use one concurrency group with `queue: max` for each Worker and environment. Once the job reaches the front of the queue, the action checks that the branch still points to the event commit. It then applies any configured remote D1 migrations before running the package's `deploy` script with the selected Wrangler environment.
 
 ### Deploy and clean up pull request previews
 
 Use separate jobs for the two events.
 
-- **Preview** runs on `pull_request` and may consume that run's artifact. A build may finish after the PR closes or advances, so the action checks the live PR state and head SHA inside the queue.
-- **Cleanup** runs on `pull_request_target: closed` and rechecks the closed state to preserve a reopened PR's preview. Allow the event in the repository's Actions policy. Use only the trusted event checkout and its lockfile in this job. Never run code or consume artifacts from the PR.
+- **Preview** runs on `pull_request` and may consume that run's artifact. Because a build may finish after the PR closes or advances, the action checks the live PR state and head SHA inside the queue.
+- **Cleanup** runs on `pull_request_target: closed`, which the repository's Actions policy must allow. It checks that the PR is still closed so a reopened PR keeps its preview. Use only the trusted event checkout and its lockfile, and never run code or consume artifacts from the PR.
 
-Apply the same trust check and per-PR queue to both jobs, with workflow-level cancellation disabled so a running deployment or cleanup can finish.
+Apply the same trust check and per-PR queue to both jobs, and disable workflow-level cancellation so a running deployment or cleanup can finish.
 
 ```yaml
 if: >-
@@ -270,4 +270,4 @@ concurrency:
   queue: max
 ```
 
-Use the `preview-url` and `deployment-url` outputs for PR links. Gate comments and GitHub deployment updates on `applied == 'true'` and grant the corresponding write permissions. Jobs declaring a GitHub environment may still record a successful job that skipped the Cloudflare operation.
+Use the `preview-url` and `deployment-url` outputs for PR links. Grant the corresponding write permissions and gate comments and GitHub deployment updates on `applied == 'true'`, since GitHub can record a successful environment job even when it skipped the Cloudflare operation.

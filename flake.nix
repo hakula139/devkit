@@ -146,6 +146,10 @@
           github = nuScript "github" [
             pkgs.gh
           ];
+          workers = nuScript "workers" [
+            pkgs.gh
+            pkgs.git
+          ];
         };
 
         # ------------------------------------------------------------------------------------------

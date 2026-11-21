@@ -41,20 +41,20 @@ jobs:
         uses: hakula139/devkit/.github/actions/ci-result@v3
 ```
 
-When adding checks, keep both of these settings on the gate required by the [branch ruleset](github.md#apply-the-branch-ruleset).
+When adding checks, keep both of these settings on the gate required by the [branch ruleset].
 
 - List every check job in its `needs` so the gate waits for each result. A job still running when the gate starts can fail after the gate has passed.
 - Keep `if: ${{ !cancelled() }}` on the gate, since GitHub can otherwise skip it after an upstream failure and count the required check as passing.
 
 ## Configure reusable workflows
 
-| Job                                                                                | What belongs here                                   | Caller configuration                                                                              |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| [Nix](../.github/workflows/nix.yml)                                                | Flake checks and shared hooks                       | Expose packages under `checks` and include `preCommit` in the default dev shell                   |
-| [Python](../.github/workflows/python.yml) or [Node](../.github/workflows/node.yml) | Language tests and coverage                         | Configure pytest or the package's `test` script                                                   |
-| [Rust](../.github/workflows/rust.yml)                                              | Cargo tests, coverage, and optional MSRV checks     | Set `msrv: true` for the `msrv` dev shell or `all_features: true` to check every feature together |
-| [Project job](#add-project-jobs)                                                   | Project builds, packaging, or native Windows checks | Use the project toolchain and upload artifacts a later job consumes                               |
-| [CI Result](../.github/actions/ci-result/action.yml)                               | One required status for all check jobs              | Keep the job name `CI Result` and grant `actions: read`                                           |
+| Job                | What belongs here                                   | Caller configuration                                                                              |
+| ------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [Nix]              | Flake checks and shared hooks                       | Expose packages under `checks` and include `preCommit` in the default dev shell                   |
+| [Python] or [Node] | Language tests and coverage                         | Configure pytest or the package's `test` script                                                   |
+| [Rust]             | Cargo tests, coverage, and optional MSRV checks     | Set `msrv: true` for the `msrv` dev shell or `all_features: true` to check every feature together |
+| [Project job]      | Project builds, packaging, or native Windows checks | Use the project toolchain and upload artifacts a later job consumes                               |
+| [CI Result]        | One required status for all check jobs              | Keep the job name `CI Result` and grant `actions: read`                                           |
 
 ### Choose platforms
 
@@ -82,7 +82,7 @@ To preserve a flake output through Cachix garbage collection, pin it from a chec
     pins: '{"my-tool-main-x86_64-linux": ".#default"}'
 ```
 
-If builds can finish out of order, check the current branch head before pinning so an older run cannot replace a newer pin. See the [`cachix-pin` inputs](../.github/actions/cachix-pin/action.yml).
+If builds can finish out of order, check the current branch head before pinning so an older run cannot replace a newer pin. See the [`cachix-pin` inputs][cachix-pin inputs].
 
 ## Run Nix checks
 
@@ -92,7 +92,7 @@ To build a package in CI with `nix flake check`, expose it as a check.
 checks.package = self.packages.${system}.default;
 ```
 
-Include the [`preCommit` shell](hooks.md#set-up-the-dev-shell) in `devShells.default` so the Linux job can run the hooks.
+Include the [`preCommit` shell][preCommit shell] in `devShells.default` so the Linux job can run the hooks.
 
 ## Add project jobs
 
@@ -103,9 +103,9 @@ Keep builds, packaging, and other project-specific steps in the repository's own
 
 Keep tool flags in the tool's configuration so contributors and CI can use the same command, with `--locked` and `--frozen-lockfile` on the command line. If the project supports Windows, add a native Windows job to `CI Result`'s `needs` because those runners cannot run Nix.
 
-A check belongs in `nix flake check` only when it runs offline, uses dependencies that Nix supplies without a hash to maintain, and needs no build cache. A language build in the sandbox starts without its usual build cache, and if Renovate changes the fetched dependencies, their fixed-output hash needs updating. `dk.nuTests` meets these conditions for the [Nushell tests](nu-test.md), so Nushell needs no language job.
+A check belongs in `nix flake check` only when it runs offline, uses dependencies that Nix supplies without a hash to maintain, and needs no build cache. A language build in the sandbox starts without its usual build cache, and if Renovate changes the fetched dependencies, their fixed-output hash needs updating. `dk.nuTests` meets these conditions for the [Nushell tests], so Nushell needs no language job.
 
-Keep a published package in `checks` when Renovate maintains its fixed-output hash. The check catches stale hashes, so [refresh the hash on the Renovate pull request](renovate.md#refresh-nix-dependency-hashes) before merging.
+Keep a published package in `checks` when Renovate maintains its fixed-output hash. The check catches stale hashes, so [refresh the hash on the Renovate pull request][refresh fixed-output hashes] before merging.
 
 ## Language jobs
 
@@ -125,7 +125,7 @@ python:
     CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
 
-Configure the [uv interpreter](hooks.md#declare-uv) and pytest in `pyproject.toml`. To upload coverage, add `pytest-cov` to the `dev` group and name the measured package in `source`, because a bare `--cov` can miss modules that no test imports and include unrelated packages on `PYTHONPATH`.
+Configure the [uv interpreter] and pytest in `pyproject.toml`. To upload coverage, add `pytest-cov` to the `dev` group and name the measured package in `source`, because a bare `--cov` can miss modules that no test imports and include unrelated packages on `PYTHONPATH`.
 
 ```toml
 [tool.coverage.run]
@@ -218,7 +218,7 @@ codecov:
 
 ## Deploy a Cloudflare Worker
 
-A root Worker with a `deploy` package script can call [`workers-deploy.yml`](../.github/workflows/workers-deploy.yml) on a default-branch push or manual dispatch. Keep Worker-specific Wrangler flags in that script.
+A root Worker with a `deploy` package script can call [`workers-deploy.yml`][workers-deploy workflow] on a default-branch push or manual dispatch. Keep Worker-specific Wrangler flags in that script.
 
 ```yaml
 deploy:
@@ -230,7 +230,7 @@ deploy:
     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 ```
 
-For a project with its own build or deployment policy, prepare the job before calling the [`workers` action](../.github/actions/workers/action.yml).
+For a project with its own build or deployment policy, prepare the job before calling the [`workers` action][workers action].
 
 1. Check out `${{ github.sha }}` and set up Nix, which the action uses to supply its own Nushell.
 2. Run `nix develop -c pnpm install --frozen-lockfile` from the repository root, then download the artifact built for that commit if the job deploys one.
@@ -271,3 +271,18 @@ concurrency:
 ```
 
 Use the `preview-url` and `deployment-url` outputs for PR links. Grant the corresponding write permissions and gate comments and GitHub deployment updates on `applied == 'true'`, since GitHub can record a successful environment job even when it skipped the Cloudflare operation.
+
+[branch ruleset]: github.md#apply-the-branch-ruleset
+[Nix]: ../.github/workflows/nix.yml
+[Python]: ../.github/workflows/python.yml
+[Node]: ../.github/workflows/node.yml
+[Rust]: ../.github/workflows/rust.yml
+[Project job]: #add-project-jobs
+[CI Result]: ../.github/actions/ci-result/action.yml
+[cachix-pin inputs]: ../.github/actions/cachix-pin/action.yml
+[preCommit shell]: hooks.md#set-up-the-dev-shell
+[Nushell tests]: nu-test.md
+[refresh fixed-output hashes]: renovate.md#refresh-nix-dependency-hashes
+[uv interpreter]: hooks.md#declare-uv
+[workers-deploy workflow]: ../.github/workflows/workers-deploy.yml
+[workers action]: ../.github/actions/workers/action.yml

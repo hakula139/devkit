@@ -2,17 +2,17 @@
 
 ## Read before you edit
 
-| When the change touches                                      | Read                                   |
-| ------------------------------------------------------------ | -------------------------------------- |
-| `mkLib`, `lib.systems`, or `lib.eachSystem`                  | [Nix flake](docs/flake.md)             |
-| The pre-commit baseline or dev shell                         | [Hooks](docs/hooks.md)                 |
-| Nushell application builders, `dk.nushell`, or skill helpers | [Nushell tooling](docs/nushell.md)     |
-| `nu-test`, `nu-check`, or `nuTests`                          | [Nushell test runner](docs/nu-test.md) |
-| Nix or language CI, `ci-result`, or Workers deployment       | [CI workflow and gate](docs/ci.md)     |
-| An action, a reusable workflow, or `cliff.toml`              | [Releasing](docs/releasing.md)         |
-| A devkit release or versioning decision                      | [Releasing devkit](RELEASING.md)       |
-| The Renovate preset                                          | [Renovate preset](docs/renovate.md)    |
-| Repository settings, rulesets, or labels                     | [GitHub conventions](docs/github.md)   |
+| When the change touches                                      | Read                   |
+| ------------------------------------------------------------ | ---------------------- |
+| `mkLib`, `lib.systems`, or `lib.eachSystem`                  | [Nix flake]            |
+| The pre-commit baseline or dev shell                         | [Hooks]                |
+| Nushell application builders, `dk.nushell`, or skill helpers | [Nushell tooling]      |
+| `nu-test`, `nu-check`, or `nuTests`                          | [Nushell test runner]  |
+| Nix or language CI, `ci-result`, or Workers deployment       | [CI workflow and gate] |
+| An action, a reusable workflow, or `cliff.toml`              | [Releasing]            |
+| A devkit release or versioning decision                      | [Releasing devkit]     |
+| The Renovate preset                                          | [Renovate preset]      |
+| Repository settings, rulesets, or labels                     | [GitHub conventions]   |
 
 ## Conventions
 
@@ -33,4 +33,15 @@ nix develop -c run-hooks
 
 ## Code review
 
-Review the change and its affected callers against the documented contracts, paying particular attention to the versioning rules in [Choose the version](RELEASING.md#choose-the-version).
+Review the change and its affected callers against the documented contracts, paying particular attention to the versioning rules in [Choose the version].
+
+[Nix flake]: docs/flake.md
+[Hooks]: docs/hooks.md
+[Nushell tooling]: docs/nushell.md
+[Nushell test runner]: docs/nu-test.md
+[CI workflow and gate]: docs/ci.md
+[Releasing]: docs/releasing.md
+[Releasing devkit]: RELEASING.md
+[Renovate preset]: docs/renovate.md
+[GitHub conventions]: docs/github.md
+[Choose the version]: RELEASING.md#choose-the-version

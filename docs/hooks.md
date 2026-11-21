@@ -8,7 +8,7 @@ Enter the dev shell from the intended checkout. Its configuration path must be a
 
 The hook installation reports on stderr, so `nix develop -c <cmd>` writes only the command's output to stdout. A repository's own `shellHook` must keep stdout clean too.
 
-Run [`run-hooks`](../nix/hooks/run-hooks.nix) separately from `nix flake check` to verify Git hooks, as CI does.
+Run `run-hooks` separately from `nix flake check`, as CI does. It prepares dependencies for enabled lockfile-pinned tools and checks tracked files across the pre-commit, pre-merge-commit, and pre-push stages. Pass hook IDs to run a subset, such as `nix develop -c run-hooks cspell`.
 
 ```bash
 nix develop -c run-hooks
@@ -16,7 +16,19 @@ nix develop -c run-hooks
 
 ## Enable hooks
 
-Use `hooks.<name>.enable` to enable the checks your project needs or disable one of devkit's defaults. The [baseline](../nix/hooks/baseline.nix) groups those defaults by language and file type. The [upstream hook definitions](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) provide the available settings. ESLint and clippy treat warnings as errors because prek hides the output of a passing hook.
+The baseline enables file hygiene, spelling, EditorConfig, Markdown formatting and linting, Nix checks, YAML syntax, and GitHub Actions linting. Use `hooks.<name>.enable` to turn off a default or opt into a project-specific check.
+
+| Project files             | Hooks to enable               | Scope                                                                       |
+| ------------------------- | ----------------------------- | --------------------------------------------------------------------------- |
+| Documentation             | `doctoc`, `lychee`            | Maintain marked tables of contents or check links                           |
+| JavaScript and TypeScript | `eslint`, `tsc`               | Lint selected scripts or type-check the project                             |
+| Web formats and TOML      | `prettier`, `taplo`           | Format JS, TS, CSS, JSON, JSONC, and YAML with Prettier, or TOML with Taplo |
+| Nushell                   | `nu-check`                    | Check scripts with the project's module search paths                        |
+| Python                    | `mypy`, `ruff`, `ruff-format` | Type-check, lint, or format                                                 |
+| Rust                      | `clippy`, `rustfmt`           | Lint or format with the project's toolchain                                 |
+| Shell                     | `shellcheck`, `shfmt`         | Lint or format shell scripts                                                |
+
+ESLint and clippy treat warnings as errors because prek hides the output of a passing hook. See the [baseline](../nix/hooks/baseline.nix) for individual defaults and the [upstream hook definitions](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) for settings.
 
 ## Configure a hook
 
@@ -57,6 +69,10 @@ Add a `cspell.json` that names a project dictionary. `sort-file-contents` keeps 
 ### Generate Markdown tables of contents
 
 doctoc fills a table of contents between `<!-- START doctoc -->` and `<!-- END doctoc -->` markers placed where the list goes, leaving a file without them untouched. In marked files, use inline links in headings so doctoc generates anchors matching GitHub.
+
+### Format Markdown
+
+Keep Markdown under dprint so fenced examples retain their indentation and blank lines and embedded HTML stays intact. It formats the files selected by prek even when Git ignore rules match a tracked file. Preserve the Markdown override in `.editorconfig` so editors retain two-space hard line breaks.
 
 ### Check EditorConfig properties
 
@@ -109,7 +125,7 @@ Start the repository's `.envrc` with a shell directive, which shellcheck needs t
 
 ## Run a lockfile-pinned tool
 
-Use `dk.nodeTool "<command>"` or `dk.uvTool "<command>"` for hooks that need the repository's locked tools or plugins. See the [baseline](../nix/hooks/baseline.nix) for hooks that already use these helpers.
+ESLint and TypeScript already run from the project's pnpm lockfile, and mypy runs from its uv lockfile. Use `dk.nodeTool "<command>"` or `dk.uvTool "<command>"` when another hook needs project dependencies. For example, set `hooks.prettier.package = dk.nodeTool "prettier";` for Prettier plugins, or use `dk.nodeTool "cspell"` for npm dictionaries.
 
 Add `dk.nodeToolchain` to the dev shell to use the same Node.js and pnpm as `nodeTool`, and `dk.uvToolchain` to use the same uv as `uvTool`, which is the uv that [`mkLib` selects](flake.md):
 

@@ -41,23 +41,38 @@ jobs:
         uses: hakula139/devkit/.github/actions/ci-result@v3
 ```
 
-List every check job in the `needs` of `CI Result` so the gate sees its final status. Keep `if: ${{ !cancelled() }}` on the gate. Otherwise GitHub can skip it after an upstream failure and count the required check as passing. See the [branch ruleset](github.md#apply-the-branch-ruleset).
+Keep these two properties when extending the gate required by the [branch ruleset](github.md#apply-the-branch-ruleset).
+
+- List every check job in its `needs`. The gate can miss a failed check if that job is still running.
+- Keep `if: ${{ !cancelled() }}` on the gate. Otherwise GitHub can skip it after an upstream failure and count the required check as passing.
 
 ## Configure reusable workflows
 
-The workflow files declare their supported inputs, defaults, and secrets under `workflow_call`. See [Nix](../.github/workflows/nix.yml), [Python](../.github/workflows/python.yml), [Node](../.github/workflows/node.yml), and [Rust](../.github/workflows/rust.yml).
+| Job                                                                                | What belongs here                                   | Caller configuration                                                                              |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [Nix](../.github/workflows/nix.yml)                                                | Flake checks and shared hooks                       | Expose packages under `checks` and include `preCommit` in the default dev shell                   |
+| [Python](../.github/workflows/python.yml) or [Node](../.github/workflows/node.yml) | Language tests and coverage                         | Configure pytest or the package's `test` script                                                   |
+| [Rust](../.github/workflows/rust.yml)                                              | Cargo tests, coverage, and optional MSRV checks     | Set `msrv: true` for the `msrv` dev shell or `all_features: true` to check every feature together |
+| [Project job](#add-project-jobs)                                                   | Project builds, packaging, or native Windows checks | Use the project toolchain and upload artifacts a later job consumes                               |
+| [CI Result](../.github/actions/ci-result/action.yml)                               | One required status for all check jobs              | Keep the job name `CI Result` and grant `actions: read`                                           |
 
 ### Choose platforms
 
-Pass `macos: false` to the `nix` job to skip the macOS leg. The Linux leg still evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
+The Nix and Rust workflows run on Linux and macOS by default. Python and Node run on Linux and accept `macos: true`. Even with `macos: false`, the Linux Nix job evaluates every system's outputs with `nix flake check --all-systems`, so leave a package out of each system its `meta.platforms` excludes.
 
 ### Check out source
 
 Use `sparse-checkout` to keep a large tracked payload out of CI's Nix store. Use the same exclusions in local checkouts where the payload must stay out of the world-readable store. Patterns use non-cone mode, so `/*` followed by `!/payload/` excludes that directory.
 
+Pass `submodules: true` if the build needs first-level submodules. Shared checkouts discard Git credentials, so later steps that perform authenticated Git operations must supply their own.
+
+### Cache builds
+
+All Nix and language jobs can read the public `hakula` Cachix cache. Pass `CACHIX_AUTH_TOKEN` to publish builds from the default branch.
+
 ### Pin store paths
 
-Pin a flake output that should survive Cachix garbage collection. Pass `CACHIX_AUTH_TOKEN` to `setup-nix` as `cachix_auth_token` earlier in the job.
+Pin a flake output that should survive Cachix garbage collection. The action needs a checkout containing the output and an authenticated Cachix client. Pass `CACHIX_AUTH_TOKEN` to `setup-nix` as `cachix_auth_token` earlier in the job.
 
 ```yaml
 - name: Pin critical store paths
@@ -96,7 +111,7 @@ A published package whose fixed-output hash Renovate maintains is an exception, 
 
 Use a language job for checks the Nix job does not already cover, and list it in `CI Result`'s `needs`. The calling job must grant `id-token: write` for Codecov OIDC even with `coverage: false`, since the reusable workflow declares that permission on the job. Use the same call pattern for Node and Rust.
 
-Allow time for native cold builds. Build the Rust dev shell before restoring the Cargo cache so toolchain discovery cannot hide build progress.
+Keep the default GitHub job timeout for native cold builds and pass `--print-build-logs` on first entry to a dev shell so progress stays visible. Build the Rust dev shell before restoring the Cargo cache so toolchain discovery cannot hide build progress.
 
 ### Python
 
@@ -215,7 +230,11 @@ deploy:
     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 ```
 
-For jobs with their own build or deployment policy, call the [`workers` action](../.github/actions/workers/action.yml) after checking out `${{ github.sha }}`, setting up Nix, running `nix develop -c pnpm install --frozen-lockfile`, and downloading any artifacts built for that commit. Set `CLOUDFLARE_API_TOKEN` on the step, plus `CLOUDFLARE_ACCOUNT_ID` if Wrangler's config omits it.
+For a project with its own build or deployment policy, prepare the job before calling the [`workers` action](../.github/actions/workers/action.yml).
+
+1. Check out `${{ github.sha }}` and set up Nix. The action supplies its own Nushell.
+2. Run `nix develop -c pnpm install --frozen-lockfile` from the repository root. If the job deploys a build artifact, download the artifact built for that commit.
+3. Set `CLOUDFLARE_API_TOKEN` on the Workers step, plus `CLOUDFLARE_ACCOUNT_ID` if Wrangler's configuration omits it.
 
 ```yaml
 - name: Deploy
@@ -228,11 +247,16 @@ For jobs with their own build or deployment policy, call the [`workers` action](
     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 ```
 
-Restrict branch jobs to the branches allowed to deploy. Use one concurrency group with `queue: max` per Worker and environment so a deployment can finish after its D1 migrations have run.
+Restrict branch jobs to the branches allowed to deploy. Use one concurrency group with `queue: max` per Worker and environment. After entering the queue, the action checks that the branch still points to the event commit, applies any configured remote D1 migrations, then runs the package's `deploy` script with the selected Wrangler environment.
 
 ### Deploy and clean up pull request previews
 
-Call the same action on `pull_request` for previews and on `pull_request_target: closed` for cleanup. Use the same trust check, permissions, and queue in both jobs.
+Use separate jobs for the two events.
+
+- **Preview** runs on `pull_request` and may consume that run's artifact. A build may finish after the PR closes or advances, so the action checks the live PR state and head SHA inside the queue.
+- **Cleanup** runs on `pull_request_target: closed` and rechecks the closed state to preserve a reopened PR's preview. Allow the event in the repository's Actions policy. Use only the trusted event checkout and its lockfile in this job. Never run code or consume artifacts from the PR.
+
+Apply the same trust check and per-PR queue to both jobs, with workflow-level cancellation disabled so a running deployment or cleanup can finish.
 
 ```yaml
 if: >-
@@ -245,7 +269,5 @@ concurrency:
   group: preview-${{ github.event.pull_request.number }}
   queue: max
 ```
-
-Disable workflow-level cancellation for both jobs. Allow `pull_request_target` in the repository's Actions event policy and run cleanup solely from the trusted event checkout and its lockfile.
 
 Use the `preview-url` and `deployment-url` outputs for PR links. Gate comments and GitHub deployment updates on `applied == 'true'` and grant the corresponding write permissions. Jobs declaring a GitHub environment may still record a successful job that skipped the Cloudflare operation.

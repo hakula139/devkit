@@ -11,7 +11,11 @@ Extend the [shared preset](../default.json) in the consumer's `.github/renovate.
 }
 ```
 
-The major tag follows stable releases. Pin a full version for manual upgrades, or omit the ref to follow the default branch.
+| Preset reference                 | When consumers pick up changes                |
+| -------------------------------- | --------------------------------------------- |
+| `github>hakula139/devkit#v3`     | On a stable release within the selected major |
+| `github>hakula139/devkit#v3.0.0` | When the consumer changes the pin             |
+| `github>hakula139/devkit`        | On the next run after a default-branch change |
 
 ## Refresh Nix dependency hashes
 

@@ -1,0 +1,45 @@
+name: Cloudflare Workers
+description: Deploy a Worker, deploy a pull request preview, or delete that preview
+
+inputs:
+  operation:
+    description: One of deploy, preview, or cleanup
+    default: deploy
+  directory:
+    description: Directory containing the Worker's package and Wrangler configuration
+    default: '.'
+  wrangler-environment:
+    description: Wrangler environment for a branch deployment
+    default: ''
+  d1-database:
+    description: D1 database name or binding to migrate remotely before a branch deployment
+    default: ''
+  minify:
+    description: Pass --minify to a branch deployment
+    default: 'false'
+
+outputs:
+  applied:
+    description: Whether the operation completed, including cleanup of an already absent preview
+    value: ${{ steps.workers.outputs.applied }}
+  preview-url:
+    description: Stable URL of the pull request preview
+    value: ${{ steps.workers.outputs.preview-url }}
+  deployment-url:
+    description: URL of this deployment within the pull request preview
+    value: ${{ steps.workers.outputs.deployment-url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Run Wrangler
+      id: workers
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        OPERATION: ${{ inputs.operation }}
+        WORKER_DIRECTORY: ${{ inputs.directory }}
+        WRANGLER_ENVIRONMENT: ${{ inputs.wrangler-environment }}
+        D1_DATABASE: ${{ inputs.d1-database }}
+        MINIFY: ${{ inputs.minify }}
+      run: bash "$GITHUB_ACTION_PATH/workers.sh"

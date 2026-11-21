@@ -45,7 +45,7 @@ The [branch ruleset](github.md#apply-the-branch-ruleset) requires `CI Result`, s
 
 ## Configure reusable workflows
 
-The reusable workflows share these inputs and secrets.
+The reusable Nix and language workflows share these inputs and secrets.
 
 | Input             | Workflows                            | Default                                          | Effect                                                |
 | ----------------- | ------------------------------------ | ------------------------------------------------ | ----------------------------------------------------- |
@@ -243,3 +243,85 @@ codecov:
   notify:
     after_n_builds: 2
 ```
+
+## Deploy a Cloudflare Worker
+
+A Worker with its package and Wrangler configuration at the repository root can call [`workers-deploy.yml`](../.github/workflows/workers-deploy.yml). The workflow installs dependencies from `pnpm-lock.yaml` in the repository's Nix dev shell and runs the locked Wrangler.
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: hakula139/devkit/.github/workflows/workers-deploy.yml@v3
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+```
+
+Use the repository's default branch in the push filter. The workflow deploys only from that branch, serializes jobs in the `workers-production` concurrency group, and skips Wrangler if the branch has moved. Pass `minify: true` under `with` to deploy with `--minify`.
+
+### Deploy a build artifact
+
+A project with a separate build job can call the [`workers` action](../.github/actions/workers/action.yml) after its checks pass. Restrict deployment to the intended branches and serialize jobs that target the same Worker and Wrangler environment with a shared concurrency group and `queue: max`. Check out the event commit (`${{ github.sha }}`), set up Nix, and run `nix develop -c pnpm install --frozen-lockfile` at the repository root. Download the artifact built for that event commit in the same workflow run.
+
+```yaml
+- name: Download site
+  uses: actions/download-artifact@v8
+  with:
+    name: site-dist
+    path: web/dist/
+
+- name: Deploy
+  uses: hakula139/devkit/.github/actions/workers@v3
+  with:
+    directory: web
+    wrangler-environment: production
+    d1-database: DB
+  env:
+    CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+```
+
+`directory` defaults to the repository root. Set `wrangler-environment` for a named Wrangler environment. With `d1-database` set to a Wrangler D1 binding or database name, the action checks the live branch head, applies pending remote migrations, and deploys only after they succeed. Set `CLOUDFLARE_ACCOUNT_ID` on the action step if the Wrangler configuration omits it.
+
+### Deploy and clean up pull request previews
+
+Run `operation: preview` on `pull_request` and `operation: cleanup` on `pull_request_target` with `types: [closed]`. The repository's [Actions event policy](https://docs.github.com/en/actions/reference/security/securely-using-pull_request_target#default-policy-for-pull_request_target) must allow cleanup. Both jobs use the same trust check, permissions, and queue.
+
+```yaml
+if: >-
+  github.event.pull_request.head.repo.full_name == github.repository &&
+  github.event.pull_request.user.login != 'dependabot[bot]'
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  queue: max
+```
+
+Keep workflow-level cancellation disabled for runs containing either job so closing or updating a pull request cannot interrupt a running Cloudflare operation. Set up the checkout and dependencies as for a branch deployment. Preview can use the artifact built from its event commit. Cleanup runs with the trusted `pull_request_target` checkout and its lockfile. Never check out PR code or download PR artifacts during cleanup.
+
+```yaml
+- name: Deploy preview
+  id: workers
+  uses: hakula139/devkit/.github/actions/workers@v3
+  with:
+    operation: preview
+    directory: web
+  env:
+    CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+```
+
+Use the same Worker directory and credentials with `operation: cleanup`. The action deploys `pr-<number>` only while the PR is open at the triggering head SHA. Cleanup deletes that preview only while the PR is closed and succeeds if it is already absent.
+
+Use `steps.workers.outputs.preview-url` for the stable PR link and `steps.workers.outputs.deployment-url` for that deployment. Gate caller steps that update comments or deactivate GitHub deployments with `if: steps.workers.outputs.applied == 'true'`. Grant `pull-requests: write` to jobs that comment and `deployments: write` to jobs that deactivate deployments. GitHub's automatic deployment records reflect job status, so a successfully skipped action can still appear as a successful deployment when its job declares an environment.

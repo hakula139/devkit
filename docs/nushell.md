@@ -1,137 +1,46 @@
 # Nushell tooling
 
-After [setting up the flake](flake.md), `dk` provides `mkNuApplication`, `writeNuApplication`, `nuTests`, and the `nu-*` tools, which run on `dk.nushell`, the Nushell that `mkLib` selects. [Nushell test runner](nu-test.md) covers `nu-test`, `nu-check`, and `nuTests`.
-
 ## Package a project
 
-Add the package to the per-system output attribute set:
+After [setting up the flake](flake.md), use `dk.mkNuApplication` for a Nushell source tree. Put the entry script at `src/my-tool.nu` for this package.
 
 ```nix
 packages.default = dk.mkNuApplication {
   pname = "my-tool";
   version = "0.1.0";
   src = ./src;
-  skills = [
-    ./skills/my-tool
-  ];
 };
 ```
 
-`mkNuApplication` packages the application as follows:
-
-- Reads its entry file from `<entry>.nu` at the `src` root, where `entry` defaults to `pname`, and installs it as `bin/<entry>` with `runtimeInputs` on its `PATH`.
-- Packages the `.nu` files under `src`, leaving out `.test.nu`, `.stub.nu`, and `.testlib.nu`.
-- Copies each `skills` directory to `share/skills/<basename>` through `devkit.lib.skillSource <directory>`, which drops those same suffixes and every `fixtures/` directory from the skill.
-- Sets `meta.mainProgram` to `entry` and merges any `meta` argument over it.
+For a package that also ships skills, see the [packaging example](../tests/nu-tooling/mk-nu-application/default.nix) and the [builder](../nix/mk-nu-application.nix).
 
 ## Package a single file
-
-`writeNuApplication` packages a single-file command that needs no source directory, version, or skills:
 
 ```nix
 packages.my-command = dk.writeNuApplication {
   name = "my-command";
   text = builtins.readFile ./my-command.nu;
-  runtimeInputs = [
-    pkgs.git
-  ];
-  flags = {
-    verbose = true;
-  };
+  runtimeInputs = [ pkgs.git ];
 };
 ```
 
-It installs `text` as `bin/<name>`, the name `--help` shows, with `runtimeInputs` on its `PATH`. It sets `meta.mainProgram` to `name` and merges any `meta` argument over it.
+Both builders accept `flags` for application defaults that callers can override. Nushell parses some arguments to a script as code. Pass untrusted data through stdin or a file, and use trusted values for wrapper-supplied arguments, which bypass the wrapper's argument check. See the [single-file example](../tests/nu-tooling/write-nu-application/default.nix) and the [argument check](../nix/nu-wrapper.sh).
 
 ## Share modules
 
-Both builders take `libDirs`, a list of directories (paths or derivations) outside the application's own files that hold modules it `use`s by name:
+For imports by module name, use the same `libDirs` in the package and its [Nix test check](nu-test.md#run-the-check). Pass a filtered source such as `lib.fileset.toSource` when a module directory contains files the package should exclude. See the [package and test example](../tests/nu-tooling/lib-dirs/default.nix).
 
-```nix
-dk.writeNuApplication {
-  name = "my-command";
-  text = builtins.readFile ./my-command.nu; # `use config-file.nu`
-  libDirs = [
-    ../lib/nu
-  ];
-};
-```
-
-The wrapper passes the directories to Nushell as one `--include-path`, so `use config-file.nu` resolves at parse time to `<dir>/config-file.nu` in the first directory that holds it, and the script text stays as checked in. `libDirs` copies each directory into the store whole, so pass `lib.fileset.toSource` to leave out test files. `mkNuApplication` resolves relative imports such as `use ./helper.nu` against the entry file in `src`.
-
-Nushell resolves a name that is not relative to the file from `NU_LIB_DIRS`, a `:`-separated list. Set it to the same directories as absolute paths in the dev shell, which `nu`, `nu-check`, and `nu-test` all read, so a script runs and checks from the checkout:
-
-```nix
-devShells.default = pkgs.mkShell {
-  NU_LIB_DIRS = "${toString ./lib/nu}";
-};
-```
-
-Pass `libDirs` to [`nuTests`](nu-test.md#run-the-check) too, which sets `NU_LIB_DIRS` in the check. The `nu-check` pre-commit hook runs outside the dev shell, so set its `settings.libDirs` to the same directories:
-
-```nix
-nu-check = {
-  enable = true;
-  settings.libDirs = [
-    ./lib/nu
-  ];
-};
-```
-
-## Pass application flags
-
-Both builders take `flags`, which maps each attribute name to the application option `--<name>`:
-
-```nix
-flags = {
-  config = ./config.json;
-  count = 3;
-  disabled = false;
-  mode = "fast mode";
-  tag = [
-    "one"
-    "two value"
-  ];
-  verbose = true;
-};
-```
-
-This passes `--config <path> --count 3 --mode "fast mode" --tag one --tag "two value" --verbose`. A string, integer, path, or derivation passes its string form as the option's value, `true` passes the option alone, and `false` or `null` passes nothing. A list passes the option once per item in list order, and attributes are passed in sorted order. A value stays one argument even when it contains spaces.
-
-The generated arguments reach `main` ahead of the caller's arguments, so a caller can override a generated value by passing the option again, including disabling a generated switch with `--verbose=false`. `writeNuApplication` also takes `makeWrapperArgs`, which follows the generated flags in its `makeShellWrapper` call. Use it for wrapper operations such as `--set`, or for a raw argument that `flags` cannot generate:
-
-```nix
-makeWrapperArgs = [
-  "--set"
-  "MY_TOOL_HOME"
-  "/var/lib/my-tool"
-
-  "--add-flag"
-  "--legacy"
-];
-```
-
-## Pass code-like arguments
-
-The `mkNuApplication` and `writeNuApplication` wrappers exit 1 before running the script on an argument that Nushell would parse as code:
-
-- An argument starting with `--`, other than `--`, `--<name>`, and `--<name>=<value>`, where `<name>` is a letter followed by letters, digits, `_`, and `-`
-- A bare redirection, such as `o>` or `e>>`
-- An argument starting with `...$`
-
-Pass such an operand in another form, such as an absolute path. Arguments that `flags` or `makeWrapperArgs` add bypass this check.
+Set `NU_LIB_DIRS` in the dev shell to the same absolute paths separated by `:`. The pre-commit hook runs outside that shell, so also set `hooks.nu-check.settings.libDirs`.
 
 ## Link skills from Home Manager
 
-`devkit.lib` provides the skill option and links for a Home Manager module:
+Use the packaged skill directory's basename for `name`. The [skill helpers](../nix/skill-links.nix) define the option and produce the file links.
 
 ```nix
 options.programs.my-tool.skillDirectories = lib.mkOption devkit.lib.skillDirectoriesOption;
 
 config = lib.mkIf cfg.enable {
-  home.packages = [
-    cfg.package
-  ];
+  home.packages = [ cfg.package ];
   home.file = devkit.lib.skillLinks {
     inherit (cfg) package;
     name = "my-tool";
@@ -139,5 +48,3 @@ config = lib.mkIf cfg.enable {
   };
 };
 ```
-
-A skill link's `name` must equal its skill directory's basename.

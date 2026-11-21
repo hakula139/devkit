@@ -9,17 +9,13 @@ devkit = {
 };
 ```
 
-`mkLib` takes Nushell, Ruff, and uv from the consumer's nixpkgs when they are at least 0.116, 0.17, and 0.13, and otherwise from devkit's `nixpkgs-unstable` input, so `nixpkgs-unstable` must not follow a stable nixpkgs.
+Keep devkit's `nixpkgs-unstable` input independent of a stable `nixpkgs` so [`mkLib`](../flake.nix) has access to newer fallback tools.
 
-`devkit.lib.systems` and `devkit.lib.eachSystem` replace `flake-utils`:
-
-- `devkit.lib.systems` lists the shared target systems.
-- `devkit.lib.eachSystem` merges each system's attribute set, leaving any output that a system omits absent on that system.
+Use `eachSystem` to define outputs for devkit's supported systems. Omit an output on systems where it cannot build.
 
 ```nix
 outputs =
   {
-    self,
     devkit,
     nixpkgs,
     ...
@@ -36,10 +32,6 @@ outputs =
     in
     {
       devShells.default = pkgs.mkShell {
-        name = "my-tool-dev";
-        packages = [
-          pkgs.ripgrep
-        ];
         inputsFrom = [
           preCommit
         ];
@@ -48,6 +40,4 @@ outputs =
   );
 ```
 
-`devkit.lib` holds the pure helpers, and `dk = devkit.lib.mkLib pkgs` binds `pkgs` once for the rest. See [Hooks](hooks.md) for hook setup and configuration.
-
-Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it.
+Add `/.pre-commit-config.yaml` to the repository's `.gitignore`, since the dev shell generates it. See [Hooks](hooks.md) to configure and run the hooks.

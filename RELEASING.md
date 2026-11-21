@@ -1,14 +1,12 @@
 # Releasing devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog. There is no release-version field to bump. Draft the changelog with:
+Choose the version [below](#choose-the-version) and follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md). The Git tag and changelog carry devkit's version. Pass the release tag when drafting the changelog.
 
 ```bash
 nix run .#changelog -- v3.4.1
 ```
 
-After the tagged commit passes CI, `tag.yml` creates the GitHub Release and, for stable releases, advances the moving major tag.
-
-Verify the GitHub Release and major tag after publication. If the release job fails after creating the Release, inspect it before retrying.
+After the [tag workflow](.github/workflows/tag.yml) publishes, verify the GitHub Release and, for a stable release, the major tag. If publication fails partway through, inspect the Release before retrying.
 
 ## Choose the version
 
@@ -33,9 +31,9 @@ Consumers follow the major tag without a PR, so classify each change by its effe
 
 ## Roll back
 
-devkit's own release never runs `release.yml`, `nix-cache.yml`, or `publish-release`'s `assets`, and its CI never runs `python.yml`, `node.yml`, or `rust.yml`. After changing any of them, watch the next consumer run of the changed piece and roll back if it fails.
+For changes that devkit's [CI](.github/workflows/ci.yml) and [release](.github/workflows/tag.yml) workflows do not exercise, watch the next consumer run and roll back if the change breaks it.
 
-Force-move the major tag back to the previous release:
+For example, to restore `v3.4.0` as the release used by `v3`, move the major tag back.
 
 ```bash
 git tag -f v3 v3.4.0

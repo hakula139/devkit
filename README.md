@@ -14,8 +14,9 @@ Shared development tooling for Hakula's repositories.
 | [Hooks]                | Pre-commit setup and configuration      |
 | [Nushell tooling]      | Application and skill packaging         |
 | [Nushell test runner]  | Tests and script checks                 |
-| [CI workflow and gate] | Nix checks, language jobs, status gate  |
-| [Releasing]            | Release setup and publishing            |
+| [CI workflow and gate] | CI checks and Workers deployment        |
+| [Releasing]            | Release a consumer project              |
+| [Releasing devkit]     | Version policy and rollback             |
 | [Renovate preset]      | Dependency updates and automerge        |
 | [GitHub conventions]   | Repository settings, rulesets, labels   |
 | [Development]          | Contributor instructions                |
@@ -30,6 +31,7 @@ Copyright (c) 2026 [Hakula](https://hakula.xyz). Licensed under the [MIT License
 [Nushell test runner]: docs/nu-test.md
 [CI workflow and gate]: docs/ci.md
 [Releasing]: docs/releasing.md
+[Releasing devkit]: RELEASING.md
 [Renovate preset]: docs/renovate.md
 [GitHub conventions]: docs/github.md
 [Development]: AGENTS.md

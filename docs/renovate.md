@@ -2,7 +2,7 @@
 
 ## Use the preset
 
-Extend the preset from `.github/renovate.json`:
+Extend the [shared preset](../default.json) in the consumer's `.github/renovate.json`.
 
 ```json
 {
@@ -11,13 +11,11 @@ Extend the preset from `.github/renovate.json`:
 }
 ```
 
-- `github>hakula139/devkit` picks up preset changes on the next Renovate run.
-- `github>hakula139/devkit#v3` picks up preset changes only on a devkit release.
-- `github>hakula139/devkit#v1.2.3` picks up preset changes only when you bump the reference.
+The major tag follows stable releases. Pin a full version for manual upgrades, or omit the ref to follow the default branch.
 
 ## Refresh Nix dependency hashes
 
-A published package that fetches its dependencies through a fixed-output derivation, such as `fetchPnpmDeps`, needs its hash refreshed on every Renovate lockfile update. Add these rules to the repository's `.github/renovate.json`, so the hash-changing updates wait for review:
+Refresh fixed-output dependency hashes when an update changes the locked dependencies. For a package using `fetchPnpmDeps`, disable automerge for those updates in the consumer's `.github/renovate.json`.
 
 ```json
 {
@@ -26,14 +24,14 @@ A published package that fetches its dependencies through a fixed-output derivat
 }
 ```
 
-On the Renovate branch, from the flake root, pass the package's attribute name, such as `default` for `packages.<system>.default`:
+Run `nix-update` from the flake root on the Renovate branch, substituting the package's attribute name for `default` if needed.
 
 ```bash
-nix run nixpkgs#nix-update -- --flake --version=skip <package>
+nix run nixpkgs#nix-update -- --flake --version=skip default
 ```
 
 Review the diff, then commit the refreshed hash and merge the pull request promptly. The commit makes Renovate treat the branch as edited, so it stops updating that branch.
 
 ## Update devkit major references
 
-A devkit major update opens a separate `devkit` PR. Run `nix flake update devkit` on that PR before merging it.
+Run `nix flake update devkit` on a devkit major update PR before merging so the flake lock follows the new major reference.

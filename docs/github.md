@@ -1,71 +1,45 @@
 # GitHub conventions
 
-These conventions provide defaults for public repositories, and you can extend the required checks and labels to fit each repository.
-
-Run each command with an authenticated `gh`, passing the target repository as `OWNER/REPO`. For a private repository, pass `--private` to `settings` and `ruleset`, which then skip private vulnerability reporting, secret scanning, and the ruleset.
+Use the [administration helper](../scripts/github.nu) with an authenticated `gh`. For a private repository, pass `--private` to both `settings` and `ruleset`. This leaves vulnerability reporting and secret scanning as configured and skips the ruleset, so manage private branch protection separately.
 
 ## Apply repository settings
-
-Apply repository and workflow settings, security features, and immutable releases:
 
 ```bash
 nix run github:hakula139/devkit/v3#github -- settings OWNER/REPO
 ```
 
-### Repository and workflow settings
+The [repository settings](../.github/settings/repository.json), [workflow permissions](../.github/settings/workflow-permissions.json), and [security settings](../.github/settings/security.json) define the defaults.
 
-- **Merge methods: squash only.** The changelog is drafted from each squashed commit's conventional title.
-- **Squash commit title and body: `PR_TITLE` and `PR_BODY`.** The pull request description carries the rationale into the commit body.
-- **`delete_branch_on_merge`: on.**
-- **`allow_auto_merge`: on.** Renovate's platform automerge merges the moment checks pass.
-- **Wiki: off.** Docs live in the repository, and you can enable Projects and Discussions as needed.
-- **Workflow token: read, cannot approve.** Each job requests the write permissions it needs.
-
-The [repository settings](../.github/settings/repository.json) and [workflow permissions](../.github/settings/workflow-permissions.json) define these defaults.
-
-### Security
-
-- **Dependency alerts and updates:** Dependabot alerts stay on while Dependabot security updates stay off, because Renovate reads the alerts and opens the security pull requests itself, bypassing its schedule and the preset's release-age floor. One updater then gives security bumps the preset's commit types, labels, and automerge, and a repository needs no `dependabot.yml`.
-- **Private vulnerability reporting:** Provides the channel named in the default `SECURITY.md`.
-- **Secret scanning with push protection:** Keeps credentials out of the history.
-
-The [security settings](../.github/settings/security.json) define the secret scanning configuration.
-
-### Immutable releases
-
-Once a release is published, its tag cannot move or be deleted and its assets are fixed, while its title and notes stay editable. The major tag has no release of its own, so `tag.yml` and a [rollback](../RELEASING.md#roll-back) can still move it, and no tag ruleset is needed.
+- Use a conventional **PR title** and explain the rationale in the description, since a squash merge carries both into the commit that git-cliff reads. Automerge lets Renovate queue eligible PRs until checks pass, and automatic branch deletion cleans up merged branches.
+- Keep **documentation** in the repository with the wiki disabled, and enable Projects and Discussions per repository as needed.
+- Grant **write permissions** to individual jobs that need them. The default workflow token is read-only and cannot approve PRs.
+- Enable **Dependabot alerts** and leave Dependabot security updates disabled. Renovate uses the alerts to open security PRs without waiting for its usual update window or minimum release age.
+- On public repositories, enable **private vulnerability reporting** to provide the channel named in the shared `SECURITY.md`, and enable secret scanning with push protection.
+- Publishing an **immutable release** fixes its tag and assets while leaving the title and notes editable. Keep the moving major tag free of releases so it can advance or [roll back](../RELEASING.md#roll-back).
 
 ## Apply the branch ruleset
 
-The ruleset blocks deleting and force-pushing the default branch, and requires a pull request for every change:
-
-- Squash is the only allowed merge method, matching the [repository settings](#repository-and-workflow-settings), and the default branch history must stay linear.
-- `CI Result` from GitHub Actions must pass. A pull request can merge while behind the default branch, since the default branch's own CI run catches a clash between pull requests.
-- Every review thread must be resolved.
-- No approval is required, and a new push dismisses earlier approvals so that each approval covers only the commits it reviewed.
-- The admin role can bypass the ruleset in an emergency.
-
-Apply [the main ruleset](../.github/settings/rulesets/main.json) to a repository:
+The command creates the [shared ruleset](../.github/settings/rulesets/main.json) or replaces it in full. If you only need to change the required checks on a customized ruleset, edit its live `required_status_checks` directly.
 
 ```bash
 nix run github:hakula139/devkit/v3#github -- ruleset OWNER/REPO
 ```
 
-The helper creates or fully replaces the ruleset with the template's name. To change only required checks, preserve the live ruleset's other settings and update only `required_status_checks`.
+| Default branch rule | Policy                                                |
+| ------------------- | ----------------------------------------------------- |
+| History             | Squash by PR only, no force pushes or branch deletion |
+| Review              | Resolve all review threads, zero approvals required   |
+| New commits         | Dismiss earlier approvals                             |
+| Required check      | `CI Result` from GitHub Actions                       |
+| Admin bypass        | Emergencies only                                      |
 
-To require checks that another app reports, list them after the repository as `CONTEXT@APP-ID`, taking the ID from `gh api apps/<slug> --jq .id`. For example, Codecov reports `codecov/patch` as app `254`:
+Gate the repository's Actions jobs through [CI Result](ci.md). A PR can merge even when it is behind the default branch because CI runs again after the merge to catch conflicts between changes that passed independently.
 
-```bash
-nix run github:hakula139/devkit/v3#github -- ruleset OWNER/REPO codecov/patch@254
-```
-
-A check without `@APP-ID` binds to GitHub Actions. Gate the repository's own Actions jobs through `CI Result`'s `needs`, as the [CI workflow](ci.md) describes, so the ruleset keeps requiring `CI Result` alone from Actions.
+An extra check name without a suffix binds to GitHub Actions. To require a check from another app, append it to the command as `CONTEXT@APP-ID`, such as `codecov/patch@254`. You can find the app ID with `gh api apps/<slug> --jq .id`.
 
 ## Set up the labels
 
-Create or update the [shared labels](../.github/settings/labels.json) while preserving the repository's custom labels.
-
-Use lowercase `area: <component>` labels for repository-defined components, and apply multiple area labels to an issue when needed. Pass component names without the prefix, or omit them to apply only the shared labels:
+When applying the [shared labels](../.github/settings/labels.json), pass any repository-specific component names in lowercase to create `area: <component>` labels. The command preserves existing labels with other names, and you can apply several area labels to an issue that spans multiple components.
 
 ```bash
 nix run github:hakula139/devkit/v3#github -- labels OWNER/REPO cli parser
@@ -73,4 +47,4 @@ nix run github:hakula139/devkit/v3#github -- labels OWNER/REPO cli parser
 
 ## Inherit the community files
 
-The public [`hakula139/.github`](https://github.com/hakula139/.github) repository supplies every repository's default pull request template, issue forms, and `SECURITY.md`.
+Repositories under the same owner can use the pull request templates, issue forms, and `SECURITY.md` from the public [community repository](https://github.com/hakula139/.github) as defaults.

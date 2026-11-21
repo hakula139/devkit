@@ -2,13 +2,13 @@
 
 ## Set up the dev shell
 
-`preCommit` returns a dev shell. Add it to the `inputsFrom` of the repository's `pkgs.mkShell`. The shell's own `packages` and `nativeBuildInputs` take precedence over hook packages on `PATH`.
+Add `preCommit` to `inputsFrom` as shown in [Nix flake](flake.md). The shell's own `packages` and `nativeBuildInputs` take precedence over hook packages on `PATH`.
 
-Entering the dev shell from a Git checkout installs the hooks, replacing an existing hook with prek's shim, so a clone whose hooks another tool installed stops failing. The configuration path must be absent or a symlink into the Nix store. A symlinked hook is followed, so prek overwrites the link's target instead of the link itself.
+Enter the dev shell from the checkout where you intend to install the hooks. Its configuration path must either be absent or point into the Nix store through a symlink. Installing prek's shims replaces existing hooks, including the targets of symlinked hooks.
 
-The hook installation reports on stderr, so `nix develop -c <cmd>` writes only the command's output to stdout. A repository's own `shellHook` must keep stdout clean too.
+Hook installation reports on stderr so callers of `nix develop -c <cmd>` can read the command's output from stdout. Keep stdout clear in the repository's own `shellHook` for the same reason.
 
-`run-hooks` runs the enabled `pre-commit`, `pre-merge-commit`, and `pre-push` hooks on every tracked file, or only the hooks whose IDs it receives, after installing the lockfiles of [lockfile-pinned tools](#run-a-lockfile-pinned-tool). `nix flake check` runs no hooks, so verify a change with `run-hooks` as well, as [`nix.yml`](ci.md) does in CI:
+As in CI, run `run-hooks` separately from `nix flake check`. The hook runner prepares dependencies for enabled lockfile-pinned tools, then checks tracked files across the pre-commit, pre-merge-commit, and pre-push stages. To run a subset, pass hook IDs as in `nix develop -c run-hooks cspell`.
 
 ```bash
 nix develop -c run-hooks
@@ -16,48 +16,25 @@ nix develop -c run-hooks
 
 ## Enable hooks
 
-Turn a hook on or off with `hooks.<name>.enable`.
+The baseline enables file hygiene, spelling, EditorConfig, Markdown formatting and linting, Nix checks, YAML syntax, and GitHub Actions linting. Use `hooks.<name>.enable` to turn off a default or opt into a project-specific check.
 
-The shared hook configurations cover:
+| Project files             | Hooks to enable               | Scope                                                                       |
+| ------------------------- | ----------------------------- | --------------------------------------------------------------------------- |
+| Documentation             | `doctoc`, `lychee`            | Maintain marked tables of contents or check links                           |
+| JavaScript and TypeScript | `eslint`, `tsc`               | Lint selected scripts or type-check the project                             |
+| Web formats and TOML      | `prettier`, `taplo`           | Format JS, TS, CSS, JSON, JSONC, and YAML with Prettier, or TOML with Taplo |
+| Nushell                   | `nu-check`                    | Check scripts with the project's module search paths                        |
+| Python                    | `mypy`, `ruff`, `ruff-format` | Type-check, lint, or format                                                 |
+| Rust                      | `clippy`, `rustfmt`           | Lint or format with the project's toolchain                                 |
+| Shell                     | `shellcheck`, `shfmt`         | Lint or format shell scripts                                                |
 
-| Group                   | Hook                       | Default | Checks                                                       | Config                                      |
-| ----------------------- | -------------------------- | ------- | ------------------------------------------------------------ | ------------------------------------------- |
-| General                 | `check-added-large-files`  | ✓       | Large files being committed                                  |                                             |
-|                         | `check-merge-conflicts`    | ✓       | Conflict markers                                             |                                             |
-|                         | `cspell`                   | ✓       | Spelling                                                     | `cspell.json`                               |
-|                         | `editorconfig-checker`     | ✓       | EditorConfig properties                                      | `.editorconfig`                             |
-|                         | `end-of-file-fixer`        | ✓       | Final newlines                                               |                                             |
-|                         | `lychee`                   |         | Broken external and relative links                           | `lychee.toml`                               |
-|                         | `sort-file-contents`       | ✓       | The order of `.cspell/words.txt`                             |                                             |
-|                         | `trim-trailing-whitespace` | ✓       | Trailing whitespace                                          |                                             |
-| GitHub Actions          | `actionlint`               | ✓       | Workflow syntax, expressions, and action inputs              | `.github/actionlint.yaml`                   |
-| JavaScript / TypeScript | `eslint`                   |         | Lint                                                         | `eslint.config.js`                          |
-|                         | `tsc`                      |         | Types                                                        | `tsconfig.json`                             |
-| Markdown                | `doctoc`                   |         | Generated tables of contents                                 |                                             |
-|                         | `dprint`                   | ✓       | Formatting                                                   |                                             |
-|                         | `markdownlint-cli2`        | ✓       | Lint                                                         | Shared defaults, `.markdownlint-cli2.jsonc` |
-| Nix                     | `deadnix`                  | ✓       | Unused code                                                  |                                             |
-|                         | `nixfmt`                   | ✓       | Formatting                                                   |                                             |
-|                         | `statix`                   | ✓       | Lint                                                         |                                             |
-| Nushell                 | `nu-check`                 |         | Syntax                                                       |                                             |
-| Python                  | `mypy`                     |         | Types                                                        | `[tool.mypy]` in `pyproject.toml`           |
-|                         | `ruff`                     |         | Lint                                                         | Ruff configuration                          |
-|                         | `ruff-format`              |         | Formatting                                                   | Ruff configuration                          |
-| Rust                    | `clippy`                   |         | Lint                                                         | `Cargo.toml` `[lints]`, `clippy.toml`       |
-|                         | `rustfmt`                  |         | Formatting                                                   | `rustfmt.toml`                              |
-| Shell                   | `shellcheck`               |         | Lint                                                         |                                             |
-|                         | `shfmt`                    |         | Formatting                                                   |                                             |
-| TOML                    | `taplo`                    |         | Formatting                                                   | Shared defaults, `.taplo.toml`              |
-| Web formats             | `prettier`                 |         | Formatting of JavaScript, TypeScript, CSS, JSON, JSONC, YAML | Shared defaults, `.prettierrc.json`         |
-| YAML                    | `check-yaml`               | ✓       | Syntax                                                       |                                             |
-
-devkit's [baseline](../nix/hooks/baseline.nix) sets each hook's defaults, and git-hooks.nix's [`modules/hooks.nix`](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) defines its settings. ESLint and clippy fail on warnings, since prek hides the output of a passing hook.
+ESLint and clippy treat warnings as errors because prek hides the output of a passing hook. See the [baseline](../nix/hooks/baseline.nix) for individual defaults and the [upstream hook definitions](https://github.com/cachix/git-hooks.nix/blob/master/modules/hooks.nix) for settings.
 
 ## Configure a hook
 
 ### Override the baseline
 
-A definition under `hooks` replaces the baseline's value, while `args` and `excludes` append to the baseline's lists unless wrapped in `lib.mkForce`:
+A definition under `hooks` generally replaces the baseline value. The `args` and `excludes` lists append by default, so wrap them in `lib.mkForce` when you need to replace them.
 
 ```nix
 preCommit = dk.preCommit {
@@ -87,7 +64,7 @@ Set `hooks.<name>.settings.configPath` to point markdownlint-cli2, Prettier, Ruf
 
 ### Add a spelling dictionary
 
-Add a `cspell.json` that names a project dictionary. `sort-file-contents` keeps `.cspell/words.txt` sorted, and a dictionary at another path needs `hooks.sort-file-contents.files` set to match it.
+Name the project dictionary in `cspell.json`. The `sort-file-contents` hook sorts `.cspell/words.txt` by default, so set `hooks.sort-file-contents.files` if you keep the dictionary elsewhere.
 
 ### Generate Markdown tables of contents
 
@@ -95,13 +72,13 @@ doctoc fills a table of contents between `<!-- START doctoc -->` and `<!-- END d
 
 ### Format Markdown
 
-dprint preserves relative indentation and blank lines in fenced code blocks and skips HTML formatting. The hook checks the Markdown files selected by prek, including tracked files matched by Git ignore rules.
+Let dprint format Markdown so it preserves indentation and blank lines in fenced examples and leaves embedded HTML intact. It formats every file that prek selects, including tracked Markdown files that match Git ignore rules. Keep the Markdown override in `.editorconfig` so editors preserve two-space hard line breaks.
 
 ### Check EditorConfig properties
 
-Keep a copy of the shared `.editorconfig` checked in, then add language-specific sections that match the repository's formatters. EditorConfig has no include mechanism, and editors use this file outside the dev shell. Nushell indentation is checked through this file because no hook formats Nushell.
+Because EditorConfig has no include mechanism and editors use it outside the dev shell, check in a copy of the shared `.editorconfig` and add language-specific sections that match the repository's formatters. The Nushell section also sets the indentation the checker enforces, since no hook formats Nushell.
 
-The Markdown override preserves two-space hard line breaks. Exclude binary payloads that the checker treats as text through `hooks.editorconfig-checker.excludes`.
+Exclude binary payloads that the checker treats as text through `hooks.editorconfig-checker.excludes`.
 
 ### Check Nushell files
 
@@ -113,7 +90,7 @@ mypy checks the `files` that `[tool.mypy]` names, whichever files changed.
 
 ### Lint and format Python
 
-`ruff` runs the Ruff that [`mkLib` selects](flake.md), and `ruff-format.package` defaults to `hooks.ruff.package`. To run both hooks on the Ruff that the repository's `uv.lock` pins, add `ruff` to its `dev` dependency group and set:
+To run both Ruff hooks at the version in `uv.lock`, add `ruff` to the `dev` dependency group and set the package once.
 
 ```nix
 hooks.ruff.package = dk.uvTool "ruff";
@@ -121,7 +98,7 @@ hooks.ruff.package = dk.uvTool "ruff";
 
 ### Lint and format Rust
 
-Point clippy and rustfmt at the repository's toolchain:
+Point clippy and rustfmt at the repository's toolchain so the hooks use the same compiler and formatter as local development.
 
 ```nix
 hooks = {
@@ -140,7 +117,7 @@ Set Cargo flags in `hooks.clippy.settings` and lint levels in `Cargo.toml` `[lin
 
 ### Check shell files
 
-Start the repository's `.envrc` with a shell directive, which shellcheck needs to lint a file without a shebang:
+Start the repository's `.envrc` with a shell directive so shellcheck can lint it without a shebang.
 
 ```bash
 # shellcheck shell=bash
@@ -148,9 +125,9 @@ Start the repository's `.envrc` with a shell directive, which shellcheck needs t
 
 ## Run a lockfile-pinned tool
 
-`dk.nodeTool "<command>"` and `dk.uvTool "<command>"` return packages that run the command from the repository's pnpm or uv lockfile, which `run-hooks` installs first. `eslint` and `tsc` use `dk.nodeTool` and `mypy` uses `dk.uvTool` by default. Set `package` to `dk.nodeTool "prettier"` for Prettier with plugins, or to `dk.nodeTool "cspell"` for cspell with npm dictionaries.
+ESLint and TypeScript already run from the project's pnpm lockfile, and mypy runs from its uv lockfile. Use `dk.nodeTool "<command>"` or `dk.uvTool "<command>"` when another hook needs project dependencies. For example, set `hooks.prettier.package = dk.nodeTool "prettier";` for Prettier plugins, or use `dk.nodeTool "cspell"` for npm dictionaries.
 
-Add `dk.nodeToolchain` to the dev shell to use the same Node.js and pnpm as `nodeTool`, and `dk.uvToolchain` to use the same uv as `uvTool`, which is the uv that [`mkLib` selects](flake.md):
+Add `dk.nodeToolchain` and `dk.uvToolchain` to the dev shell to match the Node.js and pnpm used by `nodeTool` and the uv version that [`mkLib` selects](flake.md) for `uvTool`.
 
 ```nix
 packages = builtins.attrValues dk.nodeToolchain ++ builtins.attrValues dk.uvToolchain;
@@ -158,7 +135,7 @@ packages = builtins.attrValues dk.nodeToolchain ++ builtins.attrValues dk.uvTool
 
 ### Declare pnpm
 
-Declare pnpm in `package.json` with `devEngines`, matching the toolchain's major:
+Declare pnpm in `package.json` with a `devEngines` range that matches the toolchain's major version.
 
 ```json
 {
@@ -172,11 +149,11 @@ Declare pnpm in `package.json` with `devEngines`, matching the toolchain's major
 }
 ```
 
-Leave out a `packageManager` field, which would make pnpm download and run that exact version instead. npm refuses to run in a project whose `devEngines` names pnpm, so publish with `pnpm publish`, which supports OIDC trusted publishing, and run npm-only commands from outside the checkout.
+Omit the top-level `packageManager` field because it makes pnpm download and run that exact version. When `devEngines` names pnpm, npm refuses to run inside the project. Use `pnpm publish` for OIDC trusted publishing and run npm-only commands from outside the checkout.
 
 ### Declare uv
 
-Set uv's version floor and interpreter in `pyproject.toml`, which every `uv` invocation reads, inside the dev shell or not:
+Set uv's version floor and interpreter in `pyproject.toml` so they apply to each `uv` invocation, both inside and outside the dev shell.
 
 ```toml
 [tool.uv]
@@ -185,8 +162,8 @@ python-downloads = "never"
 python-preference = "only-system"
 ```
 
-`required-version` stops an older uv before it rewrites `uv.lock` to an older revision. `only-system` makes uv use the dev shell's Python, and unlike `system` it also replaces a `.venv` built on a uv-managed Python. Add the `pkgs.python3xx` that satisfies `requires-python` to the dev shell.
+Use `required-version` to stop older versions of uv before they rewrite `uv.lock` to an older revision. The `system` preference allows a `.venv` built with a uv-managed Python to stay in place. Set `only-system` to replace that environment with the dev shell's Python, and include the `pkgs.python3xx` that satisfies `requires-python` in the shell.
 
 ## Exclude files
 
-The baseline excludes any path with a `fixtures/` component, since fixtures are byte-for-byte inputs that no hook may rewrite. `excludes` adds to that list.
+The baseline excludes paths containing a `fixtures/` component to preserve fixture inputs byte for byte. Use `excludes` to extend that list.

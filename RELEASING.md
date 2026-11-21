@@ -1,41 +1,40 @@
 # Releasing devkit
 
-Follow the [release skill](https://github.com/hakula139/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md), choosing a SemVer release version under [Choose the version](#choose-the-version). devkit records that version in its Git tag and changelog. There is no release-version field to bump. Draft the changelog with:
+[Choose the version](#choose-the-version), then follow the [release skill](https://github.com/hakulab/plugins/blob/main/plugins/hakula-workflow/skills/release/SKILL.md) to prepare and publish it. Since devkit records its version in the Git tag and changelog, pass the release tag when drafting the notes.
 
 ```bash
 nix run .#changelog -- v3.4.1
 ```
 
-After the tagged commit passes CI, `tag.yml` creates the GitHub Release and, for stable releases, advances the moving major tag.
-
-Verify the GitHub Release and major tag after publication. If the release job fails after creating the Release, inspect it before retrying.
+Once the [tag workflow](.github/workflows/tag.yml) publishes the GitHub Release, verify it and, for a stable release, check the moving major tag. If publication fails partway through, inspect the Release before retrying.
 
 ## Choose the version
 
-Consumers follow the major tag without a PR, so classify each change by its effect on an existing caller and release at the highest level any change reaches.
+Consumers follow the major tag without a PR, so classify each change by its effect on an existing caller and choose the highest version bump the changes require.
 
-- **Major:** An existing caller's configuration stops working or must change.
+- Bump the **major version** when an existing caller's configuration stops working or must change.
+  - An input, secret, argument, attribute, or flake output is removed, renamed, or newly required.
+  - The [minimum nixpkgs release](docs/flake.md) increases.
+  - The `nodeToolchain` upgrades Node.js or pnpm to a new major version, which can put consumers outside their [`devEngines`](docs/hooks.md#declare-pnpm) ranges.
+  - An action or reusable workflow changes in a way that can fail a caller's run for a reason other than hook findings.
+  - The Renovate preset allows more updates to merge without review or changes the required merge strategy.
+  - The `header` in the shared `cliff.toml` changes. With `--prepend`, an existing header is replaced only if it matches exactly.
 
-  - Removing, renaming, or newly requiring an input, secret, argument, attribute, flake output.
-  - Raising the [minimum nixpkgs release](docs/flake.md).
-  - Raising the major version of `nodeToolchain`'s Node.js or pnpm, which fails consumers' [`devEngines`](docs/hooks.md#declare-pnpm) ranges.
-  - An action or reusable workflow change that can fail a caller's run other than through hook findings.
-  - A Renovate preset change that lets more updates merge without review or changes the required merge strategy.
-  - Changing the shared `cliff.toml`'s `header`, since `--prepend` replaces an existing header only when it matches exactly.
+- Use a **minor release** for the following changes, which existing callers can adopt without changing their configuration, even when new checks report findings.
+  - The release introduces or tightens baseline hooks or shared hook defaults.
+  - Shared repository settings or the branch ruleset become stricter or looser. A repository picks up those changes when the `github` helper reapplies them.
+  - Additions qualify, as do newer tool versions that `lib` selects.
 
-- **Minor:** Callers keep working unchanged, even when new checks report findings.
-
-  - New or stricter baseline hooks or shared hook defaults.
-  - Stricter or looser shared repository settings or branch ruleset, which reach a repository only when the `github` helper reapplies them.
-  - Additions and newer tool versions that `lib` selects.
-
-- **Patch:** Everything else, such as fixes that keep every contract.
+- Use a **patch release** for everything else, including fixes that preserve all existing contracts.
 
 ## Roll back
 
-devkit's own release never runs `release.yml`, `nix-cache.yml`, or `publish-release`'s `assets`, and its CI never runs `python.yml`, `node.yml`, or `rust.yml`. After changing any of them, watch the next consumer run of the changed piece and roll back if it fails.
+When a change affects a path that devkit's own workflows leave untested, watch the next consumer run and roll back if the change breaks it.
 
-Force-move the major tag back to the previous release:
+- [CI](.github/workflows/ci.yml) leaves the `python.yml`, `node.yml`, and `rust.yml` workflows to consumers.
+- The [tag workflow](.github/workflows/tag.yml) publishes without release assets and leaves `release.yml` and `nix-cache.yml` to consumers.
+
+Once you have approval to move the published tag, point the moving major tag back to the previous working stable release. For example, these commands restore `v3` to `v3.4.0`.
 
 ```bash
 git tag -f v3 v3.4.0

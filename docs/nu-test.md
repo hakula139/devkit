@@ -1,22 +1,20 @@
 # Nushell test runner
 
-`nu-test` runs the tests in a set of `.test.nu` files, and `dk.nuTests` wraps it in a Nix check.
-
 ## Write a test
 
-A test is a command named `test <behavior>` in a `.test.nu` file, using assertions from `std/assert`. A test name may contain only letters, digits, and `,.:-`, with single spaces between words and no trailing space.
+Define each test as a `test <behavior>` command in a `.test.nu` file beside the code it exercises, using `std/assert` for assertions. See the [test file](../tests/nu-tooling/lib-dirs/lib-dirs.test.nu) for an example and the [Nushell testing conventions](https://github.com/hakulab/plugins/blob/main/plugins/hakula-languages/skills/nushell/SKILL.md#testing) for guidance on assertions and fixtures.
 
-- **One process per test.** The runner collects test names from the files and runs the tests in parallel, each in its own `nu` process, so a test that modifies its environment or exits cannot affect the others.
-- **Load failures are tests.** A file that fails to parse or whose test names cannot be read reports a `(load)` entry with its output and counts as a failure. A file that prints to stdout or exits while loading cannot report its test names, so it also fails.
-- **Stubs.** A `<name>.stub.nu` file beside a test file is installed as an executable `<name>` in the directory given by `NU_TEST_STUBS`. A test calls a stub through `$env.NU_TEST_STUBS | path join <name>` or by prepending that directory to `PATH`.
-- **Shared helpers.** A `<name>.testlib.nu` file beside the test files holds builders that several of them `use`. `nuTests` copies it with the test files, and `mkNuApplication` excludes it from the package.
-- **Module directories.** Each test's `nu` process gets the runner's `NU_LIB_DIRS`, so a test `use`s a module by name. Nushell exports that list to an external command only as a string, so a test that runs `nu` or `nu-check` passes `$env.NU_LIB_DIRS | str join (char esep)` through `with-env`.
-- **Scratch space.** `TMPDIR` points to a fresh empty directory for each test, and the runner removes these directories after the run, even if the file fails to load.
-- **Exit codes.** The runner prints one `PASS` or `FAIL` line per test and a `passed, failed` summary, then exits nonzero if any test fails or no tests run.
+- Choose **test names** made up of ASCII letters, digits, or `,.:-`, with one space between words and no trailing space. The runner reads the command names after the file loads, so keep stdout empty and let loading finish. If discovery fails, the runner reports a failed `(load)` entry.
+- Tests **run in parallel**, each in a fresh Nushell process, so one test cannot rely on environment changes made by another. Write temporary files in the test's own empty `TMPDIR`, which the runner cleans up afterward.
+- Keep **fixtures** beside the tests that read them. Since inputs from the Nix store are read-only, copy a fixture into `TMPDIR` and run `chmod u+w` on the copy before modifying it.
+- Put **shared helpers** in a sibling `<name>.testlib.nu` so several tests can import the same builders. The Nix check includes this file, and the application builder leaves it out of the package.
+- To **stub an executable**, place `<name>.stub.nu` beside the test file. The runner installs it under `NU_TEST_STUBS` as `<name>`. Call it there directly, or prepend that directory to `PATH` if a child process needs to find the stub by name.
+
+The [runner](../src/nu-test.nu) prints a result for each test followed by the totals, and exits nonzero if discovery fails, a test fails, or no tests run.
 
 ## Run the check
 
-`nuTests` takes `src`, an optional `runtimeInputs` list, and an optional `libDirs` list of module directories that tests `use` by name, which [Nushell tooling](nushell.md#share-modules) describes. After [setting up the flake](flake.md), add it to the per-system output attribute set:
+After [setting up the flake](flake.md), add the check to the per-system outputs.
 
 ```nix
 checks.tests = dk.nuTests {
@@ -24,20 +22,19 @@ checks.tests = dk.nuTests {
 };
 ```
 
-- The check copies every directory containing a `.test.nu` file (including the whole `src` tree when a test sits at its root), fails evaluation if `src` contains none, and runs those files from the `src` root with `dk.nushell` and `runtimeInputs` on `PATH`.
-- Run `chmod u+w` on any file copied by a test before writing to it.
-- A test that sources a path outside its copied directory fails in the sandbox.
+The [Nix check](../nix/nu-test-check.nix) requires at least one `.test.nu` file under `src`. It copies each directory that contains a test file, so a test at the root of `src` brings in the whole tree. Tests run from the root of that copy, where a relative import can fail if it points to a file outside the copied directories.
+
+- Add any packages that provide external commands used by the tests to `runtimeInputs`.
+- If a test imports modules by name, pass the package's [module directories](nushell.md#share-modules) to `libDirs`, as in the [check](../tests/nu-tooling/lib-dirs/default.nix). When a test starts `nu` or `nu-check`, the child needs `NU_LIB_DIRS` as a string. The [test](../tests/nu-tooling/lib-dirs/lib-dirs.test.nu) shows how to pass `$env.NU_LIB_DIRS | str join (char esep)` in `with-env`.
 
 ## Run one file directly
 
-Add `dk.nushell` and `dk.nu-test` to the dev shell's `packages` (which [Nix flake](flake.md) shows how to define) so `nu` matches the check's Nushell and `nu-test` is on `PATH`. Because the check runs from the `src` root, reproduce a failure by running `nu-test <file>...` from that root with relative paths.
+To reproduce a failure with the same interpreter and working directory as the Nix check, add `dk.nushell` and `dk.nu-test` to the dev shell and run `nu-test path/to/file.test.nu` from the check's `src` directory.
 
 ## Check a script without running it
 
-`dk.nu-check` runs Nushell's `--ide-check` on each file to catch mismatched delimiters and wrong argument counts in calls to local `def`s. Because Nushell treats a mistyped command as an external call, run the script once for real too. Diagnostics take these forms:
+The [`nu-check` hook](hooks.md) reports Nushell diagnostics. Run the script as well, since Nushell can interpret a mistyped command name as an external executable.
 
-- A file's own error prints as `<file>:<line>:<column>: <message>`, the format editors link. The column counts bytes, matching Nushell's own diagnostics.
-- An error inside a module the file loads prints as `<file>: <message> (in a module it loads)`.
-- A missing or non-UTF-8 file prints as `<file>: <reason>`.
-
-[Hooks](hooks.md) covers the baseline's `nu-check` hook.
+- `<file>:<line>:<column>: <message>` locates an error in the checked file, with a one-based byte column.
+- `<file>: <message> (in a module it loads)` reports an error in an imported module.
+- `<file>: <reason>` reports a file the checker could not read as UTF-8, including a missing file.

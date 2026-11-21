@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2026-11-22
+
+### Added
+
+- _(ci)_ `workers-deploy.yml` deploys a Cloudflare Worker from the repository root using the package's `deploy` script after checking that the default branch still points to the triggering commit. Jobs with their own build can call the `workers` action to deploy a branch with optional remote D1 migrations beforehand, deploy previews for trusted pull requests, and remove them when the pull requests close. ([#128](https://github.com/hakula139/devkit/pull/128))
+
+[3.7.0]: https://github.com/hakula139/devkit/compare/v3.6.0...v3.7.0
+
 ## [3.6.0] - 2026-11-20
 
 ### Added

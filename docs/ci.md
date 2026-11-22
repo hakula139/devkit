@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   nix:
-    uses: hakula139/devkit/.github/workflows/nix.yml@v3
+    uses: hakulab/devkit/.github/workflows/nix.yml@v3
     secrets:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Check results
-        uses: hakula139/devkit/.github/actions/ci-result@v3
+        uses: hakulab/devkit/.github/actions/ci-result@v3
 ```
 
 When adding checks, keep both of these settings on the gate required by the [branch ruleset].
@@ -77,7 +77,7 @@ To preserve a flake output through Cachix garbage collection, pin it from a chec
 ```yaml
 - name: Pin critical store paths
   if: github.ref == 'refs/heads/main'
-  uses: hakula139/devkit/.github/actions/cachix-pin@v3
+  uses: hakulab/devkit/.github/actions/cachix-pin@v3
   with:
     pins: '{"my-tool-main-x86_64-linux": ".#default"}'
 ```
@@ -120,7 +120,7 @@ python:
   permissions:
     contents: read
     id-token: write
-  uses: hakula139/devkit/.github/workflows/python.yml@v3
+  uses: hakulab/devkit/.github/workflows/python.yml@v3
   secrets:
     CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
@@ -224,7 +224,7 @@ A root Worker with a `deploy` package script can call [`workers-deploy.yml`][wor
 deploy:
   permissions:
     contents: read
-  uses: hakula139/devkit/.github/workflows/workers-deploy.yml@v3
+  uses: hakulab/devkit/.github/workflows/workers-deploy.yml@v3
   secrets:
     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -238,7 +238,7 @@ For a project with its own build or deployment policy, prepare the job before ca
 
 ```yaml
 - name: Deploy
-  uses: hakula139/devkit/.github/actions/workers@v3
+  uses: hakulab/devkit/.github/actions/workers@v3
   with:
     directory: web
     wrangler-environment: production

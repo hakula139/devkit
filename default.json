@@ -27,12 +27,12 @@
       "customType": "regex",
       "managerFilePatterns": ["/(^|/)flake\\.nix$/", "**/!(CHANGELOG).md"],
       "matchStrings": [
-        "(?:^|[^\\w-])hakula139/devkit/[\\w./-]+@(?<currentValue>v\\d+)[^.\\d]",
-        "(?:^|[^\\w-])github>hakula139/devkit#(?<currentValue>v\\d+)[^.\\d]",
-        "(?:^|[^\\w-])github:hakula139/devkit/(?<currentValue>v\\d+)[^.\\d]",
-        "(?:^|[^\\w-])github\\.com/hakula139/devkit/(?:blob|tree)/(?<currentValue>v\\d+)[^.\\d]"
+        "(?:^|[^\\w-])hakulab/devkit/[\\w./-]+@(?<currentValue>v\\d+)[^.\\d]",
+        "(?:^|[^\\w-])github>hakulab/devkit#(?<currentValue>v\\d+)[^.\\d]",
+        "(?:^|[^\\w-])github:hakulab/devkit/(?<currentValue>v\\d+)[^.\\d]",
+        "(?:^|[^\\w-])github\\.com/hakulab/devkit/(?:blob|tree)/(?<currentValue>v\\d+)[^.\\d]"
       ],
-      "depNameTemplate": "hakula139/devkit",
+      "depNameTemplate": "hakulab/devkit",
       "datasourceTemplate": "github-tags",
       "extractVersionTemplate": "^(?<version>v\\d+)$"
     }
@@ -65,7 +65,7 @@
       "groupName": "GitHub Actions"
     },
     {
-      "matchDepNames": ["hakula139/devkit"],
+      "matchDepNames": ["hakulab/devkit"],
       "groupName": "devkit",
       "versioning": "github-actions"
     }

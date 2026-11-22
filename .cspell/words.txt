@@ -17,6 +17,7 @@ fetchpatch
 fetchurl
 fileset
 hakula
+hakulab
 intraword
 lockfiles
 maxlevel

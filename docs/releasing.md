@@ -19,7 +19,7 @@ jobs:
     permissions:
       actions: read
       contents: write
-    uses: hakula139/devkit/.github/workflows/release.yml@v3
+    uses: hakulab/devkit/.github/workflows/release.yml@v3
     secrets:
       CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
 ```
@@ -29,7 +29,7 @@ jobs:
 With `gh` authenticated, run the [changelog command](../scripts/changelog.nu) from the root of the repository you are releasing. The shared template starts stable drafts after the previous stable tag and prerelease drafts after the previous version tag. You can supply your own template in the repository's `cliff.toml` and pass `--highlights <file>` whenever the template supports Markdown highlights.
 
 ```bash
-nix run github:hakula139/devkit/v3#changelog -- v1.2.3
+nix run github:hakulab/devkit/v3#changelog -- v1.2.3
 ```
 
 ### Recover a release

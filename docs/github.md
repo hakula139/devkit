@@ -5,7 +5,7 @@ Use the [administration helper](../scripts/github.nu) with an authenticated `gh`
 ## Apply repository settings
 
 ```bash
-nix run github:hakula139/devkit/v3#github -- settings OWNER/REPO
+nix run github:hakulab/devkit/v3#github -- settings OWNER/REPO
 ```
 
 The [repository settings](../.github/settings/repository.json), [workflow permissions](../.github/settings/workflow-permissions.json), and [security settings](../.github/settings/security.json) define the defaults.
@@ -22,7 +22,7 @@ The [repository settings](../.github/settings/repository.json), [workflow permis
 The command creates the [shared ruleset](../.github/settings/rulesets/main.json) or replaces it in full. If you only need to change the required checks on a customized ruleset, edit its live `required_status_checks` directly.
 
 ```bash
-nix run github:hakula139/devkit/v3#github -- ruleset OWNER/REPO
+nix run github:hakulab/devkit/v3#github -- ruleset OWNER/REPO
 ```
 
 | Default branch rule | Policy                                                |
@@ -42,9 +42,9 @@ An extra check name without a suffix binds to GitHub Actions. To require a check
 When applying the [shared labels](../.github/settings/labels.json), pass any repository-specific component names in lowercase to create `area: <component>` labels. The command preserves existing labels with other names, and you can apply several area labels to an issue that spans multiple components.
 
 ```bash
-nix run github:hakula139/devkit/v3#github -- labels OWNER/REPO cli parser
+nix run github:hakulab/devkit/v3#github -- labels OWNER/REPO cli parser
 ```
 
 ## Inherit the community files
 
-Repositories under the same owner can use the pull request templates, issue forms, and `SECURITY.md` from the public [community repository](https://github.com/hakula139/.github) as defaults.
+Repositories under the same owner can use the pull request templates, issue forms, and `SECURITY.md` from the public [community repository](https://github.com/hakulab/.github) as defaults.

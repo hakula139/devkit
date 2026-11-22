@@ -1,6 +1,6 @@
 # devkit
 
-[![CI](https://github.com/hakula139/devkit/actions/workflows/ci.yml/badge.svg)](https://github.com/hakula139/devkit/actions/workflows/ci.yml)
+[![CI](https://github.com/hakulab/devkit/actions/workflows/ci.yml/badge.svg)](https://github.com/hakulab/devkit/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![WakaTime coding time for devkit](https://wakatime.com/badge/user/f4a35a1f-0e29-4093-a647-e66aad164737/project/04be7427-93da-43cd-8ed9-4d1f7e35987a.svg)
 

@@ -7,15 +7,15 @@ Extend the [shared preset](../default.json) in the consumer's `.github/renovate.
 ```json
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>hakula139/devkit#v3"]
+  "extends": ["github>hakulab/devkit#v3"]
 }
 ```
 
-| Preset reference                 | When consumers pick up changes                |
-| -------------------------------- | --------------------------------------------- |
-| `github>hakula139/devkit#v3`     | On a stable release within the selected major |
-| `github>hakula139/devkit#v3.0.0` | When the consumer changes the pin             |
-| `github>hakula139/devkit`        | On the next run after a default-branch change |
+| Preset reference               | When consumers pick up changes                |
+| ------------------------------ | --------------------------------------------- |
+| `github>hakulab/devkit#v3`     | On a stable release within the selected major |
+| `github>hakulab/devkit#v3.0.0` | When the consumer changes the pin             |
+| `github>hakulab/devkit`        | On the next run after a default-branch change |
 
 ## Refresh Nix dependency hashes
 

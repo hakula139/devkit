@@ -82,6 +82,8 @@ To preserve a flake output through Cachix garbage collection, pin it from a chec
     pins: '{"my-tool-main-x86_64-linux": ".#default"}'
 ```
 
+Pins retain their two latest revisions by default. Set `keep-revisions` to change the count or `keep-days` to expire each revision after a fixed number of days.
+
 If builds can finish out of order, check the current branch head before pinning so an older run cannot replace a newer pin. See the [`cachix-pin` inputs][cachix-pin].
 
 ## Run Nix checks

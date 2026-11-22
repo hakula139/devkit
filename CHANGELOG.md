@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.1] - 2026-11-22
+
+### Changed
+
+- Devkit moved to the `hakulab` GitHub organization. Update action and reusable workflow references to `hakulab/devkit`, since GitHub Actions requires the new owner after the transfer. Use `hakulab/devkit` for flake inputs and Renovate preset references as well. ([#130](https://github.com/hakulab/devkit/pull/130))
+
+### Fixed
+
+- _(renovate)_ The shared preset detects Devkit major-tag references under `hakulab/devkit` and groups their updates together. ([#130](https://github.com/hakulab/devkit/pull/130))
+
+[3.7.1]: https://github.com/hakulab/devkit/compare/v3.7.0...v3.7.1
+
 ## [3.7.0] - 2026-11-22
 
 ### Added

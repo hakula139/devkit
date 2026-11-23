@@ -22,6 +22,19 @@
   "automergeStrategy": "squash",
   "labels": ["dependencies"],
   "semanticCommits": "enabled",
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/examples/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+    "**/fixtures/**",
+    "**/.mise/locks/**",
+    "**/.config/mise/locks/**"
+  ],
   "customManagers": [
     {
       "customType": "regex",

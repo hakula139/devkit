@@ -166,4 +166,4 @@ Use `required-version` to stop older versions of uv before they rewrite `uv.lock
 
 ## Exclude files
 
-The baseline excludes paths containing a `fixtures/` component to preserve fixture inputs byte for byte. Use `excludes` to extend that list.
+The baseline excludes paths containing a `__fixtures__/`, `fixtures/`, `__snapshots__/`, or `testdata/` component to preserve byte-exact test data (conventional fixture and snapshot directories across ecosystems). Add repository-specific exclusions through `excludes` in `dk.preCommit`.

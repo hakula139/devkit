@@ -63,8 +63,12 @@ let
 in
 { config, ... }:
 {
+  # Keep only conventional fixture and snapshot directories. Add project paths via `excludes`.
   excludes = [
+    "(^|/)__fixtures__/"
     "(^|/)fixtures/"
+    "(^|/)__snapshots__/"
+    "(^|/)testdata/"
   ];
 
   hooks = lib.mapAttrsRecursiveCond (attrs: !lib.isDerivation attrs) baselinePriority {

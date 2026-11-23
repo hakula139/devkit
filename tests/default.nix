@@ -17,7 +17,9 @@ in
   dprint-markdown = import ./dprint-markdown { inherit pkgs repo; };
   skill-links = import ./skill-links { inherit pkgs skillSource; };
 }
-// lib.mapAttrs' (name: lib.nameValuePair "actions-${name}") (import ./actions { inherit dk; })
+// lib.mapAttrs' (name: lib.nameValuePair "actions-${name}") (
+  import ./actions { inherit pkgs dk repo; }
+)
 // lib.mapAttrs' (name: lib.nameValuePair "nu-tooling-${name}") (
   import ./nu-tooling { inherit pkgs dk; }
 )

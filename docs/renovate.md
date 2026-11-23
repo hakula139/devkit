@@ -19,14 +19,22 @@ Extend the [shared preset](../default.json) in the consumer's `.github/renovate.
 
 ## Refresh Nix dependency hashes
 
-When an update changes the locked dependencies, refresh the corresponding fixed-output hashes. If the package uses `fetchPnpmDeps`, disable automerge for those updates in the consumer's `.github/renovate.json` so you can refresh the hash before merging.
+When an update changes the locked dependencies, refresh the corresponding fixed-output hashes. If the package uses `fetchPnpmDeps` with `--prod`, disable automerge for its runtime dependencies in the consumer's `.github/renovate.json` so you can refresh the hash before merging. Minor and patch updates to `devDependencies` still automerge through the shared preset's `Node dependencies` rule.
 
 ```json
 {
   "lockFileMaintenance": { "automerge": false },
-  "packageRules": [{ "matchManagers": ["npm"], "automerge": false }]
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["dependencies", "pnpm-workspace.overrides"],
+      "automerge": false
+    }
+  ]
 }
 ```
+
+A fetcher that hashes the full lockfile covers every dependency, so disable automerge for all npm updates.
 
 Run `nix-update` from the flake root on the Renovate branch, replacing `default` with the package's attribute name if needed.
 

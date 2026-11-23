@@ -16,6 +16,7 @@ in
 {
   actions = import ./actions { inherit pkgs dk repo; };
   dprint-markdown = import ./dprint-markdown { inherit pkgs repo; };
+  hooks = import ./hooks { inherit pkgs dk; };
   skill-links = import ./skill-links { inherit pkgs skillSource; };
 }
 // lib.mapAttrs' (name: lib.nameValuePair "nu-tooling-${name}") (

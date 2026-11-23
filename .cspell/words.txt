@@ -56,10 +56,12 @@ Swatinem
 taiki
 taplo
 tera
+testdata
 testlib
 testpaths
 toplevel
 venv
+vitest
 wakatime
 worktree
 worktrees

@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: Install Nushell
-      uses: taiki-e/install-action@nu
+      uses: hustcer/setup-nu@v3
 
     - name: Check results
       shell: bash

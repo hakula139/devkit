@@ -12,7 +12,7 @@ runs:
       uses: taiki-e/install-action@parse-changelog
 
     - name: Install Nushell
-      uses: taiki-e/install-action@nu
+      uses: hustcer/setup-nu@v3
 
     - name: Publish release
       shell: bash

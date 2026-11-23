@@ -1,0 +1,3 @@
+def --wrapped main [...args: string] {
+  $"($args | to json --raw)\n" | save --append $env.STUB_GH_LOG
+}

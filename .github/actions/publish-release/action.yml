@@ -11,9 +11,12 @@ runs:
     - name: Install changelog parser
       uses: taiki-e/install-action@parse-changelog
 
+    - name: Install Nushell
+      uses: taiki-e/install-action@nu
+
     - name: Publish release
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         ASSETS: ${{ inputs.assets }}
-      run: bash "$GITHUB_ACTION_PATH/publish-release.sh"
+      run: nu "$GITHUB_ACTION_PATH/publish-release.nu"

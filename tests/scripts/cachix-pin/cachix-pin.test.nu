@@ -1,6 +1,6 @@
 use std/assert
 
-const SCRIPT = path self "../../scripts/cachix-pin.nu"
+const SCRIPT = path self "../../../scripts/cachix-pin.nu"
 
 def run-cachix-pin [
   pins: record

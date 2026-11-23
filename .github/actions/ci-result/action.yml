@@ -4,9 +4,12 @@ description: Fail unless every completed job in the gate's workflow succeeded or
 runs:
   using: composite
   steps:
+    - name: Install Nushell
+      uses: hustcer/setup-nu@v3
+
     - name: Check results
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
         GATE_ID: ${{ job.check_run_id }}
-      run: bash "$GITHUB_ACTION_PATH/ci-result.sh"
+      run: nu "$GITHUB_ACTION_PATH/ci-result.nu"

@@ -34,7 +34,7 @@ nix run github:hakulab/devkit/v3#changelog -- v1.2.3
 
 ### Recover a release
 
-Because pull request CI can test a merge commit, the [CI gate for tags](../.github/actions/tagged-ci/tagged-ci.jq) requires a successful push or dispatch run on the tagged commit. Rerun failed CI jobs or, if your workflow supports it, dispatch a run on the tag.
+Because pull request CI can test a merge commit, the [CI gate for tags](../.github/actions/tagged-ci/tagged-ci.nu) requires a successful push or dispatch run on the tagged commit. Rerun failed CI jobs or, if your workflow supports it, dispatch a run on the tag.
 
 ```bash
 gh workflow run ci.yml --ref v1.2.3

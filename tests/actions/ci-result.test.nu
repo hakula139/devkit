@@ -1,6 +1,6 @@
 use std/assert
 
-const SCRIPT = path self "../../../.github/actions/ci-result/ci-result.nu"
+const SCRIPT = path self "../../.github/actions/ci-result/ci-result.nu"
 
 def run-ci-result [
   pages: list<record>

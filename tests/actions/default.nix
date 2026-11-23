@@ -11,20 +11,18 @@
 let
   inherit (pkgs) lib;
 
-  mkActionCheck =
+  mkAction =
     name:
-    dk.nuTests {
-      src = lib.path.append ./. name;
-      runtimeInputs = [
-        (dk.writeNuApplication {
-          inherit name;
-          text = builtins.readFile (lib.path.append repo.root ".github/actions/${name}/${name}.nu");
-        })
-      ];
+    dk.writeNuApplication {
+      inherit name;
+      text = builtins.readFile (lib.path.append repo.root ".github/actions/${name}/${name}.nu");
     };
 in
-lib.genAttrs [
-  "ci-result"
-  "publish-release"
-  "tagged-ci"
-] mkActionCheck
+dk.nuTests {
+  src = ./.;
+  runtimeInputs = map mkAction [
+    "ci-result"
+    "publish-release"
+    "tagged-ci"
+  ];
+}

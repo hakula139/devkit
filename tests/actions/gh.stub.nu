@@ -7,7 +7,11 @@
 def --wrapped main [...args: string] {
   $"($args | to json --raw)\n" | save --append $env.STUB_GH_LOG
 
-  let responses_dir = $env.STUB_GH_RESPONSES_DIR
+  let responses_dir = ($env.STUB_GH_RESPONSES_DIR? | default "")
+  if ($responses_dir | is-empty) {
+    return
+  }
+
   let counter_file = ($env.TMPDIR | path join "gh-call-count")
   let count = if ($counter_file | path exists) {
     (open --raw $counter_file | str trim | into int) + 1
@@ -16,8 +20,13 @@ def --wrapped main [...args: string] {
   }
   $"($count)" | save --force $counter_file
 
-  let response_file = ($responses_dir | path join $"($count).json")
-  if not ($response_file | path exists) {
+  let indexed = ($responses_dir | path join $"($count).json")
+  let default_file = ($responses_dir | path join "default.json")
+  let response_file = if ($indexed | path exists) {
+    $indexed
+  } else if ($default_file | path exists) {
+    $default_file
+  } else {
     print -e $"gh stub: no response file for call ($count)"
     exit 1
   }

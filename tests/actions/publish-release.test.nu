@@ -1,6 +1,6 @@
 use std/assert
 
-const SCRIPT = path self "../../../.github/actions/publish-release/publish-release.nu"
+const SCRIPT = path self "../../.github/actions/publish-release/publish-release.nu"
 
 def run-publish-release [
   --tag: string = "v1.2.3"

@@ -1,6 +1,6 @@
 use std/assert
 
-const SCRIPT = path self "../../../.github/actions/tagged-ci/tagged-ci.nu"
+const SCRIPT = path self "../../.github/actions/tagged-ci/tagged-ci.nu"
 
 def run-tagged-ci [
   responses: list<record>

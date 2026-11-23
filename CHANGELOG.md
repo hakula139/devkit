@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.2] - 2026-11-23
+
+### Fixed
+
+- _(hooks)_ Baseline `prettier` and `flake-check` hooks now exclude `testdata/`, `__snapshots__/`, and `__fixtures__/` directories, so repositories with test fixtures or snapshot files are no longer rewritten or rejected. ([#139](https://github.com/hakulab/devkit/pull/139))
+
+[3.8.2]: https://github.com/hakulab/devkit/compare/v3.8.1...v3.8.2
+
 ## [3.8.1] - 2026-11-23
 
 ### Changed

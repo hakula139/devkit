@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.0] - 2026-11-23
+
+### Added
+
+- _(ci)_ `cachix-pin` accepts `keep-days` as an alternative to `keep-revisions` so callers can expire cached revisions after a fixed number of days instead of keeping a revision count. `nix-cache.yml` sets `keep-days: 30` on tagged release pins, and `cachix-pin` now runs from a Nushell package exposed by the devkit flake. ([#132](https://github.com/hakulab/devkit/pull/132))
+
+### Changed
+
+- _(ci)_ `ci-result`, `publish-release`, and `tagged-ci` now run their helper scripts on Nushell via `hustcer/setup-nu@v3` instead of Bash and `jq`. ([#133](https://github.com/hakulab/devkit/pull/133))
+
+[3.8.0]: https://github.com/hakulab/devkit/compare/v3.7.1...v3.8.0
+
 ## [3.7.1] - 2026-11-22
 
 ### Changed

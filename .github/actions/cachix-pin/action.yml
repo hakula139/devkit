@@ -6,7 +6,7 @@ inputs:
     description: JSON object that maps each pin name to the flake output it pins
     required: true
   keep-revisions:
-    description: Number of revisions to keep per pin (defaults to two when keep-days is omitted)
+    description: Number of revisions to keep per pin (defaults to 2)
   keep-days:
     description: Number of days to keep each revision (mutually exclusive with keep-revisions)
 
@@ -19,4 +19,6 @@ runs:
         PINS: ${{ inputs.pins }}
         KEEP_REVISIONS: ${{ inputs.keep-revisions }}
         KEEP_DAYS: ${{ inputs.keep-days }}
-      run: bash "$GITHUB_ACTION_PATH/cachix-pin.sh"
+      run: |
+        action_root=$(cd "$GITHUB_ACTION_PATH/../../.." && pwd -P)
+        nix run "path:$action_root#cachix-pin"

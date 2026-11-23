@@ -38,4 +38,8 @@ Review the diff and commit the refreshed hash. Merge the pull request promptly b
 
 ## Update devkit major references
 
+The preset updates devkit references in `flake.nix` and Markdown files other than `CHANGELOG.md`. It inherits `config:recommended`'s ignored paths and also skips `**/fixtures/**`.
+
+To exclude more paths from these updates, add them to top-level `ignorePaths` for all managers or `regex.ignorePaths` for regex managers only. Both settings replace the inherited array, so retain applicable paths from the preset and your top-level configuration alongside the additions.
+
 Run `nix flake update devkit` on a devkit major update PR before merging so the flake lock follows the new major reference.

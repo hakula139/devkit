@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.1] - 2026-11-23
+
+### Changed
+
+- _(ci)_ The reusable workflows install Nix 2.36.0 through `cachix/install-nix-action` v32. ([#135](https://github.com/hakulab/devkit/pull/135))
+
+### Fixed
+
+- _(renovate)_ The shared preset ignores `**/fixtures/**`, so the custom regex manager no longer reports hidden Unicode in test fixtures that contain intentional full-width characters. A consumer's top-level `ignorePaths` still replaces the preset's list, and the Renovate guide explains how to add exclusions for built-in and custom managers. ([#136](https://github.com/hakulab/devkit/pull/136))
+- _(renovate)_ Renovate holds `typescript` below v7 for the npm datasource until `typescript-eslint` supports TypeScript 7.0, so it no longer opens a major update that no TypeScript consumer can merge. The Renovate guide scopes the automerge opt-out to runtime dependencies when a package uses `fetchPnpmDeps` with `--prod`, and describes how runtime minor and patch updates can move to their own group so `devDependencies` updates still automerge. ([#137](https://github.com/hakulab/devkit/pull/137))
+
+[3.8.1]: https://github.com/hakulab/devkit/compare/v3.8.0...v3.8.1
+
 ## [3.8.0] - 2026-11-23
 
 ### Added

@@ -61,7 +61,6 @@ testlib
 testpaths
 toplevel
 venv
-vitest
 wakatime
 worktree
 worktrees

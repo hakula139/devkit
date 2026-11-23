@@ -63,9 +63,7 @@ let
 in
 { config, ... }:
 {
-  # Keep only conventional fixture and snapshot directories (`__fixtures__/` for Jest, `fixtures/`
-  # for devkit, `__snapshots__/` for Jest/Vitest, and `testdata/` for Go). Put other paths in the
-  # project's `excludes`.
+  # Keep only conventional fixture and snapshot directories. Add project paths via `excludes`.
   excludes = [
     "(^|/)__fixtures__/"
     "(^|/)fixtures/"

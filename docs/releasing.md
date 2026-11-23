@@ -40,7 +40,9 @@ Because pull request CI can test a merge commit, the [CI gate for tags](../.gith
 gh workflow run ci.yml --ref v1.2.3
 ```
 
-Once CI passes, rerun the failed release jobs. To restore a deleted cache pin, rebuild the tagged package on the affected system, push its output to `hakula`, and pin it as `<repository>-<tag>-<system>`, following [`nix-cache.yml`](../.github/workflows/nix-cache.yml).
+Once CI passes, rerun the failed release jobs.
+
+Release pins named `<repository>-<tag>-<system>` expire after 30 days. To restore a pin, rebuild the tagged package on the affected system, push its output to `hakula`, and pin it with the same name and `--keep-days 30`. See [`nix-cache.yml`](../.github/workflows/nix-cache.yml).
 
 ### Write your own release workflow
 

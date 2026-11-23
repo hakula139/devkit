@@ -6,6 +6,7 @@
   pkgs,
   dk,
   repo,
+  packages,
   skillSource,
 }:
 
@@ -18,4 +19,7 @@ in
 }
 // lib.mapAttrs' (name: lib.nameValuePair "nu-tooling-${name}") (
   import ./nu-tooling { inherit pkgs dk; }
+)
+// lib.mapAttrs' (name: lib.nameValuePair "scripts-${name}") (
+  import ./scripts { inherit dk packages; }
 )

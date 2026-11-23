@@ -138,6 +138,7 @@
         # Packages
         # ------------------------------------------------------------------------------------------
         packages = {
+          cachix-pin = nuScript "cachix-pin" [ ];
           changelog = nuScript "changelog" [
             pkgs.gh
             pkgs.git
@@ -174,6 +175,7 @@
           self.packages.${system}
           // import ./tests {
             inherit pkgs dk repo;
+            packages = self.packages.${system};
             inherit (self.lib) skillSource;
           };
 

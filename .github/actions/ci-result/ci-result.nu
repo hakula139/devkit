@@ -7,14 +7,14 @@
 # Fail unless every completed job in the gate's workflow succeeded or was skipped.
 def main [] {
   let gate_id = ($env.GATE_ID | into int)
-  let endpoint = (
-    $"repos/($env.GITHUB_REPOSITORY)/actions/runs/($env.GITHUB_RUN_ID)/jobs"
-    + "?filter=all&per_page=100"
-  )
+  let endpoint = $"repos/($env.GITHUB_REPOSITORY)/actions/runs/($env.GITHUB_RUN_ID)/jobs"
 
   # `needs` misses a matrix leg cancelled before it starts, so read each job from the API.
   let pages = (
     ^gh api $endpoint
+      --method GET
+      --raw-field "filter=all"
+      --raw-field "per_page=100"
       --paginate
       --slurp
     | from json

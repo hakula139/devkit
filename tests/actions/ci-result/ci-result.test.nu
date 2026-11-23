@@ -72,7 +72,13 @@ def "test passes when all completed jobs succeeded or were skipped" [] {
   assert equal $out.calls [
     [
       "api"
-      "repos/hakulab/example/actions/runs/42/jobs?filter=all&per_page=100"
+      "repos/hakulab/example/actions/runs/42/jobs"
+      "--method"
+      "GET"
+      "--raw-field"
+      "filter=all"
+      "--raw-field"
+      "per_page=100"
       "--paginate"
       "--slurp"
     ]

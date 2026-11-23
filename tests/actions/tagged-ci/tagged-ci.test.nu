@@ -155,14 +155,18 @@ def "test ignores pull request runs and fails when no qualifying run passed" [] 
     ]
   )
 
+  let expected = (
+    [
+      "::error::No push or dispatched CI run passed on abc1234."
+      "Rerun the failed CI jobs,"
+      "or run 'gh workflow run ci.yml --ref v1.2.3',"
+      "then rerun this job."
+    ]
+    | str join " "
+  )
   assert equal $out.result {
     exit_code: 1
-    stdout: (
-      "::error::No push or dispatched CI run passed on abc1234."
-      + " Rerun the failed CI jobs,"
-      + " or run 'gh workflow run ci.yml --ref v1.2.3',"
-      + " then rerun this job.\n"
-    )
+    stdout: $"($expected)\n"
     stderr: ""
   }
 }
@@ -174,12 +178,16 @@ def "test reports an error when gh api fails" [] {
     ]
   )
 
+  let expected = (
+    [
+      "::error::Could not read the runs of .github/workflows/ci.yml,"
+      "which tagged-ci waits for."
+    ]
+    | str join " "
+  )
   assert equal $out.result {
     exit_code: 1
-    stdout: (
-      "::error::Could not read the runs of .github/workflows/ci.yml,"
-      + " which tagged-ci waits for.\n"
-    )
+    stdout: $"($expected)\n"
     stderr: "HTTP 404\n"
   }
 }

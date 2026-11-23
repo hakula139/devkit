@@ -59,12 +59,14 @@ def main [] {
     if ($runs | any {|run| $run.status != "completed" }) {
       sleep $poll_interval
     } else {
-      print (
+      [
         $"::error::No push or dispatched CI run passed on ($env.GITHUB_SHA)."
-        + " Rerun the failed CI jobs,"
-        + $" or run 'gh workflow run ci.yml --ref ($env.GITHUB_REF_NAME)',"
-        + " then rerun this job."
-      )
+        "Rerun the failed CI jobs,"
+        $"or run 'gh workflow run ci.yml --ref ($env.GITHUB_REF_NAME)',"
+        "then rerun this job."
+      ]
+      | str join " "
+      | print $in
       exit 1
     }
   }

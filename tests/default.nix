@@ -6,6 +6,7 @@
   pkgs,
   dk,
   repo,
+  packages,
   skillSource,
 }:
 
@@ -13,8 +14,9 @@ let
   inherit (pkgs) lib;
 in
 {
-  cachix-pin-tests = dk.nuTests {
-    src = ../.github/actions/cachix-pin;
+  cachix-pin-tests = import ./cachix-pin {
+    inherit dk;
+    inherit (packages) cachix-pin;
   };
   dprint-markdown = import ./dprint-markdown { inherit pkgs repo; };
   skill-links = import ./skill-links { inherit pkgs skillSource; };

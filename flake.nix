@@ -93,7 +93,6 @@
         scripts = lib.fileset.toSource {
           root = ./.;
           fileset = lib.fileset.unions [
-            ./.github/actions/cachix-pin/cachix-pin.nu
             ./.github/settings
             ./cliff.toml
             ./scripts
@@ -139,10 +138,7 @@
         # Packages
         # ------------------------------------------------------------------------------------------
         packages = {
-          cachix-pin = nuWrapper.package {
-            name = "cachix-pin";
-            script = "${scripts}/.github/actions/cachix-pin/cachix-pin.nu";
-          };
+          cachix-pin = nuScript "cachix-pin" [ ];
           changelog = nuScript "changelog" [
             pkgs.gh
             pkgs.git
@@ -179,6 +175,7 @@
           self.packages.${system}
           // import ./tests {
             inherit pkgs dk repo;
+            packages = self.packages.${system};
             inherit (self.lib) skillSource;
           };
 

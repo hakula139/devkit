@@ -1,6 +1,6 @@
 use std/assert
 
-const SCRIPT = path self "cachix-pin.nu"
+const SCRIPT = path self "../../scripts/cachix-pin.nu"
 
 def run-cachix-pin [
   pins: record
@@ -18,7 +18,11 @@ def run-cachix-pin [
       KEEP_REVISIONS: $keep_revisions
       KEEP_DAYS: $keep_days
     } {
-      ^$nu.current-exe $SCRIPT | complete
+      if ($SCRIPT | path exists) {
+        ^$nu.current-exe $SCRIPT | complete
+      } else {
+        ^cachix-pin | complete
+      }
     }
   )
   let calls = if ($log | path exists) {

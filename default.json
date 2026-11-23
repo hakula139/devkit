@@ -68,6 +68,12 @@
       "automerge": true
     },
     {
+      "description": "Hold TypeScript below v7 until typescript-eslint supports it.",
+      "matchDatasources": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
+    },
+    {
       "matchManagers": ["nix"],
       "groupName": "flake inputs",
       "semanticCommitScope": "flake",

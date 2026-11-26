@@ -104,7 +104,7 @@ pkgs.mkShell {
           --git-common-dir
       )
 
-      # Callers of `nix develop -c` read the command's stdout, so the install reports on stderr.
+      # Silence normal install output for `nix develop -c` and direnv, while errors stay on stderr.
       (
         set -e
         ${lib.getExe pkgs.flock} 9
@@ -129,7 +129,7 @@ pkgs.mkShell {
               ]) hookTypes
             )}
         ''}
-      ) 9>"$common/git-hooks.lock" >&2
+      ) 9>"$common/git-hooks.lock" >/dev/null
     fi
   '';
 }

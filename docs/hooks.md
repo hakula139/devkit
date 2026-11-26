@@ -6,7 +6,7 @@ Add `preCommit` to `inputsFrom` as shown in [Nix flake](flake.md). The shell's o
 
 Enter the dev shell from the checkout where you intend to install the hooks. Its configuration path must either be absent or point into the Nix store through a symlink. Installing prek's shims replaces existing hooks, including the targets of symlinked hooks.
 
-Hook installation reports on stderr so callers of `nix develop -c <cmd>` can read the command's output from stdout. Keep stdout clear in the repository's own `shellHook` for the same reason.
+Hook installation is silent on success and reports errors on stderr, so `direnv` stays quiet and callers of `nix develop -c <cmd>` can read the command's output from stdout. Keep stdout clear in the repository's own `shellHook` for the same reason.
 
 As in CI, run `run-hooks` separately from `nix flake check`. The hook runner prepares dependencies for enabled lockfile-pinned tools, then checks tracked files across the pre-commit, pre-merge-commit, and pre-push stages. To run a subset, pass hook IDs as in `nix develop -c run-hooks cspell`.
 

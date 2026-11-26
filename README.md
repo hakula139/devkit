@@ -8,30 +8,19 @@ devkit provides shared development tools for Hakula's repositories.
 
 ## Documentation
 
-| Document               | Description                             |
-| ---------------------- | --------------------------------------- |
-| [Nix flake]            | Flake inputs, shared helpers, dev shell |
-| [Hooks]                | Pre-commit setup and configuration      |
-| [Nushell tooling]      | Application and skill packaging         |
-| [Nushell test runner]  | Tests and script checks                 |
-| [CI workflow and gate] | CI checks and Workers deployment        |
-| [Releasing]            | Release a consumer project              |
-| [Releasing devkit]     | Version policy and rollback             |
-| [Renovate preset]      | Dependency updates and automerge        |
-| [GitHub conventions]   | Repository settings, rulesets, labels   |
-| [Development]          | Contributor instructions                |
+| Document                               | Description                             |
+| -------------------------------------- | --------------------------------------- |
+| [Nix flake](docs/flake.md)             | Flake inputs, shared helpers, dev shell |
+| [Hooks](docs/hooks.md)                 | Pre-commit setup and configuration      |
+| [Nushell tooling](docs/nushell.md)     | Application and skill packaging         |
+| [Nushell test runner](docs/nu-test.md) | Tests and script checks                 |
+| [CI workflow and gate](docs/ci.md)     | CI checks and Workers deployment        |
+| [Releasing](docs/releasing.md)         | Release a consumer project              |
+| [Releasing devkit](RELEASING.md)       | Version policy and rollback             |
+| [Renovate preset](docs/renovate.md)    | Dependency updates and automerge        |
+| [GitHub conventions](docs/github.md)   | Repository settings, rulesets, labels   |
+| [Development](AGENTS.md)               | Contributor instructions                |
 
 ## License
 
 Copyright (c) 2026 [Hakula](https://hakula.xyz). Licensed under the [MIT License](LICENSE).
-
-[Nix flake]: docs/flake.md
-[Hooks]: docs/hooks.md
-[Nushell tooling]: docs/nushell.md
-[Nushell test runner]: docs/nu-test.md
-[CI workflow and gate]: docs/ci.md
-[Releasing]: docs/releasing.md
-[Releasing devkit]: RELEASING.md
-[Renovate preset]: docs/renovate.md
-[GitHub conventions]: docs/github.md
-[Development]: AGENTS.md

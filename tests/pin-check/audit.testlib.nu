@@ -1,4 +1,4 @@
-use pin-check.nu
+use pin-check
 
 def registry []: nothing -> list<record> {
   let sample = {

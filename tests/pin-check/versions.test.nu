@@ -1,6 +1,6 @@
 use std/assert
 
-use versions.nu *
+use pin-check/versions.nu *
 
 def "test version helpers compare naturally and select the newest valid tag" [] {
   let selections = [

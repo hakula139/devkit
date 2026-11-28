@@ -122,8 +122,9 @@
             nu-check = {
               enable = true;
               settings.libDirs = [
-                ./tests/nu-tooling/lib-dirs/libs
-                ./tests/nu-tooling/lib-dirs/extra
+                ./lib
+                ./tests/nu-tooling/lib-dirs/fixtures/first
+                ./tests/nu-tooling/lib-dirs/fixtures/second
               ];
             };
             prettier.enable = true;
@@ -158,6 +159,7 @@
         # ------------------------------------------------------------------------------------------
         devShells.default = pkgs.mkShell {
           name = "devkit-dev";
+          NU_LIB_DIRS = "${./lib}";
           packages = [
             dk.nushell
             dk.nu-test

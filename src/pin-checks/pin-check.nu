@@ -47,7 +47,7 @@ def require-gh [] {
 }
 
 def warn [pin: string, message: string] {
-  print -e $"  ($pin): ($message)"
+  print -e $"($pin): ($message)"
 }
 
 def query [pin: string, lookup: closure]: nothing -> string {

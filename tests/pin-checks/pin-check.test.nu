@@ -29,17 +29,17 @@ def "test list is offline and leaves row closures lazy" [] {
 def "test check derives exit code from outcomes and diagnoses incomplete groups" [] {
   let lib_dirs = ($env.NU_LIB_DIRS | str join (char esep))
   let mixed_warnings = [
-    "  failed: upstream unavailable"
     "cannot read missing version"
+    "failed: upstream unavailable"
   ]
   let cases = [
     [name code summary label warnings];
     ["current" 0 "0 stale, 0 unknown." "tracks channel 1.0 to 2.0" []]
     ["stale" 1 "1 stale, 0 unknown." "pin superseded" []]
     ["mixed" 2 "1 stale, 2 unknown." "UNKNOWN" $mixed_warnings]
-    ["blank" 2 "0 stale, 1 unknown." "UNKNOWN" ["  sample: no value found"]]
-    ["github" 2 "0 stale, 1 unknown." "UNKNOWN" ["  sample: gh: Service unavailable (HTTP 503)"]]
-    ["empty" 2 "0 stale, 1 unknown." "UNKNOWN" ["  Packages: no pins matched"]]
+    ["blank" 2 "0 stale, 1 unknown." "UNKNOWN" ["sample: no value found"]]
+    ["github" 2 "0 stale, 1 unknown." "UNKNOWN" ["sample: gh: Service unavailable (HTTP 503)"]]
+    ["empty" 2 "0 stale, 1 unknown." "UNKNOWN" ["Packages: no pins matched"]]
   ]
 
   for case in $cases {

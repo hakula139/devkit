@@ -1,3 +1,7 @@
+# ==================================================================================================
+# Pinned Version Comparison
+# ==================================================================================================
+
 # Whether the left version is at or above the right one. The release core compares first, and a
 # final release ranks above the same core's pre-release.
 export def version-at-least [left: string, right: string]: nothing -> bool {

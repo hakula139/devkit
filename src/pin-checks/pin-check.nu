@@ -1,3 +1,7 @@
+# ==================================================================================================
+# Pinned Version Checks
+# ==================================================================================================
+
 use ./versions.nu newest-version
 export use ./versions.nu [version-at-least version-older]
 
@@ -69,14 +73,15 @@ def classify [row: record, pinned: string, upstream: string]: nothing -> record 
       status: "UNKNOWN"
       outcome: "unknown"
     }
-
   } else if ($row.classify? | is-not-empty) {
     try {
       let result = (do $row.classify $pinned $upstream)
       if ($result.status | describe) != "string" or $result.outcome not-in [
         "current" "stale" "unknown"
       ] {
-        error make {msg: "classifier must return a status string and a current, stale, or unknown outcome"}
+        error make {
+          msg: "classifier must return a status string and a current, stale, or unknown outcome"
+        }
       }
       $result
     } catch {|err|
@@ -86,19 +91,16 @@ def classify [row: record, pinned: string, upstream: string]: nothing -> record 
         outcome: "unknown"
       }
     }
-
   } else if ($row.delegated? | is-not-empty) {
     {
       status: $row.delegated
       outcome: "current"
     }
-
   } else if $pinned == $upstream {
     {
       status: "ok"
       outcome: "current"
     }
-
   } else {
     {
       status: "STALE"
@@ -236,6 +238,10 @@ export def nix-attr [root: string, file: string, regex: string]: nothing -> stri
 export def nix-version [root: string, file: string]: nothing -> string {
   nix-attr $root $file '(?m)^\s*version = "(?<v>[^"]+)"'
 }
+
+# --------------------------------------------------------------------------------------------------
+# GitHub Actions
+# --------------------------------------------------------------------------------------------------
 
 # Read the sorted, unique remote uses refs in workflows and composite actions.
 export def action-pins [root: string]: nothing -> list<string> {

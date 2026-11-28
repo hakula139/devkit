@@ -88,6 +88,4 @@ in
     uvToolchain
     writeNuApplication
     ;
-
-  pinLibDir = ../src/pin-checks;
 }

@@ -122,7 +122,7 @@
             nu-check = {
               enable = true;
               settings.libDirs = [
-                dk.pinLibDir
+                ./src/pin-checks
                 ./tests/nu-tooling/lib-dirs/libs
                 ./tests/nu-tooling/lib-dirs/extra
               ];
@@ -159,7 +159,7 @@
         # ------------------------------------------------------------------------------------------
         devShells.default = pkgs.mkShell {
           name = "devkit-dev";
-          NU_LIB_DIRS = "${dk.pinLibDir}";
+          NU_LIB_DIRS = "${./src/pin-checks}";
           packages = [
             dk.nushell
             dk.nu-test

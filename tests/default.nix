@@ -18,7 +18,7 @@ in
   dprint-markdown = import ./dprint-markdown { inherit pkgs repo; };
   pin-check = dk.nuTests {
     src = ./pin-checks;
-    libDirs = [ dk.pinLibDir ];
+    libDirs = [ ../src/pin-checks ];
   };
   skill-links = import ./skill-links { inherit pkgs skillSource; };
 }

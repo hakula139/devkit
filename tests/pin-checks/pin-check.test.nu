@@ -1,4 +1,5 @@
 use std/assert
+use std-rfc/str
 
 const SCRIPT = path self "audit.testlib.nu"
 
@@ -11,7 +12,28 @@ def "test list is offline and leaves row closures lazy" [] {
     ]
   })
 
-  let listing = "Manual pins tracked by this script:\n\nPackages\n  sample\n"
+  let listing = (
+    "
+    Manual pins tracked by this script:
+
+    Packages
+      sample
+
+    "
+    | str dedent
+  )
+  let listing_with_footer = (
+    "
+    Manual pins tracked by this script:
+
+    Packages
+      sample
+
+    See the project guide.
+
+    "
+    | str dedent
+  )
   assert equal $results [
     {
       stdout: $listing
@@ -19,7 +41,7 @@ def "test list is offline and leaves row closures lazy" [] {
       exit_code: 0
     }
     {
-      stdout: ($listing + "\nSee the project guide.\n")
+      stdout: $listing_with_footer
       stderr: ""
       exit_code: 0
     }
@@ -28,15 +50,14 @@ def "test list is offline and leaves row closures lazy" [] {
 
 def "test check derives exit code from outcomes and diagnoses incomplete groups" [] {
   let lib_dirs = ($env.NU_LIB_DIRS | str join (char esep))
-  let mixed_warnings = [
-    "cannot read missing version"
-    "failed: upstream unavailable"
-  ]
   let cases = [
     [name code summary label warnings];
     ["current" 0 "0 stale, 0 unknown." "tracks channel 1.0 to 2.0" []]
     ["stale" 1 "1 stale, 0 unknown." "pin superseded" []]
-    ["mixed" 2 "1 stale, 2 unknown." "UNKNOWN" $mixed_warnings]
+    [
+      "mixed" 2 "1 stale, 2 unknown." "UNKNOWN"
+      ["cannot read missing version" "failed: upstream unavailable"]
+    ]
     ["blank" 2 "0 stale, 1 unknown." "UNKNOWN" ["sample: no value found"]]
     ["github" 2 "0 stale, 1 unknown." "UNKNOWN" ["sample: gh: Service unavailable (HTTP 503)"]]
     ["empty" 2 "0 stale, 1 unknown." "UNKNOWN" ["Packages: no pins matched"]]

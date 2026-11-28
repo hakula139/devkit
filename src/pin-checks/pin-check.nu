@@ -13,13 +13,15 @@ export use ./versions.nu [version-at-least version-older]
 export def list [registry: closure, --footer: string]: nothing -> nothing {
   print "Manual pins tracked by this script:"
   for group in (do $registry) {
-    print $"\n($group.title)"
+    print ""
+    print $group.title
     for row in $group.pins {
       print $"  ($row.pin)"
     }
   }
   if ($footer | is-not-empty) {
-    print $"\n($footer)"
+    print ""
+    print $footer
   }
 }
 
@@ -154,14 +156,16 @@ export def check [registry: closure] {
 
   let groups = (do $registry | par-each --keep-order {|group| resolve-group $group })
   for group in $groups {
-    print $"\n($group.title)"
+    print ""
+    print $group.title
     print ($group.rows | reject outcome | table)
   }
   let rows = ($groups | each {|group| $group.rows } | flatten)
   let stale = ($rows | where outcome == "stale" | length)
   let unknown = ($rows | where outcome == "unknown" | length)
 
-  print $"\n($stale) stale, ($unknown) unknown."
+  print ""
+  print $"($stale) stale, ($unknown) unknown."
   if $unknown > 0 {
     print "UNKNOWN means a lookup failed. Rerun, and fix the printed cause if it persists."
     exit 2

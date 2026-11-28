@@ -123,6 +123,7 @@
               enable = true;
               settings.libDirs = [
                 ./src/pin-checks
+
                 ./tests/nu-tooling/lib-dirs/libs
                 ./tests/nu-tooling/lib-dirs/extra
               ];

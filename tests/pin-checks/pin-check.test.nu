@@ -29,8 +29,8 @@ def "test list is offline and leaves row closures lazy" [] {
 def "test check derives exit code from outcomes and diagnoses incomplete groups" [] {
   let lib_dirs = ($env.NU_LIB_DIRS | str join (char esep))
   let mixed_warnings = [
-    "  cannot read missing version"
     "  failed: upstream unavailable"
+    "cannot read missing version"
   ]
   let cases = [
     [name code summary label warnings];

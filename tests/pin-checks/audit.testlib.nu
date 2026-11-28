@@ -44,7 +44,7 @@ def registry []: nothing -> list<record> {
       {
         pin: "missing"
         local: {||
-          print -e "  cannot read missing version"
+          print -e "cannot read missing version"
           null
         }
         upstream: {|| "2.0"}

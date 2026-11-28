@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.0] - 2026-11-28
+
+### Added
+
+- _(nushell)_ Repositories can audit their own version pins with the shared `pin-check` module. Add `"${devkit}/lib"` from the locked devkit input to the Nushell module search paths and import it with `use pin-check`. Listing works offline, and checks distinguish current pins, stale pins, and incomplete audits. ([#147](https://github.com/hakulab/devkit/pull/147))
+
+[3.9.0]: https://github.com/hakulab/devkit/compare/v3.8.3...v3.9.0
+
 ## [3.8.3] - 2026-11-26
 
 ### Fixed

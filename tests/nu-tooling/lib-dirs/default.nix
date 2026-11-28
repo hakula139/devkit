@@ -8,8 +8,8 @@
 
 let
   libDirs = [
-    ./lib
-    ./extra
+    ./fixtures/first
+    ./fixtures/second
   ];
 
   lib-command = dk.writeNuApplication {
@@ -23,7 +23,7 @@ let
     version = "0.1.0";
     src = ./lib-app;
     libDirs = [
-      ./lib
+      ./fixtures/first
     ];
   };
 in

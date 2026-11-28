@@ -8,7 +8,7 @@
 
 let
   libDirs = [
-    ./libs
+    ./lib
     ./extra
   ];
 
@@ -23,7 +23,7 @@ let
     version = "0.1.0";
     src = ./lib-app;
     libDirs = [
-      ./libs
+      ./lib
     ];
   };
 in

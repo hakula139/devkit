@@ -123,7 +123,7 @@
               enable = true;
               settings.libDirs = [
                 ./src/lib
-                ./tests/nu-tooling/lib-dirs/libs
+                ./tests/nu-tooling/lib-dirs/lib
                 ./tests/nu-tooling/lib-dirs/extra
               ];
             };
